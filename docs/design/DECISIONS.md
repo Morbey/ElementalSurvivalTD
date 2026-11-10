@@ -66,4 +66,4 @@ Each slice ends in something Eduardo can see or play.
 
 ## Parking lot
 Ideas raised mid-slice, one line each. Review them when a slice closes.
-- An art-direction and UX agent (element colours, top-down readability, HUD and perk screen, choosing CC0 assets). Revisit when slice 4 brings the first real visuals.
+- An `art-director` agent for art direction and UX (element colours, top-down readability, HUD and perk screen, choosing CC0 assets). Revisit when slice 4 brings the first real visuals.
