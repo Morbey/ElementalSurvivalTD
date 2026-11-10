@@ -47,7 +47,7 @@
 
 ### Prototype slices
 Each slice ends in something Eduardo can see or play.
-- [ ] **Slice 1:** a grid and one enemy crossing it with pathfinding. Includes the first ADR (folder structure, asmdefs and layers), limited to what this slice needs.
+- [x] **Slice 1:** a grid and one enemy crossing it with pathfinding. Includes the first ADR (folder structure, asmdefs and layers), limited to what this slice needs.
 - [ ] **Slice 2:** starts with a WebGL build of slice 1 on a private itch.io page, rebuilt after every slice. Then the player places a tower that shoots and kills; the path recalculates around it, and an invalid placement is refused with a message.
 - [ ] **Slice 3:** waves, gold and selling towers.
 - [ ] **Slice 4:** two elements, with x2 and x0.25 damage.
