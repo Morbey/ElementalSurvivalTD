@@ -5,7 +5,7 @@ using UnityEngine;
 namespace ElementalTD.Gameplay
 {
     /// <summary>
-    /// Wires the prototype scene: builds the Core grid from data, draws throwaway primitives,
+    /// Wires the prototype scene: builds the Core grid from data, lays out the cell prefabs,
     /// frames the camera and spawns one enemy. Holds no game rules.
     /// </summary>
     public sealed class PrototypeBootstrap : MonoBehaviour
@@ -17,26 +17,24 @@ namespace ElementalTD.Gameplay
         [Header("Scene")]
         [SerializeField] private Camera viewCamera;
 
-        [Header("Presentation (throwaway prototype visuals)")]
-        [SerializeField] private Color freeColor = new Color(0.75f, 0.75f, 0.75f);
-        [SerializeField] private Color blockedColor = new Color(0.2f, 0.2f, 0.25f);
-        [SerializeField] private Color spawnColor = new Color(0.2f, 0.75f, 0.3f);
-        [SerializeField] private Color exitColor = new Color(0.85f, 0.25f, 0.2f);
-        [SerializeField] private Color enemyColor = new Color(0.95f, 0.8f, 0.1f);
-        [Tooltip("Fraction of a cell left empty between tiles so the grid lines show.")]
-        [SerializeField, Range(0f, 0.5f)] private float cellGap = 0.05f;
-        [SerializeField, Min(0.001f)] private float cellThickness = 0.1f;
+        [Header("Presentation")]
+        [Tooltip("Authored for a cell size of 1; its root is scaled by the map's cell size. Its tile starts with the free material.")]
+        [SerializeField] private GameObject cellPrefab;
+        [SerializeField] private Material blockedMaterial;
+        [SerializeField] private Material spawnMaterial;
+        [SerializeField] private Material exitMaterial;
+        [Tooltip("Authored for a cell size of 1; its root is scaled by the map's cell size.")]
+        [SerializeField] private EnemyAgent enemyPrefab;
         [Tooltip("Extra world units around the grid when framing the camera, in cells.")]
         [SerializeField, Min(0f)] private float framePaddingCells = 0.5f;
         [SerializeField, Min(1f)] private float cameraHeight = 20f;
-        [Tooltip("Enemy visual size as a fraction of a cell.")]
-        [SerializeField, Range(0.1f, 1f)] private float enemyScale = 0.5f;
 
         private void Start()
         {
-            if (map == null || enemy == null || viewCamera == null)
+            if (map == null || enemy == null || viewCamera == null || cellPrefab == null || enemyPrefab == null
+                || blockedMaterial == null || spawnMaterial == null || exitMaterial == null)
             {
-                Debug.LogError("PrototypeBootstrap: assign the map, enemy and camera references.", this);
+                Debug.LogError("PrototypeBootstrap: assign every data, scene and presentation reference.", this);
                 return;
             }
 
@@ -59,35 +57,21 @@ namespace ElementalTD.Gameplay
         private void BuildGridVisuals(GridMap grid)
         {
             var root = new GameObject("Grid").transform;
-            Material free = null, blocked = null, spawn = null, exit = null;
-
-            float cellSize = map.CellSize;
-            var tileScale = new Vector3(cellSize * (1f - cellGap), cellThickness, cellSize * (1f - cellGap));
-            var sink = new Vector3(0f, -cellThickness * 0.5f, 0f);
+            var cellScale = Vector3.one * map.CellSize;
 
             for (int y = 0; y < grid.Height; y++)
             {
                 for (int x = 0; x < grid.Width; x++)
                 {
                     var cell = new GridPos(x, y);
-                    GameObject tile = CreateVisual(PrimitiveType.Cube, $"Cell {x},{y}", root);
-                    tile.transform.position = map.CellToWorld(cell) + sink;
-                    tile.transform.localScale = tileScale;
+                    GameObject tile = Instantiate(cellPrefab, map.CellToWorld(cell), Quaternion.identity, root);
+                    tile.name = $"Cell {x},{y}";
+                    tile.transform.localScale = cellScale;
 
-                    var renderer = tile.GetComponent<Renderer>();
-                    if (free == null)
-                    {
-                        Material baseMaterial = renderer.sharedMaterial;
-                        free = Tinted(baseMaterial, freeColor, "Free");
-                        blocked = Tinted(baseMaterial, blockedColor, "Blocked");
-                        spawn = Tinted(baseMaterial, spawnColor, "Spawn");
-                        exit = Tinted(baseMaterial, exitColor, "Exit");
-                    }
-
-                    if (cell == map.Spawn) renderer.sharedMaterial = spawn;
-                    else if (cell == map.Exit) renderer.sharedMaterial = exit;
-                    else if (grid.IsBlocked(cell)) renderer.sharedMaterial = blocked;
-                    else renderer.sharedMaterial = free;
+                    var renderer = tile.GetComponentInChildren<Renderer>();
+                    if (cell == map.Spawn) renderer.sharedMaterial = spawnMaterial;
+                    else if (cell == map.Exit) renderer.sharedMaterial = exitMaterial;
+                    else if (grid.IsBlocked(cell)) renderer.sharedMaterial = blockedMaterial;
                 }
             }
         }
@@ -108,34 +92,10 @@ namespace ElementalTD.Gameplay
 
         private void SpawnEnemy(FlowField field)
         {
-            // Root sits exactly on the cell centre; the visual is a child lifted so it rests on the grid.
-            var root = new GameObject("Enemy");
-            float size = map.CellSize * enemyScale;
-            GameObject body = CreateVisual(PrimitiveType.Capsule, "Body", root.transform);
-            body.transform.localScale = new Vector3(size, size * 0.5f, size);
-            body.transform.localPosition = new Vector3(0f, size * 0.5f, 0f);
-            var bodyRenderer = body.GetComponent<Renderer>();
-            bodyRenderer.sharedMaterial = Tinted(bodyRenderer.sharedMaterial, enemyColor, "Enemy");
-
-            var agent = root.AddComponent<EnemyAgent>();
+            EnemyAgent agent = Instantiate(enemyPrefab, map.CellToWorld(map.Spawn), Quaternion.identity);
+            agent.name = "Enemy";
+            agent.transform.localScale = Vector3.one * map.CellSize;
             agent.Init(new PathFollower(field, map.Spawn), enemy.SpeedCellsPerSecond, map);
-        }
-
-        private static GameObject CreateVisual(PrimitiveType type, string name, Transform parent)
-        {
-            GameObject go = GameObject.CreatePrimitive(type);
-            go.name = name;
-            go.transform.SetParent(parent, false);
-            // Nothing uses physics in this slice.
-            Destroy(go.GetComponent<Collider>());
-            return go;
-        }
-
-        private static Material Tinted(Material source, Color color, string name)
-        {
-            var material = new Material(source) { name = $"Prototype {name}" };
-            material.color = color;
-            return material;
         }
     }
 }

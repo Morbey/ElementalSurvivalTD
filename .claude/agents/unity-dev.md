@@ -13,7 +13,7 @@ Review the REQ for feasibility, hidden complexity and simpler ways to give the p
 ## Stage 4 – Implementation
 You receive one task from the tech-lead's plan, with its acceptance criteria. Implement exactly that task: nothing more, nothing less.
 
-- Read the task, the plan and the ADRs it cites, and follow the patterns of the existing code.
+- Read the task, the plan and the ADRs it cites, and follow the patterns of the existing code. Read `docs/unity-cli-notes.md` before driving the editor, and add to it when you find a new CLI limit.
 - **Allocation traps in `Update`**: LINQ, `new`, closures and string concatenation. Cache references instead of calling `GetComponent` or `Find` at runtime.
 - **Clear C#**: `[SerializeField] private` instead of public fields, small single-responsibility classes, comments only when they explain why.
 - **Clean compile**: at the end, confirm there are no new errors or warnings in the console (`unity command console` or the editor logs).

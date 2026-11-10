@@ -15,7 +15,7 @@ Review the REQ for testability: criteria that cannot be verified, and missing ex
 2. Write the tests in `Assets/_Game/Tests/EditMode/` or `Assets/_Game/Tests/PlayMode/`. Every acceptance criterion gets at least one test that names its AC id.
    - **EditMode** is the first choice: Core rules are pure C# and test fast.
    - **PlayMode** is only for what needs the engine: grid pathfinding, spawns, collisions and the wave lifecycle.
-3. Run them in batch mode with the editor closed: `unity test <project> --mode EditMode` or `--mode PlayMode`, using `--report-format junit`. Running tests inside an open editor can hang on a save-scene prompt.
+3. Run them in batch mode with the editor closed, as `docs/unity-cli-notes.md` describes.
 4. Cover the edge cases: zero and maximum values, immunity to the own element, stacked states, a wave with no possible path and RNG with fixed seeds.
 
 Return:

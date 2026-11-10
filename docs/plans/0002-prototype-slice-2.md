@@ -57,7 +57,7 @@ Serves 2a-AC1 and 2a-AC2. Editor open for the settings; runs after T2a-1 in the 
 
 - Through the editor API, set the WebGL player to Gzip compression with the decompression fallback on (`PlayerSettings.WebGL.compressionFormat`, `PlayerSettings.WebGL.decompressionFallback`). Change no other setting, including the quality levels.
 - Create `tools/webgl.sh`, executable, resolving the project root from its own location:
-  - `build` runs `unity build <root> --target WebGL --output-path <root>/Builds/WebGL --allow-dirty-build` and returns its exit code. The flag is needed because builds are tested before the orchestrator commits.
+  - `build` runs `unity build <root> --profile WebGL --output-path <root>/Builds/WebGL --allow-dirty-build` and returns its exit code. WebGL is not a zero-code target for `unity build --target`, so T2a-2 also creates the build profile `Assets/Settings/Build Profiles/WebGL.asset` (`unity command build create_profile --name WebGL --platform WebGL`), which keeps the global scene list and player settings. The flag is needed because builds are tested before the orchestrator commits.
   - `serve` starts `python3 -m http.server 8765 --bind 127.0.0.1 --directory <root>/Builds/WebGL` detached, waits until `http://localhost:8765/` answers, prints the URL and returns. If the port already answers it only prints the URL.
   - `stop` ends that server.
   - With no argument it runs `build`, then `serve`.
@@ -211,7 +211,7 @@ Editor closed. Add the Presentation reference to the PlayMode test asmdef. Slice
 **Orchestrator, then Eduardo (2b-AC11 and the feel):** real mouse input in the editor and at `http://localhost:8765`, the text is legible, and the highlight is visible but not distracting.
 
 ## Risks
-- **First WebGL build.** `unity build` without `--execute-method` is unproven in this project; T2a-3 names the fallback. The build may leave WebGL as the active platform when the editor reopens, which costs one reimport and no more.
+- **First WebGL build.** `unity build --profile` is unproven in this project; T2a-3 names the fallback. The build may leave WebGL as the active platform when the editor reopens, which costs one reimport and no more.
 - **Stale browser cache.** The player caches its data in the browser. After a rebuild, reload without cache before judging the result.
 - **UI Toolkit in the player.** A panel with no theme shows no text. T2b-2 assigns the theme, and the browser check in 2b is the proof.
 - **Experimental `com.unity.pipeline` package.** Its runtime assembly is compiled out of players by its define constraints; if the build log blames it, report it instead of working around it.

@@ -86,6 +86,7 @@ Each fact lives in one place. Everything else links to it instead of repeating i
 - `docs/adr/`: technical decisions, one per file (`NNNN-title.md`).
 - `docs/plans/`: technical plans, one per feature (`NNNN-title.md`).
 - `docs/balance/`: tables, curves and simulation results.
+- `docs/unity-cli-notes.md`: what works and what does not when driving the editor, builds and tests from the CLI.
 - Google Doc "Tower Defense Elemental – Documento de Visão e Arquitetura" (id `1gSSxw11vd5Y8aqD5_Z23BtS7HY_DUhun0thrH7_1dls`): the detailed vision document, which may be out of date. If it contradicts the repository, the repository wins.
 
 ## 7. Shared rules for all agents

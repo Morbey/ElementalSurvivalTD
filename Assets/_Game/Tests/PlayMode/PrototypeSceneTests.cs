@@ -34,7 +34,7 @@ namespace ElementalTD.PlayModeTests
             yield return null;
         }
 
-        private static EnemyAgent[] Agents() => Object.FindObjectsByType<EnemyAgent>(FindObjectsSortMode.None);
+        private static EnemyAgent[] Agents() => Object.FindObjectsByType<EnemyAgent>();
 
         private GridPos CellOf(Vector3 p) =>
             new GridPos(Mathf.FloorToInt(p.x / _map.CellSize), Mathf.FloorToInt(p.z / _map.CellSize));
@@ -51,13 +51,62 @@ namespace ElementalTD.PlayModeTests
         [Test]
         public void AC1_Scene_Camera_Is_Orthographic_And_Straight_Down()
         {
-            Camera cam = Object.FindFirstObjectByType<Camera>();
+            Camera cam = Object.FindAnyObjectByType<Camera>();
             Assert.IsNotNull(cam);
             Assert.IsTrue(cam.orthographic);
             Assert.Greater(Vector3.Dot(cam.transform.forward, Vector3.down), 0.999f);
             Assert.AreEqual(_map.Width * _map.CellSize * 0.5f, cam.transform.position.x, 0.01f);
             Assert.AreEqual(_map.Height * _map.CellSize * 0.5f, cam.transform.position.z, 0.01f);
             Assert.GreaterOrEqual(cam.orthographicSize, _map.Height * _map.CellSize * 0.5f);
+        }
+
+        private static string MaterialPath(Material m)
+        {
+#if UNITY_EDITOR
+            return UnityEditor.AssetDatabase.GetAssetPath(m);
+#else
+            return string.Empty;
+#endif
+        }
+
+        private static Material CellMaterial(int x, int y)
+        {
+            GameObject cell = GameObject.Find($"Cell {x},{y}");
+            Assert.IsNotNull(cell, $"Cell {x},{y} not found");
+            return cell.GetComponentInChildren<Renderer>().sharedMaterial;
+        }
+
+        [Test]
+        public void S2a_AC4_Every_Renderer_Uses_A_Presentation_Material_With_A_URP_Shader()
+        {
+            Renderer[] renderers = Object.FindObjectsByType<Renderer>(FindObjectsInactive.Include);
+            Assert.Greater(renderers.Length, 144);
+            foreach (Renderer r in renderers)
+            {
+                Assert.IsNotNull(r.sharedMaterial, r.name);
+                StringAssert.StartsWith("Assets/_Game/Presentation/Materials/", MaterialPath(r.sharedMaterial), r.name);
+                StringAssert.StartsWith("Universal Render Pipeline/", r.sharedMaterial.shader.name, r.name);
+            }
+        }
+
+        [Test]
+        public void S2a_AC4_Spawn_Exit_Wall_Free_Cells_And_Enemy_Use_Five_Different_Materials()
+        {
+            var materials = new HashSet<Material>
+            {
+                CellMaterial(_map.Spawn.X, _map.Spawn.Y),
+                CellMaterial(_map.Exit.X, _map.Exit.Y),
+                CellMaterial(5, 0),
+                CellMaterial(1, 0),
+                Agents()[0].GetComponentInChildren<Renderer>().sharedMaterial
+            };
+            Assert.AreEqual(5, materials.Count);
+        }
+
+        [Test]
+        public void S2a_AC4_Scene_Has_No_Colliders()
+        {
+            Assert.AreEqual(0, Object.FindObjectsByType<Collider>(FindObjectsInactive.Include).Length);
         }
 
         [UnityTest]

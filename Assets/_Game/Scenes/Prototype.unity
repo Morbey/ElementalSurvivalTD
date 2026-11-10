@@ -385,16 +385,13 @@ MonoBehaviour:
   map: {fileID: 11400000, guid: 9a2f4aaf9b0ff453ca125385fd2f9dd9, type: 2}
   enemy: {fileID: 11400000, guid: 1fa08f7a9bf1841548026b203ab65fdf, type: 2}
   viewCamera: {fileID: 362350127}
-  freeColor: {r: 0.75, g: 0.75, b: 0.75, a: 1}
-  blockedColor: {r: 0.2, g: 0.2, b: 0.25, a: 1}
-  spawnColor: {r: 0.2, g: 0.75, b: 0.3, a: 1}
-  exitColor: {r: 0.85, g: 0.25, b: 0.2, a: 1}
-  enemyColor: {r: 0.95, g: 0.8, b: 0.1, a: 1}
-  cellGap: 0.05
-  cellThickness: 0.1
+  cellPrefab: {fileID: 3528757962447879619, guid: 4c92ad963b2b34014aa3d07a5a8a7af8, type: 3}
+  blockedMaterial: {fileID: 2100000, guid: 401e9a91767da4f9483d7aa231f89767, type: 2}
+  spawnMaterial: {fileID: 2100000, guid: f10d0fd97e498410b89d74085278b79f, type: 2}
+  exitMaterial: {fileID: 2100000, guid: daaa4028e44bd49babe5f93ed442cc60, type: 2}
+  enemyPrefab: {fileID: 3349037151500947416, guid: 2f22a8e21e83c4b29b38fe7efec2e4de, type: 3}
   framePaddingCells: 0.5
   cameraHeight: 20
-  enemyScale: 0.5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
