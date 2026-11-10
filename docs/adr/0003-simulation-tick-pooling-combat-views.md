@@ -11,7 +11,7 @@ Slice 2c adds damage, fire rates and projectiles. With a variable time step the 
 3. **Views interpolate.** Every moving Core object keeps its position at the previous tick. Views draw between the previous and the current position by the driver's fraction, in `LateUpdate`.
 4. **Combat views poll; rare changes are events.** Presentation reads the `Battle` state each frame and draws it: the n-th pooled projectile view shows the n-th projectile. Only rare structural changes are plain C# events, raised by the Core object that changes: `Board.TowerPlaced` and `Board.TowerRemoved`. Feedback on an input action (`PlacementRefused`) stays on the input component.
 5. **Presentation owns every view.** Gameplay instantiates no prefab; the enemy view moves to Presentation.
-6. **Pooling.** `Battle` reuses its projectile objects through a free list. Presentation keeps a pre-warmed pool of projectile views that grows only when exceeded. Nothing is instantiated or destroyed per shot.
+6. **Pooling.** `Battle` reuses its projectile objects through a free list. Presentation keeps a pre-warmed pool of projectile views that grows only when exceeded. Nothing is instantiated or destroyed per shot. A reused object counts its entries, and whatever points at it remembers the count: a shot aimed at an enemy that has since left the board is dropped, even when that enemy object is already back.
 7. **Health bars are meshes.** Two flat quads on the enemy prefab (back and fill), each with its own URP Unlit material; the fill is scaled by the health fraction. The camera looks straight down and enemies do not rotate, so there is no billboarding.
 
 ## Alternatives
@@ -23,7 +23,7 @@ Slice 2c adds damage, fire rates and projectiles. With a variable time step the 
 - **One bar material tinted through a `MaterialPropertyBlock`.** Rejected for the reason given in ADR 0002.
 
 ## Consequences
-- Outcomes do not depend on the frame rate: the same placements at the same ticks give the same result in tests, in the editor and in the browser. Balance simulations can call `Battle.Tick()` with no Unity code.
+- Outcomes do not depend on the frame rate: within a platform, the same placements at the same ticks give the same result. The editor (Mono) and the browser (IL2CPP) may differ in the last bit of a float, which only matters for a borderline outcome. Balance simulations can call `Battle.Tick()` with no Unity code.
 - Changing `TickSeconds` shifts balance slightly, so it is one constant in Core and not a setting.
 - `Battle.Tick()` is part of the zero-allocation path, together with the view sync.
 - Enemies are still one reused object, drawn by one view. Slice 3 (waves) pools enemies and their views, and removes the re-entry loop from `Battle`.

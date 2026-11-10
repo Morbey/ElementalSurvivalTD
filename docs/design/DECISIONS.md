@@ -14,6 +14,7 @@
 - Luck: 0 is a pure draw. More luck means higher rarity, more options and more elements that are strong against the scenario.
 - Automatic waves on a timer, 5 to 20 s apart, with no manual pause. The screen always shows the next wave, with its enemy and element.
 - Map: an open grid where the player builds a maze with towers. There is pathfinding, and flyers go in a straight line.
+  - Enemies always take a shortest path. Between equally short ways they keep going straight, otherwise turn, and go back only when that is strictly the shortest way.
   - A tower can only be placed if the spawn and every living enemy can still reach the exit, and never on the spawn cell, the exit cell or a cell an enemy occupies. Otherwise the game refuses it and tells the player why.
   - Towers can be sold, so the player can rework the board freely. The refund is total until the tower fires its first shot and partial after that (value still open).
 - Economy: gold per kill and interest at the start of each wave, with a cap that rises through talents.

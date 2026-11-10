@@ -12,33 +12,38 @@ The enemy's loop stays the prototype's stand-in for waves, now inside `Battle`: 
 ## Acceptance criteria
 - **2c-AC1 Firing.** A tower with no cooldown left fires at once when an enemy is in range, then once every `1 / shotsPerSecond` seconds while one stays in range, never more than once per tick. Range is the distance in cells from the tower's cell centre to the enemy's position, inclusive. There is no line of sight.
 - **2c-AC2 Targeting.** Among the enemies on the board and in range, a tower picks the one with the lowest distance to the exit along the flow field (the distance of the cell it is heading to, plus the unfinished part of its step). On a tie it picks the one that entered first.
-- **2c-AC3 Projectile.** A shot starts at the tower's cell centre and moves towards its target's current position at the tower's projectile speed. It hits when the target is within one step, and removes the tower's damage from the enemy's health. If the target has left the board, the projectile vanishes with no effect. Removing a tower leaves its projectiles flying.
+- **2c-AC3 Projectile.** A shot starts at the tower's cell centre and moves towards its target's current position at the tower's projectile speed. It hits when the target is within one step, and removes the tower's damage from the enemy's health. If the target has left the board since the shot was fired, the projectile vanishes with no effect, even when the enemy is already back. Removing a tower leaves its projectiles flying.
 - **2c-AC4 Leaving and re-entering.** At health 0 or below, or on reaching the exit, the enemy leaves the board: it is not drawn, cannot be targeted and does not count for the placement rule. After the re-entry delay (1 s, a serialized field on the bootstrap) it enters at the spawn with full health and walks the current route.
 - **2c-AC5 Readable.** Every projectile is visible from the tower to the enemy. A bar above the enemy shows health over maximum health: full on entry, shorter after each hit.
 - **2c-AC6 Pooling.** After start-up, play instantiates only tower visuals, and destroys only those. There is exactly one enemy view throughout. Projectile views come from a pool pre-warmed to 16, which grows only when more are in flight.
 - **2c-AC7 2b still holds.** 2b-AC1 to AC5, AC7 and AC8 are unchanged, including while the enemy is off the board, when only the spawn must still reach the exit.
 - **2c-AC8 Data.** Range, damage, shots per second and projectile speed come only from `Tower_Prototype.asset`; health and speed only from `Enemy_Prototype.asset`. Values: range 2.5 cells, damage 10, 1.5 shots/s, projectile speed 10 cells/s; health 100, speed 2 cells/s.
 - **2c-AC9 Provisional design target.** With those values on the prototype map, no single tower on any free cell kills the enemy in one pass, and towers on (6,6) and (11,2) do. The `balance-designer` replaces the values and this criterion later.
-- **2c-AC10 Fixed tick.** Core advances only through `Battle.Tick()`, in steps of 1/60 s and in the order of T2c-1. The bootstrap is its only caller in the game. The same placements at the same ticks always give the same result.
+- **2c-AC10 Fixed tick.** Core advances only through `Battle.Tick()`, in steps of 1/60 s and in the order of T2c-1. The bootstrap is its only caller in the game. On a given platform, the same placements at the same ticks always give the same result (ADR 0003).
 - **2c-AC11 Smooth motion.** Enemy and projectile views are drawn between their last two tick positions, so an enemy on a straight stretch moves on every frame, in proportion to the frame time.
 - **2c-AC12 Layers.** Every combat rule is in `ElementalTD.Core`, which still compiles with `noEngineReferences: true`. Gameplay instantiates nothing. Tower changes are announced only by `Board`.
 - **2c-AC13 Allocation.** After warm-up, `Battle.Tick()` allocates 0 bytes, including ticks with a shot, a hit, a death and a re-entry. So do a refused placement and a removal. A successful placement may allocate one Core tower object (this relaxes 2b-AC10). The per-frame view code has no `new` of a reference type, LINQ, closure, boxing or string building.
 - **2c-AC14 Range disc (droppable).** While the hover highlight shows, a translucent disc centred on the hovered cell shows the tower's range.
 - **2c-AC15 WebGL.** All of the above works in the build at `http://localhost:8765`, in Chrome and Safari.
+- **2c-AC16 No needless reversal.** Among the neighbours with the lowest distance, a follower prefers the cell straight ahead, then any neighbour that is not the cell it just left (fixed order +x, -x, +y, -y), and the cell it just left only when no other is as short. With no last move it uses the fixed order. The default prototype route does not change. Added after Eduardo saw enemies turn back on a tie in 2b; folded into T2c-1.
 
 ## Editor sequencing
 Eduardo may have the interactive editor open. The `unity-dev` drives it only after the orchestrator hands it over, and nobody closes it without the orchestrator's word.
 
 | Order | Work | Editor |
 |---|---|---|
-| 1 | T2c-1 to T2c-5, and the code part of T2c-7 | Code only. The editor may stay Eduardo's. |
-| 2 | T2c-6, and the asset part of T2c-7 | Open, after the hand-over. Save everything at the end. |
+| 1 | T2c-1 to T2c-5, and the code part of T2c-7 | Code only, on an APFS clone. The editor stays Eduardo's. |
+| 2 | The copy-back, then T2c-6 with the asset part of T2c-7 | Open, after the hand-over. Save everything at the end. |
 | 3 | Stage 4 review, then Stage 5 tests | On an APFS clone while the editor is open (`docs/unity-cli-notes.md`, Tests). |
 | 4 | T2c-8, serve, browser check | Closed. The build needs the real project. |
 
-**Order 1 is a problem for Eduardo's editor, not for any task.** His editor imports the files as they land. Until T2c-5 is done the project does not compile there, so it cannot enter Play. From then until T2c-6 it compiles but is half wired: the enemy is not drawn and clicks place nothing. Nothing is lost, because order 1 touches no scene, prefab or asset. If Eduardo needs a working editor meanwhile, do order 1 on an APFS clone and copy `Assets/_Game/` back at the hand-over.
+Order 1 is written on an APFS clone, because in the real project it would stop Eduardo's editor from compiling until T2c-5 and leave it half wired until T2c-6. It is checked there without the editor: a batch EditMode run compiles every assembly. New scripts keep the `.meta` that run gives them.
 
-New scripts get their `.meta` from the editor on its next refresh; before order 2 ends, every new script must have one. Order 1 is checked without the editor: on an APFS clone, a batch EditMode run compiles every assembly.
+**Copy-back**, the first step of order 2:
+1. `git status -- Assets/_Game` is clean in the real project.
+2. An `rsync` dry run from the clone's `Assets/_Game/` lists only the planned `.cs`, `.meta` and asmdef files, the `EnemyAgent` to `EnemyView` move and the test files. Any scene, prefab or asset is left out.
+3. The real copy, which in the same step deletes `Gameplay/EnemyAgent.cs` and its `.meta` in the real project, before the editor refreshes. `EnemyView.cs.meta` reuses that guid, and two files with one guid would cost `Enemy.prefab` its script.
+4. One refresh. Then `EnemyView.cs.meta` still has guid `d22b0fbfa66a64f15a2584cdc7e33469`, and the script on `Enemy.prefab` resolves to `EnemyView`.
 
 ## Tasks
 
@@ -110,7 +115,7 @@ public void RemoveEnemy(Enemy enemy);
 1. **Re-entry.** If the enemy is off the board, its timer loses one tick; at 0 or below, `Board.AddEnemy`.
 2. **Enemies**, in entry order. Store the previous position, step the follower by `TickSeconds`, update the position. On arrival the enemy leaves: `Board.RemoveEnemy` and the timer starts.
 3. **Towers**, in placement order. The cooldown loses one tick. At 0 or below: with a target (2c-AC1, 2c-AC2) it takes a projectile from the free list, puts it on its cell and adds `1 / ShotsPerSecond` to the cooldown; with none the cooldown is set to 0.
-4. **Projectiles.** If the target is off the board, release the projectile. Otherwise store the previous position; if the target is within `ProjectileSpeed × TickSeconds`, apply the damage and release, else move that far towards it. An enemy at health 0 or below leaves as in step 2.
+4. **Projectiles.** If the target has left the board since the shot was fired, release the projectile: the enemy counts its entries, and the projectile remembers the count at launch. Otherwise store the previous position; if the target is within `ProjectileSpeed × TickSeconds`, apply the damage and release, else move that far towards it. An enemy at health 0 or below leaves as in step 2.
 
 **Done when:** Core has no `UnityEngine`; no `new` of a reference type, LINQ, closure or boxing in `Tick` after the free list has grown; no collection is iterated in hash order.
 
@@ -118,8 +123,8 @@ public void RemoveEnemy(Enemy enemy);
 Serves 2c-AC8. Code only; in parallel with T2c-1.
 
 In `Assets/_Game/Data/`:
-- New `TowerDefinition.cs` (ScriptableObject, menu `ElementalTD/Tower Definition`): `rangeCells`, `damage`, `shotsPerSecond` and `projectileSpeedCellsPerSecond`, the last two above 0, and `TowerStats ToStats()`.
-- `EnemyDefinition.cs`: add `maxHealth` (at least 1), `MaxHealth` and `EnemyStats ToStats()`.
+- New `TowerDefinition.cs` (ScriptableObject, menu `ElementalTD/Tower Definition`): `rangeCells`, `damage`, `shotsPerSecond` and `projectileSpeedCellsPerSecond`, the last two above 0; `TowerStats ToStats()`, and `RangeCells` for the range disc.
+- `EnemyDefinition.cs`: add `maxHealth` (at least 1) and `EnemyStats ToStats()`.
 - `MapDefinition.cs`: add `Vector3 CellToWorld(float x, float y)` for Core positions; the `GridPos` overload calls it.
 
 **Done when:** the files exist and hold no number other than neutral field defaults.
@@ -155,11 +160,12 @@ Serves 2c-AC7 and AC13. Code only; after T2c-4. Mechanical changes only; the new
 - `BoardTests.cs`, `PathFollowerAllocationTests.cs`: replace `board.AddFollower()` by `new Enemy(board.Field, board.Spawn, stats)` plus `board.AddEnemy(enemy)`, and step `enemy.Follower` as before. Give `TryPlaceTower` any `TowerStats`.
 - `PathFollowerAllocationTests.cs`: drop the zero-allocation assertion for a successful placement (2c-AC13); keep those for a refusal, a removal, `Step` and `Restart`.
 - `PrototypeSceneTests.cs`: `EnemyAgent` becomes `EnemyView`, searched with inactive objects included.
+- `ElementalTD.PlayModeTests.asmdef`: add the `ElementalTD.Presentation` reference, which `EnemyView` needs.
 
 **Done when:** on an APFS clone a batch EditMode run compiles every assembly, and the EditMode suite passes.
 
 ### T2c-6 – Assets and scene wiring
-Serves 2c-AC5, AC6, AC8 and AC9. Editor open, after the hand-over; after T2c-5.
+Serves 2c-AC5, AC6, AC8 and AC9. Editor open, after the hand-over and the copy-back.
 
 Through `unity command`, each asset with its `.meta` and no collider on any primitive:
 - `Data/Assets/Tower_Prototype.asset` with the values of 2c-AC8; `maxHealth` 100 on `Enemy_Prototype.asset`.
@@ -171,13 +177,13 @@ Through `unity command`, each asset with its `.meta` and no collider on any prim
   - Assign `FillPivot` to `healthFill`.
 - `Prototype.unity`: add an object `Combat View` with `CombatView` (bootstrap, both prefabs, pre-warm 16); set `reentryDelaySeconds` to 1 on the bootstrap and `tower` to `Tower_Prototype` on the input; save the scene.
 
-**Done when:** clean compile with an empty console; in Play, towers shoot the enemy in range, the bar shrinks, the enemy vanishes at 0 and is back at the spawn a second later with a full bar; 2b's placement, removal, messages and hover work as before; everything is saved.
+**Done when:** the asset part of T2c-7 is in, because `BoardView` builds nothing without the disc prefab; clean compile with an empty console; in Play, towers shoot the enemy in range, the bar shrinks, the enemy vanishes at 0 and is back at the spawn a second later with a full bar; 2b's placement, removal, messages and hover work as before; everything is saved.
 
 ### T2c-7 – Range disc (droppable)
 Serves 2c-AC14 only. Dropping it removes this task and that criterion, and touches nothing else.
 
 - Code only, with order 1: `BoardView.cs` gets a serialized `rangeDiscPrefab` and keeps one instance named `RangeDisc`. It scales it on x and z once, by the range of `placementInput.Tower` times the cell size, and moves and toggles it together with the hover.
-- Editor open, at the end of T2c-6: `Materials/RangeDisc` (URP Unlit, transparent, alpha about 0.15); `Prefabs/RangeDisc.prefab`, a root with a child flat cylinder of radius 1 just above the tiles; assign it on `Board View`; save.
+- Editor open, inside T2c-6 and before its Play check: `Materials/RangeDisc` (URP Unlit, transparent, alpha about 0.15); `Prefabs/RangeDisc.prefab`, a root with a child flat cylinder of radius 1 just above the tiles; assign it on `Board View`; save.
 
 **Done when:** in Play the disc follows the hover, reaches 2.5 cells from the cell centre and hides off the grid.
 
@@ -193,12 +199,19 @@ While the interactive editor is open, run on an APFS clone (`docs/unity-cli-note
 - **2c-AC1:** an enemy exactly at the range is shot, and one just beyond is not; a tower behind a wall shoots. A tower placed next to a waiting enemy fires on the first tick. Over 60 s with a target always in range, 1.5 shots/s gives 90 shots, give or take one.
 - **2c-AC2:** with two enemies in range, the target is the one nearer the exit, including when they share a cell and differ only in progress; on an exact tie, the first to enter.
 - **2c-AC3:** a projectile starts on the tower's cell, gets closer every tick and hits; the health drops by exactly the damage, once. A second projectile in flight when the first one kills vanishes, and the enemy re-enters with full health. After `TryRemoveTower`, that tower's projectile still hits.
+- **2c-AC3, re-entry delay 0:** a slow shot fired earlier is still in flight when a later shot kills. The enemy is back on the spawn on the next tick, the old shot is gone, and the health stays full until the enemy is in range again.
 - **2c-AC4:** at health 0 and on arrival, `EnemyCount` is 0 and `IsOnBoard` is false; a cell the enemy stood on can be built on. With a delay of 1 s, 60 ticks later (give or take one) the enemy is on the spawn with `Health == MaxHealth`. A tower placed on the old route during the gap is respected on re-entry.
 - **2c-AC7:** the 2b `Board` suite passes after T2c-5. `TowerPlaced` and `TowerRemoved` fire once per change, after the change, and never on a refusal.
 - **2c-AC9, named as a provisional design-target check to retune with the `balance-designer`:** load the three prototype assets. For every free cell where the placement is accepted, place one tower and tick until the enemy leaves: its `Health` is above 0. With towers on (6,6) and (11,2), it leaves with `Health` at 0 or below.
 - **2c-AC10:** two battles given the same placements at the same ticks have identical health, positions and projectile counts after every tick, for a few thousand ticks.
 - **2c-AC12:** the Core asmdef and source tests still pass; no source file under `Gameplay/` contains `Instantiate`.
 - **2c-AC13:** after a warm-up that covers a shot, a death and a re-entry, `Is.Not.AllocatingGCMemory` over a few hundred ticks that cover them again.
+- **2c-AC16**, on the prototype layout unless said otherwise:
+  - Straight ahead on a tie: in an open 5 x 5 with the exit on (4,4) and a wall on (1,0), a follower from (0,0) goes to (0,1) and then on to (0,2), not to (1,1).
+  - No last move: a follower restarted on (0,1) of that field heads for (1,1), the first in the fixed order.
+  - A turn rather than back on a tie, with the tower placed while the follower is heading for the corner cell: arriving at (4,4) with a tower on (4,6) or on (4,7), it goes on to (4,5); at (9,7) with a tower on (9,3), on to (9,6); at (15,1) with a tower on (15,3), on to (15,2).
+  - Back only when strictly shortest: with the tower on (4,5), (9,6) or (15,2) instead, it returns to the cell it came from.
+  - The default route is unchanged: 27 steps through (4,4), (4,7), (9,7), (9,1) and (15,1). The 2b-AC5 fuzz still passes.
 - **Data:** `ToStats()` returns the asset's values; `CellToWorld(x, y)` agrees with the `GridPos` overload.
 
 **PlayMode**, in `Prototype.unity`, at a raised `timeScale`:
@@ -219,7 +232,7 @@ While the interactive editor is open, run on an APFS clone (`docs/unity-cli-note
 - The browser console shows no error.
 
 ## Risks
-- **Eduardo's editor during order 1.** See Editor sequencing.
+- **Copy-back.** A scene, prefab or asset copied from the clone would overwrite Eduardo's work; the dry run in Editor sequencing is the guard.
 - **Test churn.** 2c changes the API under 2b's suite; T2c-5 lists the changes, and Stage 5 must rerun all of it.
 - **Stray colliders.** Primitives created in the editor arrive with a collider, which fails an existing test.
 - **Projectile slower than its target.** It would trail the enemy until the enemy leaves. The data keeps projectile speed far above enemy speed; nothing enforces it.
