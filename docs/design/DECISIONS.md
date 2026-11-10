@@ -42,8 +42,16 @@
 - **Disoriented** (Lightning): the enemy stops and spins in place. Afterwards it is immune for a while, and on bosses the duration is shorter.
 
 ## Next steps
-- [ ] Define the scope of the minimum prototype (grid, pathfinding, one wave, two towers, modifiers).
-- [ ] First tech-lead ADR: folder structure, asmdefs and layers.
+
+### Prototype slices
+Each slice ends in something Eduardo can see or play.
+- [ ] **Slice 1:** a grid and one enemy crossing it with pathfinding. Includes the first ADR (folder structure, asmdefs and layers), limited to what this slice needs.
+- [ ] **Slice 2:** one tower that shoots and kills. Then set up a WebGL build on a private itch.io page, rebuilt after every slice.
+- [ ] **Slice 3:** waves and gold.
+- [ ] **Slice 4:** two elements, with x2 and x0.25 damage.
+- [ ] **Slice 5:** level up through XP and pick one perk.
+
+### After the prototype
 - [ ] Define the 12 remaining hybrids and their states.
 - [ ] List of perks, starting heroes and scenarios.
 - [ ] Initial balance values: resistances, durations and XP curve.
@@ -51,5 +59,8 @@
 ### Later phase: Feedback pipeline (after the base game)
 - [ ] **In-game capture:** a key opens a quick form that automatically saves the screenshot, logs, FPS and run state.
 - [ ] **Backlog:** each report becomes a GitHub issue, classified as bug, improvement, performance or content.
-- [ ] **Automatic non-production pipeline**, to try with LangGraph: triage, planning, implementation, tests and a test build on a private itch.io page.
+- [ ] **Automatic non-production pipeline**, to try with LangGraph: triage, planning, implementation, tests and an automatic build on the private itch.io page.
 - [ ] **Promotion to production** (the public game) only after Eduardo validates.
+
+## Parking lot
+Ideas raised mid-slice, one line each. Review them when a slice closes.
