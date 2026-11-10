@@ -1,0 +1,55 @@
+# Elemental TD – Design decisions (source of truth)
+
+> Closed decisions and status only, no discussion. The Functional Brain updates this file when a topic closes.
+
+## Platforms and style
+- 3D with a top-down camera, in a stylised low-poly look (reference: Bad North).
+- WebGL and desktop on equal footing. The first milestone is a free WebGL demo on itch.io, to validate the game.
+- Assets: free CC0 packs (Kenney, KayKit) for the prototype and the demo. Synty POLYGON only if the demo is well received.
+
+## Core
+- A single modifier system over attributes. Targets: tower, element, hero and global (gold, XP, luck, number of perks, enemies per wave).
+- Perks on level-up, through XP: three options, pick one, and the game pauses during the choice.
+- Controlled randomness in perks: the player picks the starting element, the draw is weighted towards elements already owned, and the first levels always show at least one option that counters the scenario.
+- Luck: 0 is a pure draw. More luck means higher rarity, more options and more elements that are strong against the scenario.
+- Automatic waves on a timer, 5 to 20 s apart, with no manual pause. The screen always shows the next wave, with its enemy and element.
+- Map: an open grid where the player builds a maze. There is pathfinding, and blocking the path completely is forbidden. Flyers go in a straight line.
+- Economy: gold per kill and interest at the start of each wave, with a cap that rises through talents.
+- Heroes: data plus reusable abilities (tank, sorcerer, support). They fight on their own and can be repositioned.
+- Talents between runs: trees per tower, per hero and for economy/luck. They are permanent modifiers saved in the profile.
+- Enemies: data plus behaviours (fly, regenerate, turn invisible, split).
+- Scenario: defines a subset of enemy elements, shown in the menu and on pause.
+- 3D boss: phase 2, not essential. It only goes ahead after the demo validates the game.
+
+## Elemental system
+- Base elements (6): **Fire, Water, Earth, Air, Light, Shadow**.
+- Main cycle: Water > Fire > Air > Earth > Water. Light and Shadow are strong against each other.
+  - Damage is **x2** against the weak element and **x0.25** against the strong one.
+- Secondary resistances (damage **x0.75**): Earth resists Fire, Fire resists Shadow, Air resists Light and Shadow resists Earth.
+- Immunity to the own element is absolute and nothing breaks it, not even Cursed.
+- Hybrids: there are 15 combinations of two elements, and each base element takes part in five. Some three-element hybrids appear late in the run, as rares.
+- First batch of hybrids, with each base element appearing once:
+  - **Nature** = Earth + Water
+  - **Lightning** = Air + Light
+  - **Hellfire** = Fire + Shadow
+  - **Poison** (Water + Shadow) waits for the next batch.
+
+## States
+- **Burning** (Fire): constant damage over a short duration.
+- **Cursed** (Hellfire): while the target burns, its resistances are halved (x0.25 becomes about x0.62 and x0.75 about x0.87).
+- **Poisoned** (Poison): starts with low damage and keeps rising, lasts longer than Burning and deals heavy damage at the end. Strong against bosses and slow enemies.
+- **Slowed** (Nature): reduces speed and has synergy with Poison.
+- **Disoriented** (Lightning): the enemy stops and spins in place. Afterwards it is immune for a while, and on bosses the duration is shorter.
+
+## Next steps
+- [ ] Define the scope of the minimum prototype (grid, pathfinding, one wave, two towers, modifiers).
+- [ ] First tech-lead ADR: folder structure, asmdefs and layers.
+- [ ] Define the 12 remaining hybrids and their states.
+- [ ] List of perks, starting heroes and scenarios.
+- [ ] Initial balance values: resistances, durations and XP curve.
+
+### Later phase: Feedback pipeline (after the base game)
+- [ ] **In-game capture:** a key opens a quick form that automatically saves the screenshot, logs, FPS and run state.
+- [ ] **Backlog:** each report becomes a GitHub issue, classified as bug, improvement, performance or content.
+- [ ] **Automatic non-production pipeline**, to try with LangGraph: triage, planning, implementation, tests and a test build on a private itch.io page.
+- [ ] **Promotion to production** (the public game) only after Eduardo validates.
