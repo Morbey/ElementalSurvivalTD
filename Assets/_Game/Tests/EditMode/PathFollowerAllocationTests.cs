@@ -29,24 +29,27 @@ namespace ElementalTD.Core.Tests
         }
 
         [Test]
-        public void S2b_AC10_Board_Place_Refuse_Remove_Step_And_Restart_Allocate_Nothing_After_Warmup()
+        public void S2b_AC10_Board_Refuse_Remove_Step_And_Restart_Allocate_Nothing_After_Warmup()
         {
             var board = new Board(new GridMap(16, 9, TestMaps.PrototypeBlocked()), TestMaps.Spawn, TestMaps.Exit);
             var a = new GridPos(2, 2);
             var c1 = new GridPos(5, 7);
             var c2 = new GridPos(5, 8);
-            PathFollower follower = board.AddFollower();
+            var enemy = new Enemy(board.Field, board.Spawn, new EnemyStats(2f, 100f));
+            board.AddEnemy(enemy);
+            PathFollower follower = enemy.Follower;
+            var stats = new TowerStats(2.5f, 10f, 1.5f, 10f);
 
             // Warm-up: every path once.
-            board.TryPlaceTower(a); board.TryRemoveTower(a);
-            board.TryPlaceTower(c1); board.TryPlaceTower(c2); board.TryRemoveTower(c1);
+            board.TryPlaceTower(a, stats); board.TryRemoveTower(a);
+            board.TryPlaceTower(c1, stats); board.TryPlaceTower(c2, stats); board.TryRemoveTower(c1);
             follower.Step(0.016f, 2f); follower.Restart(TestMaps.Spawn);
 
-            Assert.That(() => { board.TryPlaceTower(a); }, Is.Not.AllocatingGCMemory());            // placed
+            board.TryPlaceTower(a, stats); // a successful placement may allocate one Core tower object (2c-AC13)
             Assert.That(() => { board.TryRemoveTower(a); }, Is.Not.AllocatingGCMemory());           // removed
-            board.TryPlaceTower(c1);
-            Assert.That(() => { board.TryPlaceTower(c2); }, Is.Not.AllocatingGCMemory());           // refused, reverted
-            Assert.That(() => { board.TryPlaceTower(TestMaps.Spawn); }, Is.Not.AllocatingGCMemory()); // refused early
+            board.TryPlaceTower(c1, stats);
+            Assert.That(() => { board.TryPlaceTower(c2, stats); }, Is.Not.AllocatingGCMemory());           // refused, reverted
+            Assert.That(() => { board.TryPlaceTower(TestMaps.Spawn, stats); }, Is.Not.AllocatingGCMemory()); // refused early
             Assert.That(() => { follower.Step(0.016f, 2f); }, Is.Not.AllocatingGCMemory());
             Assert.That(() => { follower.Restart(TestMaps.Spawn); }, Is.Not.AllocatingGCMemory());
         }

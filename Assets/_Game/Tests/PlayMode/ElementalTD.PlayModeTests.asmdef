@@ -6,7 +6,8 @@
         "UnityEditor.TestRunner",
         "ElementalTD.Core",
         "ElementalTD.Data",
-        "ElementalTD.Gameplay"
+        "ElementalTD.Gameplay",
+        "ElementalTD.Presentation"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

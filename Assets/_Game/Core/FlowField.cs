@@ -52,19 +52,42 @@ namespace ElementalTD.Core
 
         public int Distance(GridPos pos) => _distance[_map.Index(pos)];
 
-        public bool TryGetNext(GridPos from, out GridPos next)
+        /// <summary>Next cell with no last move: on a tie, the first neighbour in the order +x, -x, +y, -y.</summary>
+        public bool TryGetNext(GridPos from, out GridPos next) => TryGetNext(from, from, out next);
+
+        /// <summary>
+        /// Next cell for a follower that reached <paramref name="from"/> from the neighbour <paramref name="cameFrom"/>.
+        /// Among the neighbours with the lowest distance it prefers straight ahead, then any but the cell it just left
+        /// in the order +x, -x, +y, -y, and goes back only when nothing else is as short.
+        /// Passing <paramref name="from"/> as <paramref name="cameFrom"/> means no last move.
+        /// </summary>
+        public bool TryGetNext(GridPos from, GridPos cameFrom, out GridPos next)
         {
             next = from;
             int current = Distance(from);
             if (current == 0 || current == Unreachable) return false;
 
             int best = current;
-            // Strict "<" keeps the first neighbour on a tie: +x, -x, +y, -y.
-            Consider(new GridPos(from.X + 1, from.Y), ref best, ref next);
-            Consider(new GridPos(from.X - 1, from.Y), ref best, ref next);
-            Consider(new GridPos(from.X, from.Y + 1), ref best, ref next);
-            Consider(new GridPos(from.X, from.Y - 1), ref best, ref next);
-            return best < current;
+            LowerBest(new GridPos(from.X + 1, from.Y), ref best);
+            LowerBest(new GridPos(from.X - 1, from.Y), ref best);
+            LowerBest(new GridPos(from.X, from.Y + 1), ref best);
+            LowerBest(new GridPos(from.X, from.Y - 1), ref best);
+            if (best >= current) return false;
+
+            var ahead = new GridPos(2 * from.X - cameFrom.X, 2 * from.Y - cameFrom.Y);
+            if (ahead != from && HasDistance(ahead, best))
+            {
+                next = ahead;
+                return true;
+            }
+
+            bool backIsBest = false;
+            if (Prefer(new GridPos(from.X + 1, from.Y), cameFrom, best, ref next, ref backIsBest)) return true;
+            if (Prefer(new GridPos(from.X - 1, from.Y), cameFrom, best, ref next, ref backIsBest)) return true;
+            if (Prefer(new GridPos(from.X, from.Y + 1), cameFrom, best, ref next, ref backIsBest)) return true;
+            if (Prefer(new GridPos(from.X, from.Y - 1), cameFrom, best, ref next, ref backIsBest)) return true;
+            next = backIsBest ? cameFrom : from;
+            return backIsBest;
         }
 
         private void Visit(int index, int distance, ref int tail)
@@ -75,15 +98,27 @@ namespace ElementalTD.Core
             _queue[tail++] = index;
         }
 
-        private void Consider(GridPos candidate, ref int best, ref GridPos next)
+        private void LowerBest(GridPos candidate, ref int best)
         {
             if (!_map.InBounds(candidate)) return;
             int d = _distance[_map.Index(candidate)];
-            if (d < best)
+            if (d < best) best = d;
+        }
+
+        private bool HasDistance(GridPos candidate, int distance) =>
+            _map.InBounds(candidate) && _distance[_map.Index(candidate)] == distance;
+
+        /// <summary>Takes the candidate if it is at the best distance and is not the cell just left.</summary>
+        private bool Prefer(GridPos candidate, GridPos cameFrom, int best, ref GridPos next, ref bool backIsBest)
+        {
+            if (!HasDistance(candidate, best)) return false;
+            if (candidate == cameFrom)
             {
-                best = d;
-                next = candidate;
+                backIsBest = true;
+                return false;
             }
+            next = candidate;
+            return true;
         }
     }
 }

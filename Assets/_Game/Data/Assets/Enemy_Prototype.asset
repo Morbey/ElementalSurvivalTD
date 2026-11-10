@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: Enemy_Prototype
   m_EditorClassIdentifier: ElementalTD.Data::ElementalTD.Data.EnemyDefinition
   speedCellsPerSecond: 2
+  maxHealth: 100

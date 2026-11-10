@@ -14,6 +14,9 @@ namespace ElementalTD.Core
         public float Progress { get; private set; }
         public bool HasArrived { get; private set; }
 
+        /// <summary>Cells left to the exit: the distance of <see cref="To"/> plus the unfinished part of the step; 0 on arrival.</summary>
+        public float DistanceToExit => HasArrived ? 0f : _field.Distance(To) + (1f - Progress);
+
         public PathFollower(FlowField field, GridPos start)
         {
             _field = field ?? throw new ArgumentNullException(nameof(field));
@@ -39,8 +42,9 @@ namespace ElementalTD.Core
             while (Progress >= 1f)
             {
                 Progress -= 1f;
+                GridPos left = From;
                 From = To;
-                if (_field.TryGetNext(From, out GridPos next))
+                if (_field.TryGetNext(From, left, out GridPos next))
                 {
                     To = next;
                 }

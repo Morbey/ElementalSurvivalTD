@@ -6,6 +6,15 @@ namespace ElementalTD.Core.Tests
 {
     public class BoardTests
     {
+        private static readonly TowerStats Stats = new TowerStats(2.5f, 10f, 1.5f, 10f);
+
+        private static Enemy AddEnemy(Board board)
+        {
+            var enemy = new Enemy(board.Field, board.Spawn, new EnemyStats(2f, 100f));
+            board.AddEnemy(enemy);
+            return enemy;
+        }
+
         private static Board PrototypeBoard()
         {
             return new Board(new GridMap(16, 9, TestMaps.PrototypeBlocked()), TestMaps.Spawn, TestMaps.Exit);
@@ -51,7 +60,7 @@ namespace ElementalTD.Core.Tests
             int[] before = Snapshot(board);
             var cell = new GridPos(5, 7); // the gap of wall A: closing it forces the detour through (5,8)
 
-            Assert.AreEqual(PlacementResult.Placed, board.TryPlaceTower(cell));
+            Assert.AreEqual(PlacementResult.Placed, board.TryPlaceTower(cell, Stats));
             Assert.IsTrue(board.HasTower(cell));
             Assert.IsTrue(board.Map.IsBlocked(cell));
             Assert.AreEqual(29, board.Field.Distance(TestMaps.Spawn)); // up to (5,8) and back: 2 extra cells
@@ -85,11 +94,11 @@ namespace ElementalTD.Core.Tests
         public void S2b_AC3_Refusal_Reason_And_Nothing_Changes(string which, PlacementResult expected)
         {
             Board board = PrototypeBoard();
-            PathFollower f = board.AddFollower();
+            PathFollower f = AddEnemy(board).Follower;
             f.Step(0.5f, 2f); // From (1,4), To (2,4)
             Assert.AreEqual(new GridPos(1, 4), f.From);
             Assert.AreEqual(new GridPos(2, 4), f.To);
-            board.TryPlaceTower(new GridPos(3, 2));
+            board.TryPlaceTower(new GridPos(3, 2), Stats);
 
             GridPos cell;
             switch (which)
@@ -104,7 +113,7 @@ namespace ElementalTD.Core.Tests
             }
 
             int[] before = Snapshot(board);
-            Assert.AreEqual(expected, board.TryPlaceTower(cell));
+            Assert.AreEqual(expected, board.TryPlaceTower(cell, Stats));
             CollectionAssert.AreEqual(before, Snapshot(board));
         }
 
@@ -112,9 +121,9 @@ namespace ElementalTD.Core.Tests
         public void S2b_AC3_Prototype_Layout_Tower_On_5_7_Placed_Then_5_8_WouldBlockPath_And_Nothing_Changes()
         {
             Board board = PrototypeBoard();
-            Assert.AreEqual(PlacementResult.Placed, board.TryPlaceTower(new GridPos(5, 7)));
+            Assert.AreEqual(PlacementResult.Placed, board.TryPlaceTower(new GridPos(5, 7), Stats));
             int[] before = Snapshot(board);
-            Assert.AreEqual(PlacementResult.WouldBlockPath, board.TryPlaceTower(new GridPos(5, 8)));
+            Assert.AreEqual(PlacementResult.WouldBlockPath, board.TryPlaceTower(new GridPos(5, 8), Stats));
             CollectionAssert.AreEqual(before, Snapshot(board));
             Assert.IsTrue(board.Field.IsReachable(TestMaps.Spawn));
         }
@@ -123,16 +132,16 @@ namespace ElementalTD.Core.Tests
         public void S2b_AC3_Two_Corridors_Cell_Ahead_Of_Follower_WouldBlockPath_Although_Spawn_Still_Reaches_Exit()
         {
             Board board = TwoCorridorBoard();
-            PathFollower f = board.AddFollower();
+            PathFollower f = AddEnemy(board).Follower;
             StepUntil(f, p => p.From == new GridPos(2, 4));
             Assert.AreEqual(new GridPos(3, 4), f.To);
 
-            Assert.AreEqual(PlacementResult.Placed, board.TryPlaceTower(new GridPos(1, 4))); // close the entrance behind it
+            Assert.AreEqual(PlacementResult.Placed, board.TryPlaceTower(new GridPos(1, 4), Stats)); // close the entrance behind it
             Assert.IsTrue(board.Field.IsReachable(board.Spawn), "spawn must still reach the exit by the other corridor");
             Assert.IsTrue(board.Field.IsReachable(f.To));
 
             int[] before = Snapshot(board);
-            Assert.AreEqual(PlacementResult.WouldBlockPath, board.TryPlaceTower(new GridPos(4, 4)));
+            Assert.AreEqual(PlacementResult.WouldBlockPath, board.TryPlaceTower(new GridPos(4, 4), Stats));
             CollectionAssert.AreEqual(before, Snapshot(board));
             Assert.IsTrue(board.Field.IsReachable(board.Spawn));
         }
@@ -141,20 +150,20 @@ namespace ElementalTD.Core.Tests
         public void S2b_AC3_Priority_SpawnOrExit_Beats_EnemyInTheWay()
         {
             Board board = PrototypeBoard();
-            PathFollower f = board.AddFollower(); // From is the spawn
+            PathFollower f = AddEnemy(board).Follower; // From is the spawn
             Assert.AreEqual(board.Spawn, f.From);
-            Assert.AreEqual(PlacementResult.SpawnOrExit, board.TryPlaceTower(board.Spawn));
+            Assert.AreEqual(PlacementResult.SpawnOrExit, board.TryPlaceTower(board.Spawn, Stats));
         }
 
         [Test]
         public void S2b_AC3_Priority_EnemyInTheWay_Beats_WouldBlockPath()
         {
             Board board = PrototypeBoard();
-            Assert.AreEqual(PlacementResult.Placed, board.TryPlaceTower(new GridPos(5, 7)));
-            PathFollower f = board.AddFollower();
+            Assert.AreEqual(PlacementResult.Placed, board.TryPlaceTower(new GridPos(5, 7), Stats));
+            PathFollower f = AddEnemy(board).Follower;
             StepUntil(f, p => p.To == new GridPos(5, 8));
             // Blocking (5,8) would also cut the path, but the follower is on it.
-            Assert.AreEqual(PlacementResult.EnemyInTheWay, board.TryPlaceTower(new GridPos(5, 8)));
+            Assert.AreEqual(PlacementResult.EnemyInTheWay, board.TryPlaceTower(new GridPos(5, 8), Stats));
         }
 
         [TestCase(1)]
@@ -166,7 +175,7 @@ namespace ElementalTD.Core.Tests
         {
             var rnd = new Random(seed);
             Board board = PrototypeBoard();
-            PathFollower[] followers = { board.AddFollower(), board.AddFollower() };
+            PathFollower[] followers = { AddEnemy(board).Follower, AddEnemy(board).Follower };
 
             for (int i = 0; i < 3000; i++)
             {
@@ -175,7 +184,7 @@ namespace ElementalTD.Core.Tests
                     ? new GridPos(near.To.X + rnd.Next(-2, 3), near.To.Y + rnd.Next(-2, 3))
                     : new GridPos(rnd.Next(-1, 17), rnd.Next(-1, 10));
                 if (board.HasTower(cell)) { if (rnd.Next(2) == 0) board.TryRemoveTower(cell); }
-                else board.TryPlaceTower(cell);
+                else board.TryPlaceTower(cell, Stats);
 
                 for (int k = 0; k < followers.Length; k++)
                 {

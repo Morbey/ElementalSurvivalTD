@@ -119,5 +119,39 @@ namespace ElementalTD.Core.Tests
             }
             finally { Object.DestroyImmediate(def); }
         }
+
+        [Test]
+        public void S2c_AC8_ToStats_Returns_The_Definition_Values()
+        {
+            var tower = ScriptableObject.CreateInstance<TowerDefinition>();
+            var enemy = ScriptableObject.CreateInstance<EnemyDefinition>();
+            try
+            {
+                JsonUtility.FromJsonOverwrite("{\"rangeCells\":2.5,\"damage\":10,\"shotsPerSecond\":1.5,\"projectileSpeedCellsPerSecond\":10}", tower);
+                JsonUtility.FromJsonOverwrite("{\"speedCellsPerSecond\":2,\"maxHealth\":100}", enemy);
+                TowerStats t = tower.ToStats();
+                EnemyStats e = enemy.ToStats();
+                Assert.AreEqual(new[] { 2.5f, 10f, 1.5f, 10f }, new[] { t.Range, t.Damage, t.ShotsPerSecond, t.ProjectileSpeed });
+                Assert.AreEqual(new[] { 2f, 100f }, new[] { e.Speed, e.MaxHealth });
+            }
+            finally
+            {
+                Object.DestroyImmediate(tower);
+                Object.DestroyImmediate(enemy);
+            }
+        }
+
+        [Test]
+        public void S2c_AC8_CellToWorld_Float_Overload_Agrees_With_The_GridPos_Overload()
+        {
+            MapDefinition def = Make("{\"width\":7,\"height\":4,\"cellSize\":2,\"spawn\":{\"x\":1,\"y\":2},\"exit\":{\"x\":6,\"y\":3},\"blockedCells\":[]}");
+            try
+            {
+                Assert.AreEqual(def.CellToWorld(new GridPos(3, 2)), def.CellToWorld(3f, 2f));
+                Assert.AreEqual(new Vector3(7f, 0f, 5f), def.CellToWorld(3f, 2f));
+                Assert.AreEqual(new Vector3(8f, 0f, 4f), def.CellToWorld(3.5f, 1.5f), "between cell centres");
+            }
+            finally { Object.DestroyImmediate(def); }
+        }
     }
 }

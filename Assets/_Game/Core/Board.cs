@@ -4,18 +4,31 @@ using System.Collections.Generic;
 namespace ElementalTD.Core
 {
     /// <summary>
-    /// Owns the map, the shared flow field, the towers and the living followers, and holds the placement rule:
-    /// a tower may never leave the spawn or any follower without a path to the exit.
+    /// What is on the board: the map, the shared flow field, the towers and the enemies on it.
+    /// Holds the placement rule: a tower may never leave the spawn or any enemy on the board without a path to the exit.
     /// </summary>
     public sealed class Board
     {
-        private readonly bool[] _tower;
-        private readonly List<PathFollower> _followers = new List<PathFollower>();
+        private readonly Tower[] _towerAt;
+        private readonly List<Tower> _towers = new List<Tower>();
+        private readonly List<Enemy> _enemies = new List<Enemy>();
+
+        /// <summary>Raised after the board has changed.</summary>
+        public event Action<GridPos> TowerPlaced;
+        /// <summary>Raised after the board has changed.</summary>
+        public event Action<GridPos> TowerRemoved;
 
         public GridMap Map { get; }
         public FlowField Field { get; }
         public GridPos Spawn { get; }
         public GridPos Exit { get; }
+
+        public int TowerCount => _towers.Count;
+        /// <summary>In placement order.</summary>
+        public Tower TowerAt(int index) => _towers[index];
+        public int EnemyCount => _enemies.Count;
+        /// <summary>In entry order.</summary>
+        public Enemy EnemyAt(int index) => _enemies[index];
 
         public Board(GridMap map, GridPos spawn, GridPos exit)
         {
@@ -25,26 +38,19 @@ namespace ElementalTD.Core
 
             Spawn = spawn;
             Exit = exit;
-            _tower = new bool[map.CellCount];
+            _towerAt = new Tower[map.CellCount];
             Field = new FlowField(map);
             Field.Compute(exit);
         }
 
-        public bool HasTower(GridPos cell) => Map.InBounds(cell) && _tower[Map.Index(cell)];
+        public bool HasTower(GridPos cell) => Map.InBounds(cell) && _towerAt[Map.Index(cell)] != null;
 
-        public PathFollower AddFollower()
-        {
-            var follower = new PathFollower(Field, Spawn);
-            _followers.Add(follower);
-            return follower;
-        }
-
-        public PlacementResult TryPlaceTower(GridPos cell)
+        public PlacementResult TryPlaceTower(GridPos cell, in TowerStats stats)
         {
             if (!Map.InBounds(cell)) return PlacementResult.OutOfBounds;
             if (cell == Spawn || cell == Exit) return PlacementResult.SpawnOrExit;
             if (Map.IsBlocked(cell)) return PlacementResult.CellBlocked;
-            if (IsUnderFollower(cell)) return PlacementResult.EnemyInTheWay;
+            if (IsUnderEnemy(cell)) return PlacementResult.EnemyInTheWay;
 
             Map.SetBlocked(cell, true);
             Field.Compute(Exit);
@@ -55,7 +61,10 @@ namespace ElementalTD.Core
                 return PlacementResult.WouldBlockPath;
             }
 
-            _tower[Map.Index(cell)] = true;
+            var tower = new Tower(cell, stats);
+            _towerAt[Map.Index(cell)] = tower;
+            _towers.Add(tower);
+            TowerPlaced?.Invoke(cell);
             return PlacementResult.Placed;
         }
 
@@ -63,18 +72,38 @@ namespace ElementalTD.Core
         {
             if (!HasTower(cell)) return false;
 
-            _tower[Map.Index(cell)] = false;
+            int index = Map.Index(cell);
+            _towers.RemoveAt(IndexOf(_towers, _towerAt[index]));
+            _towerAt[index] = null;
             Map.SetBlocked(cell, false);
             // Removal only opens cells, so no path can break.
             Field.Compute(Exit);
+            TowerRemoved?.Invoke(cell);
             return true;
         }
 
-        private bool IsUnderFollower(GridPos cell)
+        /// <summary>The enemy enters at the spawn with full health; its previous position is its position.</summary>
+        public void AddEnemy(Enemy enemy)
         {
-            for (int i = 0; i < _followers.Count; i++)
+            if (enemy == null) throw new ArgumentNullException(nameof(enemy));
+            if (enemy.IsOnBoard) throw new InvalidOperationException("The enemy is already on the board.");
+            enemy.Enter(Spawn);
+            _enemies.Add(enemy);
+        }
+
+        public void RemoveEnemy(Enemy enemy)
+        {
+            int index = IndexOf(_enemies, enemy);
+            if (index < 0) return;
+            _enemies.RemoveAt(index);
+            enemy.IsOnBoard = false;
+        }
+
+        private bool IsUnderEnemy(GridPos cell)
+        {
+            for (int i = 0; i < _enemies.Count; i++)
             {
-                PathFollower f = _followers[i];
+                PathFollower f = _enemies[i].Follower;
                 if (f.From == cell || f.To == cell) return true;
             }
             return false;
@@ -84,9 +113,16 @@ namespace ElementalTD.Core
         {
             if (!Field.IsReachable(Spawn)) return false;
             // A follower re-reads the field only at To, so To is the cell that must stay connected.
-            for (int i = 0; i < _followers.Count; i++)
-                if (!Field.IsReachable(_followers[i].To)) return false;
+            for (int i = 0; i < _enemies.Count; i++)
+                if (!Field.IsReachable(_enemies[i].Follower.To)) return false;
             return true;
+        }
+
+        private static int IndexOf<T>(List<T> list, T item) where T : class
+        {
+            for (int i = 0; i < list.Count; i++)
+                if (ReferenceEquals(list[i], item)) return i;
+            return -1;
         }
     }
 }

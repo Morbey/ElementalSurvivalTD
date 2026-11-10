@@ -29,9 +29,12 @@ namespace ElementalTD.Data
         }
 
         /// <summary>World position of a cell's centre on the y = 0 plane; grid Y maps to world Z.</summary>
-        public Vector3 CellToWorld(GridPos cell)
+        public Vector3 CellToWorld(GridPos cell) => CellToWorld(cell.X, cell.Y);
+
+        /// <summary>World position of a Core position in cell coordinates (a cell's centre is its x, y), on the y = 0 plane.</summary>
+        public Vector3 CellToWorld(float x, float y)
         {
-            return new Vector3((cell.X + 0.5f) * cellSize, 0f, (cell.Y + 0.5f) * cellSize);
+            return new Vector3((x + 0.5f) * cellSize, 0f, (y + 0.5f) * cellSize);
         }
 
         /// <summary>Cell containing a world point, by flooring x and z; may be out of bounds.</summary>

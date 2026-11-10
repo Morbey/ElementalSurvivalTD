@@ -1,5 +1,6 @@
 using System;
 using ElementalTD.Core;
+using ElementalTD.Data;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -13,16 +14,17 @@ namespace ElementalTD.Gameplay
     {
         [SerializeField] private PrototypeBootstrap bootstrap;
         [SerializeField] private Camera viewCamera;
+        [Tooltip("The tower a click places. While unassigned, nothing is picked.")]
+        [SerializeField] private TowerDefinition tower;
 
         private static readonly Plane Ground = new Plane(Vector3.up, Vector3.zero);
 
-        public event Action<GridPos> TowerPlaced;
-        public event Action<GridPos> TowerRemoved;
         /// <summary>Never raised for OutOfBounds.</summary>
         public event Action<PlacementResult> PlacementRefused;
 
         public bool HasHoverCell { get; private set; }
         public GridPos HoverCell { get; private set; }
+        public TowerDefinition Tower => tower;
 
         private void Update()
         {
@@ -47,19 +49,18 @@ namespace ElementalTD.Gameplay
             Board board = bootstrap.Board;
             if (board.HasTower(cell))
             {
-                if (board.TryRemoveTower(cell)) TowerRemoved?.Invoke(cell);
+                board.TryRemoveTower(cell);
                 return;
             }
 
-            PlacementResult result = board.TryPlaceTower(cell);
-            if (result == PlacementResult.Placed) TowerPlaced?.Invoke(cell);
-            else PlacementRefused?.Invoke(result);
+            PlacementResult result = board.TryPlaceTower(cell, tower.ToStats());
+            if (result != PlacementResult.Placed) PlacementRefused?.Invoke(result);
         }
 
         private bool TryPick(Vector2 screenPosition, out GridPos cell)
         {
             cell = default;
-            if (bootstrap == null || bootstrap.Board == null || viewCamera == null) return false;
+            if (bootstrap == null || bootstrap.Board == null || viewCamera == null || tower == null) return false;
 
             Ray ray = viewCamera.ScreenPointToRay(screenPosition);
             if (!Ground.Raycast(ray, out float distance)) return false;

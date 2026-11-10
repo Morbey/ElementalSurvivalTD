@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace ElementalTD.Presentation
 {
-    /// <summary>Shows the board: the cell tiles, one visual per tower and the hover highlight.</summary>
+    /// <summary>Shows the board: the cell tiles, one visual per tower, the hover highlight and the range disc.</summary>
     public sealed class BoardView : MonoBehaviour
     {
         [SerializeField] private PrototypeBootstrap bootstrap;
@@ -23,27 +23,33 @@ namespace ElementalTD.Presentation
         [SerializeField] private GameObject towerPrefab;
         [Tooltip("Authored for a cell size of 1; its root is scaled by the map's cell size.")]
         [SerializeField] private GameObject hoverPrefab;
+        [Tooltip("A disc of radius 1 at a cell size of 1; scaled on x and z by the tower's range.")]
+        [SerializeField] private GameObject rangeDiscPrefab;
 
+        private Board _board;
         private MapDefinition _map;
         private GridMap _grid;
         private Transform _towerRoot;
         private GameObject[] _towers;
         private GameObject _hover;
         private Transform _hoverTransform;
+        private GameObject _rangeDisc;
+        private Transform _rangeDiscTransform;
 
         private void Start()
         {
             if (bootstrap == null || bootstrap.Board == null || placementInput == null || cellPrefab == null
                 || blockedMaterial == null || spawnMaterial == null || exitMaterial == null
-                || towerPrefab == null || hoverPrefab == null)
+                || towerPrefab == null || hoverPrefab == null || rangeDiscPrefab == null || placementInput.Tower == null)
             {
-                Debug.LogError("BoardView: assign every reference; the board must exist.", this);
+                Debug.LogError("BoardView: assign every reference, and a tower on the placement input; the board must exist.", this);
                 enabled = false;
                 return;
             }
 
+            _board = bootstrap.Board;
             _map = bootstrap.Map;
-            _grid = bootstrap.Board.Map;
+            _grid = _board.Map;
             _towers = new GameObject[_grid.CellCount];
             _towerRoot = new GameObject("Towers").transform;
 
@@ -55,30 +61,46 @@ namespace ElementalTD.Presentation
             _hoverTransform.localScale = Vector3.one * _map.CellSize;
             _hover.SetActive(false);
 
-            placementInput.TowerPlaced += OnTowerPlaced;
-            placementInput.TowerRemoved += OnTowerRemoved;
+            _rangeDisc = Instantiate(rangeDiscPrefab);
+            _rangeDisc.name = "RangeDisc";
+            _rangeDiscTransform = _rangeDisc.transform;
+            float radius = placementInput.Tower.RangeCells * _map.CellSize;
+            _rangeDiscTransform.localScale = new Vector3(radius, _map.CellSize, radius);
+            _rangeDisc.SetActive(false);
+
+            _board.TowerPlaced += OnTowerPlaced;
+            _board.TowerRemoved += OnTowerRemoved;
         }
 
         private void OnDestroy()
         {
-            if (placementInput == null) return;
-            placementInput.TowerPlaced -= OnTowerPlaced;
-            placementInput.TowerRemoved -= OnTowerRemoved;
+            if (_board == null) return;
+            _board.TowerPlaced -= OnTowerPlaced;
+            _board.TowerRemoved -= OnTowerRemoved;
         }
 
         private void LateUpdate()
         {
             bool show = placementInput.HasHoverCell;
-            if (show) _hoverTransform.position = _map.CellToWorld(placementInput.HoverCell);
-            if (_hover.activeSelf != show) _hover.SetActive(show);
+            if (show)
+            {
+                Vector3 centre = _map.CellToWorld(placementInput.HoverCell);
+                _hoverTransform.position = centre;
+                _rangeDiscTransform.position = centre;
+            }
+            if (_hover.activeSelf != show)
+            {
+                _hover.SetActive(show);
+                _rangeDisc.SetActive(show);
+            }
         }
 
         private void BuildTiles()
         {
             var root = new GameObject("Grid").transform;
             var cellScale = Vector3.one * _map.CellSize;
-            GridPos spawn = bootstrap.Board.Spawn;
-            GridPos exit = bootstrap.Board.Exit;
+            GridPos spawn = _board.Spawn;
+            GridPos exit = _board.Exit;
 
             for (int y = 0; y < _grid.Height; y++)
             {
