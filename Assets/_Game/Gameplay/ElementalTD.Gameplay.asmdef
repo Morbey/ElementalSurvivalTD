@@ -3,7 +3,8 @@
     "rootNamespace": "ElementalTD.Gameplay",
     "references": [
         "ElementalTD.Core",
-        "ElementalTD.Data"
+        "ElementalTD.Data",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

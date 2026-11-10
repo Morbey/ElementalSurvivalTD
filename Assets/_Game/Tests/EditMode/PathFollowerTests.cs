@@ -110,5 +110,21 @@ namespace ElementalTD.Core.Tests
             frames++;
             Assert.That(frames * 0.01f, Is.EqualTo(13.5f).Within(0.03f));
         }
+
+        [Test]
+        public void S2b_AC6_Restart_Leaves_Follower_Equal_To_A_New_One()
+        {
+            FlowField field = TestMaps.PrototypeField(out _);
+            var used = new PathFollower(field, TestMaps.Spawn);
+            used.Step(100f, 2f);
+            Assert.IsTrue(used.HasArrived);
+            used.Restart(TestMaps.Spawn);
+            var fresh = new PathFollower(field, TestMaps.Spawn);
+            Assert.AreEqual(fresh.From, used.From);
+            Assert.AreEqual(fresh.To, used.To);
+            Assert.AreEqual(fresh.Progress, used.Progress);
+            Assert.AreEqual(fresh.HasArrived, used.HasArrived);
+            Assert.IsFalse(used.HasArrived);
+        }
     }
 }

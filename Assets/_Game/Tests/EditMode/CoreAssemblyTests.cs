@@ -33,5 +33,14 @@ namespace ElementalTD.Core.Tests
             foreach (string file in files)
                 StringAssert.DoesNotContain("UnityEngine", File.ReadAllText(file), file);
         }
+
+        [Test]
+        public void S2b_AC9_Gameplay_Asmdef_Does_Not_Reference_Presentation_And_Presentation_Asmdef_Exists()
+        {
+            string game = Path.GetFullPath(Path.Combine(Application.dataPath, "_Game"));
+            var gameplay = JsonUtility.FromJson<AsmdefData>(File.ReadAllText(Path.Combine(game, "Gameplay/ElementalTD.Gameplay.asmdef")));
+            CollectionAssert.DoesNotContain(gameplay.references, "ElementalTD.Presentation");
+            Assert.IsTrue(File.Exists(Path.Combine(game, "Presentation/ElementalTD.Presentation.asmdef")));
+        }
     }
 }

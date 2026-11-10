@@ -34,6 +34,12 @@ namespace ElementalTD.Data
             return new Vector3((cell.X + 0.5f) * cellSize, 0f, (cell.Y + 0.5f) * cellSize);
         }
 
+        /// <summary>Cell containing a world point, by flooring x and z; may be out of bounds.</summary>
+        public GridPos WorldToCell(Vector3 world)
+        {
+            return new GridPos(Mathf.FloorToInt(world.x / cellSize), Mathf.FloorToInt(world.z / cellSize));
+        }
+
         private void OnValidate()
         {
             width = Mathf.Max(1, width);

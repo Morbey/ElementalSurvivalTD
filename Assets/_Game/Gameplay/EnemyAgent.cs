@@ -9,14 +9,16 @@ namespace ElementalTD.Gameplay
     /// </summary>
     public sealed class EnemyAgent : MonoBehaviour
     {
+        private Board _board;
         private PathFollower _follower;
         private MapDefinition _map;
         private Transform _transform;
         private float _speed;
 
-        public void Init(PathFollower follower, float speedCellsPerSecond, MapDefinition map)
+        public void Init(Board board, float speedCellsPerSecond, MapDefinition map)
         {
-            _follower = follower;
+            _board = board;
+            _follower = board.AddFollower();
             _speed = speedCellsPerSecond;
             _map = map;
             _transform = transform;
@@ -27,13 +29,9 @@ namespace ElementalTD.Gameplay
         {
             if (_follower == null) return;
 
-            bool arrived = _follower.Step(Time.deltaTime, _speed);
+            // Prototype stand-in for waves (goes away in slice 3): the one enemy loops forever.
+            if (_follower.Step(Time.deltaTime, _speed)) _follower.Restart(_board.Spawn);
             SyncPosition();
-            if (arrived)
-            {
-                _follower = null;
-                Destroy(gameObject);
-            }
         }
 
         private void SyncPosition()

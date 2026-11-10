@@ -13,6 +13,8 @@ What the team has learned about driving this project with the `unity` CLI. Add a
 - `scene add_to_build` and `remove_from_build` change the list only in memory. Save it explicitly and check `ProjectSettings/EditorBuildSettings.asset` on disk.
 - `settings.player set` does not cover the WebGL player settings. Set them through `script eval` (`PlayerSettings.WebGL.…`), save, and check `ProjectSettings/ProjectSettings.asset`.
 - `asset copy` refuses a source outside `Assets/`. Use `AssetDatabase.CopyAsset` through `script eval`.
+- For multi-step asset or scene work, write a C# script outside `Assets/` and run `unity command script eval --file <path>`. In it, do not use `??` on `GetComponent` or `GameObject.Find` results: Unity's fake null defeats it.
+- Smoke-check a scene with `unity command editor.playmode start`, then `script eval` calls on the live objects, then `editor.playmode stop`; Play mode changes are discarded.
 - A malformed `unity command` writes "No command named …" errors to the editor console. Clear it (`unity command console clear`) before a clean-compile check.
 
 ## Builds
@@ -22,5 +24,6 @@ What the team has learned about driving this project with the `unity` CLI. Add a
 - The first build after a change of platform takes about two minutes; an unchanged rebuild is incremental and takes seconds.
 
 ## Tests
+- When the interactive editor is open and may be Eduardo's, do not close it: run the tests on an APFS clone. `cp -cR <project> <scratch>/clone`, then delete `clone/Temp`, `clone/Logs` and `clone/Library/EditorInstance.json`, and run `unity test <clone> …`. Fix tests in the real project, `rsync -a --delete <project>/Assets/ <clone>/Assets/`, and delete the clone at the end.
 - `unity test <project> --mode EditMode|PlayMode --report-format junit --output <path outside Assets/>`.
 - An asmdef with no scripts is not compiled and Unity warns about it.

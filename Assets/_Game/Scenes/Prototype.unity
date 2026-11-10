@@ -338,6 +338,75 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &1210909746
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1210909749}
+  - component: {fileID: 1210909748}
+  - component: {fileID: 1210909747}
+  m_Layer: 0
+  m_Name: Board View
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1210909747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1210909746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99ea9bd1cc6a34771901875635759253, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.BoardCameraFramer
+  bootstrap: {fileID: 1930703238}
+  viewCamera: {fileID: 362350127}
+  framePaddingCells: 0.5
+  cameraHeight: 20
+--- !u!114 &1210909748
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1210909746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86162bac680154c52b797a00262fa2c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.BoardView
+  bootstrap: {fileID: 1930703238}
+  placementInput: {fileID: 1930703239}
+  cellPrefab: {fileID: 3528757962447879619, guid: 4c92ad963b2b34014aa3d07a5a8a7af8, type: 3}
+  blockedMaterial: {fileID: 2100000, guid: 401e9a91767da4f9483d7aa231f89767, type: 2}
+  spawnMaterial: {fileID: 2100000, guid: f10d0fd97e498410b89d74085278b79f, type: 2}
+  exitMaterial: {fileID: 2100000, guid: daaa4028e44bd49babe5f93ed442cc60, type: 2}
+  towerPrefab: {fileID: 5695598947140489440, guid: 55c445d61b3fb43f69320f3a25c09c06, type: 3}
+  hoverPrefab: {fileID: 1718156874206481013, guid: b2ac3ccce47f3437a99b2dc5a6382254, type: 3}
+--- !u!4 &1210909749
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1210909746}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1930703236
 GameObject:
   m_ObjectHideFlags: 0
@@ -348,6 +417,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1930703237}
   - component: {fileID: 1930703238}
+  - component: {fileID: 1930703239}
   m_Layer: 0
   m_Name: Bootstrap
   m_TagString: Untagged
@@ -384,14 +454,96 @@ MonoBehaviour:
   m_EditorClassIdentifier: ElementalTD.Gameplay::ElementalTD.Gameplay.PrototypeBootstrap
   map: {fileID: 11400000, guid: 9a2f4aaf9b0ff453ca125385fd2f9dd9, type: 2}
   enemy: {fileID: 11400000, guid: 1fa08f7a9bf1841548026b203ab65fdf, type: 2}
-  viewCamera: {fileID: 362350127}
-  cellPrefab: {fileID: 3528757962447879619, guid: 4c92ad963b2b34014aa3d07a5a8a7af8, type: 3}
-  blockedMaterial: {fileID: 2100000, guid: 401e9a91767da4f9483d7aa231f89767, type: 2}
-  spawnMaterial: {fileID: 2100000, guid: f10d0fd97e498410b89d74085278b79f, type: 2}
-  exitMaterial: {fileID: 2100000, guid: daaa4028e44bd49babe5f93ed442cc60, type: 2}
   enemyPrefab: {fileID: 3349037151500947416, guid: 2f22a8e21e83c4b29b38fe7efec2e4de, type: 3}
-  framePaddingCells: 0.5
-  cameraHeight: 20
+--- !u!114 &1930703239
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1930703236}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e3a9dcf45f6d4ddc8a1118357dea24f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ElementalTD.Gameplay::ElementalTD.Gameplay.TowerPlacementInput
+  bootstrap: {fileID: 1930703238}
+  viewCamera: {fileID: 362350127}
+--- !u!1 &1997445108
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1997445111}
+  - component: {fileID: 1997445110}
+  - component: {fileID: 1997445109}
+  m_Layer: 0
+  m_Name: Hud
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1997445109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1997445108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad91bd2aa42c74d8cb1530a2efc8f269, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.PlacementMessageView
+  document: {fileID: 1997445110}
+  placementInput: {fileID: 1930703239}
+  spawnOrExitText: Cannot build on the spawn or the exit.
+  cellBlockedText: Cannot build on a wall.
+  enemyInTheWayText: An enemy is in the way.
+  wouldBlockPathText: That would block the path.
+  duration: 2
+--- !u!114 &1997445110
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1997445108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
+  m_PanelSettings: {fileID: 11400000, guid: a5150d1ad9b7a47f8b1e30bbc51cc477, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: 4b69cbdd0a6b748d699a000cc692ec16, type: 3}
+  m_SortingOrder: 0
+  m_Position: 0
+  m_WorldSpaceSizeMode: 1
+  m_WorldSpaceWidth: 1920
+  m_WorldSpaceHeight: 1080
+  m_PivotReferenceSize: 0
+  m_Pivot: 0
+  m_WorldSpaceCollider: {fileID: 0}
+--- !u!4 &1997445111
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1997445108}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -399,3 +551,5 @@ SceneRoots:
   - {fileID: 362350128}
   - {fileID: 1068877344}
   - {fileID: 1930703237}
+  - {fileID: 1210909749}
+  - {fileID: 1997445111}

@@ -134,7 +134,7 @@ Serves 2b-AC1, 2b-AC4 and 2b-AC7. Editor open; in parallel with T2b-1.
   - `Presentation/Prefabs/Tower.prefab`: a root with a child cube of about 0.7 of a cell, resting on the grid, with no collider.
   - `Presentation/Prefabs/Hover.prefab`: a root with a flat, cell-sized child placed above the tower's top, so that it shows on tower cells too.
   - `Presentation/UI/PanelSettings.asset`, with a runtime theme assigned and scaling with the screen size from a 960 x 600 reference.
-- Written as text: `Presentation/UI/Hud.uxml`, with one `Label` named `placement-message`, and `Presentation/UI/Hud.uss`, which puts it top-centre and makes it legible on the grid.
+- Written as text: `Presentation/UI/RuntimeTheme.tss`, which only imports Unity's default runtime theme and is the theme assigned to the panel settings; `Presentation/UI/Hud.uxml`, with one `Label` named `placement-message`, and `Presentation/UI/Hud.uss`, which puts it top-centre and makes it legible on the grid.
 
 **Done when:** clean compile and the assets exist with their `.meta` files.
 
@@ -211,7 +211,6 @@ Editor closed. Add the Presentation reference to the PlayMode test asmdef. Slice
 **Orchestrator, then Eduardo (2b-AC11 and the feel):** real mouse input in the editor and at `http://localhost:8765`, the text is legible, and the highlight is visible but not distracting.
 
 ## Risks
-- **First WebGL build.** `unity build --profile` is unproven in this project; T2a-3 names the fallback. The build may leave WebGL as the active platform when the editor reopens, which costs one reimport and no more.
 - **Stale browser cache.** The player caches its data in the browser. After a rebuild, reload without cache before judging the result.
 - **UI Toolkit in the player.** A panel with no theme shows no text. T2b-2 assigns the theme, and the browser check in 2b is the proof.
 - **Experimental `com.unity.pipeline` package.** Its runtime assembly is compiled out of players by its define constraints; if the build log blames it, report it instead of working around it.

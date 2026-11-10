@@ -34,6 +34,8 @@ namespace ElementalTD.Core
 
         public bool IsBlocked(GridPos pos) => _blocked[Index(pos)];
 
+        internal void SetBlocked(GridPos cell, bool blocked) => _blocked[Index(cell)] = blocked;
+
         public int Index(GridPos pos)
         {
             if (!InBounds(pos))

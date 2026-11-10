@@ -97,5 +97,27 @@ namespace ElementalTD.Core.Tests
             }
             finally { Object.DestroyImmediate(def); }
         }
+
+        [Test]
+        public void S2b_AC1_WorldToCell_Round_Trips_Every_Cell_And_Maps_Points_Just_Inside_Each_Edge()
+        {
+            MapDefinition def = Make("{\"width\":5,\"height\":4,\"cellSize\":2}");
+            try
+            {
+                for (int y = 0; y < 4; y++)
+                    for (int x = 0; x < 5; x++)
+                    {
+                        var cell = new GridPos(x, y);
+                        Vector3 c = def.CellToWorld(cell);
+                        Assert.AreEqual(cell, def.WorldToCell(c));
+                        const float e = 0.999f; // just inside the half cell (1.0)
+                        Assert.AreEqual(cell, def.WorldToCell(c + new Vector3(e, 0, e)));
+                        Assert.AreEqual(cell, def.WorldToCell(c - new Vector3(e, 0, e)));
+                    }
+                Assert.AreEqual(new GridPos(-1, -1), def.WorldToCell(new Vector3(-0.1f, 0, -0.1f)));
+                Assert.AreEqual(new GridPos(5, 4), def.WorldToCell(new Vector3(10.1f, 0, 8.1f)));
+            }
+            finally { Object.DestroyImmediate(def); }
+        }
     }
 }

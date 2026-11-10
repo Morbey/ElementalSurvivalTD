@@ -17,10 +17,15 @@ namespace ElementalTD.Core
         public PathFollower(FlowField field, GridPos start)
         {
             _field = field ?? throw new ArgumentNullException(nameof(field));
+            Restart(start);
+        }
+
+        public void Restart(GridPos start)
+        {
             From = start;
-            To = field.TryGetNext(start, out GridPos next) ? next : start;
+            To = _field.TryGetNext(start, out GridPos next) ? next : start;
             Progress = 0f;
-            HasArrived = From == To && field.Distance(start) == 0;
+            HasArrived = From == To && _field.Distance(start) == 0;
         }
 
         public bool Step(float dt, float speedCellsPerSecond)
