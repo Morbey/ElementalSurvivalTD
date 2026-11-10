@@ -13,6 +13,8 @@
 - Controlled randomness in perks: the player picks the starting element, the draw is weighted towards elements already owned, and the first levels always show at least one option that counters the scenario.
 - Luck: 0 is a pure draw. More luck means higher rarity, more options and more elements that are strong against the scenario.
 - Automatic waves on a timer, 5 to 20 s apart, with no manual pause. The screen always shows the next wave, with its enemy and element.
+- A run has a fixed number of waves (ten in the prototype). Clearing the last wave wins the run.
+- An enemy that reaches the exit leaves the board and costs the player a life. At zero lives the run is lost. (Number of lives still open.)
 - Map: an open grid where the player builds a maze with towers. There is pathfinding, and flyers go in a straight line.
   - Enemies always take a shortest path. Between equally short ways they keep going straight, otherwise turn, and go back only when that is strictly the shortest way.
   - A tower can only be placed if the spawn and every living enemy can still reach the exit, and never on the spawn cell, the exit cell or a cell an enemy occupies. Otherwise the game refuses it and tells the player why.
@@ -53,7 +55,10 @@ Each slice ends in something Eduardo can see or play.
   - [ ] **2a:** a WebGL build of slice 1 that runs in the browser. It goes to a private itch.io page, rebuilt after every slice, once Eduardo provides the account.
   - [ ] **2b:** the player places and removes blocking towers with the mouse; the path recalculates, and an invalid placement is refused with a message. The enemy respawns at the spawn when it reaches the exit, so the maze can be tried continuously.
   - [ ] **2c:** towers shoot visible projectiles at the enemy in range that is closest to the exit, with no line of sight; the enemy shows its health, dies, and re-enters at the spawn with full health one second later (also after reaching the exit).
-- [ ] **Slice 3:** waves, gold and selling towers.
+- [ ] **Slice 3**, in three steps that Eduardo accepts one at a time:
+  - [ ] **3a:** ten automatic waves of several enemies, lives lost at the exit, and a win or lose screen with a restart.
+  - [ ] **3b:** gold: towers cost gold, kills pay gold, and the screen shows the balance. Interest waits for a later slice.
+  - [ ] **3c:** selling towers, with the full refund until the first shot and a partial one after.
 - [ ] **Slice 4:** two elements, with x2 and x0.25 damage.
 - [ ] **Slice 5:** level up through XP and pick one perk.
 
