@@ -1,0 +1,31 @@
+using UnityEngine.TestTools.Constraints;
+using NUnit.Framework;
+using Is = UnityEngine.TestTools.Constraints.Is;
+
+namespace ElementalTD.Core.Tests
+{
+    public class PathFollowerAllocationTests
+    {
+        [Test]
+        public void AC7_Step_AllocatesNothing_AfterWarmup_Within_And_Across_Cells()
+        {
+            FlowField field = TestMaps.PrototypeField(out _);
+            var inCell = new PathFollower(field, TestMaps.Spawn);
+            inCell.Step(0.016f, 2f); // warm-up
+            Assert.That(() => { inCell.Step(0.016f, 2f); }, Is.Not.AllocatingGCMemory());
+
+            var crossing = new PathFollower(field, TestMaps.Spawn);
+            crossing.Step(0.016f, 100f); // warm-up; 1.6 cells per call, so every call crosses a boundary
+            Assert.That(() => { crossing.Step(0.016f, 100f); }, Is.Not.AllocatingGCMemory());
+            Assert.That(() => { crossing.Step(0.016f, 100f); }, Is.Not.AllocatingGCMemory());
+        }
+
+        [Test]
+        public void AC7_TryGetNext_AllocatesNothing_AfterWarmup()
+        {
+            FlowField field = TestMaps.PrototypeField(out _);
+            field.TryGetNext(TestMaps.Spawn, out _);
+            Assert.That(() => { field.TryGetNext(TestMaps.Spawn, out _); }, Is.Not.AllocatingGCMemory());
+        }
+    }
+}

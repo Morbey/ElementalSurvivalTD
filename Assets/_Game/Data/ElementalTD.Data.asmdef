@@ -1,0 +1,16 @@
+{
+    "name": "ElementalTD.Data",
+    "rootNamespace": "ElementalTD.Data",
+    "references": [
+        "ElementalTD.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

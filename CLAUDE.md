@@ -46,7 +46,7 @@ Every feature goes through these stages in order. **A stage starts only when the
 | 4 | Implementation | `unity-dev`, independent tasks in parallel | Clean compile. If the work touched the architecture, the `tech-lead` approved it. |
 | 5 | Testing | `qa-tester` | PASS on every acceptance criterion. A FAIL returns to stage 4. |
 | 6 | Delivery review | `business-analyst` | Every criterion is delivered as written, and nothing was delivered that no criterion asked for. |
-| 7 | User acceptance | Eduardo | Eduardo accepts. You then commit, update "Next steps" in `DECISIONS.md` and tell Eduardo in two or three sentences what was done and what comes next. |
+| 7 | User acceptance | Eduardo | Eduardo accepts. You then merge the slice branch into `main`, update "Next steps" in `DECISIONS.md` and tell Eduardo in two or three sentences what was done and what comes next. |
 
 A simple question or a small tweak may skip stages; say which ones you skipped. A code change never skips stage 5.
 
@@ -84,6 +84,7 @@ Each fact lives in one place. Everything else links to it instead of repeating i
 - `docs/design/DECISIONS.md`: closed design decisions, game rules and next steps. Always read it first.
 - `docs/requirements/`: one requirement per feature (`REQ-NNNN-title.md`), written from `_TEMPLATE.md`.
 - `docs/adr/`: technical decisions, one per file (`NNNN-title.md`).
+- `docs/plans/`: technical plans, one per feature (`NNNN-title.md`).
 - `docs/balance/`: tables, curves and simulation results.
 - Google Doc "Tower Defense Elemental – Documento de Visão e Arquitetura" (id `1gSSxw11vd5Y8aqD5_Z23BtS7HY_DUhun0thrH7_1dls`): the detailed vision document, which may be out of date. If it contradicts the repository, the repository wins.
 
@@ -100,4 +101,4 @@ Each fact lives in one place. Everything else links to it instead of repeating i
 - **Determinism.** RNG is seeded and injectable, so tests and simulations are reproducible.
 - **Simplest first.** No dependency-injection framework, ECS or DOTS without a measured justification.
 - **Live editor first.** Run `unity status` before touching scenes, prefabs or assets, and change them through `unity command …`. Never hand-edit `.unity`, `.prefab` or `.asset` files while the editor is connected.
-- **Git.** Every script goes with its `.meta`. Never commit `Library/`, `Temp/`, `Logs/` or `UserSettings/`. Only the orchestrator commits.
+- **Git.** Every script goes with its `.meta`. Never commit `Library/`, `Temp/`, `Logs/` or `UserSettings/`. `main` is always playable and only receives accepted work. Each slice lives on its own branch (`slice/N-title`), which merges into `main` after user acceptance. Only the orchestrator commits and merges.

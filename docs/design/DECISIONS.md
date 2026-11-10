@@ -13,7 +13,9 @@
 - Controlled randomness in perks: the player picks the starting element, the draw is weighted towards elements already owned, and the first levels always show at least one option that counters the scenario.
 - Luck: 0 is a pure draw. More luck means higher rarity, more options and more elements that are strong against the scenario.
 - Automatic waves on a timer, 5 to 20 s apart, with no manual pause. The screen always shows the next wave, with its enemy and element.
-- Map: an open grid where the player builds a maze. There is pathfinding, and blocking the path completely is forbidden. Flyers go in a straight line.
+- Map: an open grid where the player builds a maze with towers. There is pathfinding, and flyers go in a straight line.
+  - A tower can only be placed if the spawn and every living enemy can still reach the exit, and never on the spawn cell, the exit cell or a cell an enemy occupies. Otherwise the game refuses it and tells the player why.
+  - Towers can be sold, so the player can rework the board freely. The refund is total until the tower fires its first shot and partial after that (value still open).
 - Economy: gold per kill and interest at the start of each wave, with a cap that rises through talents.
 - Heroes: data plus reusable abilities (tank, sorcerer, support). They fight on their own and can be repositioned.
 - Talents between runs: trees per tower, per hero and for economy/luck. They are permanent modifiers saved in the profile.
@@ -46,8 +48,8 @@
 ### Prototype slices
 Each slice ends in something Eduardo can see or play.
 - [ ] **Slice 1:** a grid and one enemy crossing it with pathfinding. Includes the first ADR (folder structure, asmdefs and layers), limited to what this slice needs.
-- [ ] **Slice 2:** one tower that shoots and kills. Then set up a WebGL build on a private itch.io page, rebuilt after every slice.
-- [ ] **Slice 3:** waves and gold.
+- [ ] **Slice 2:** starts with a WebGL build of slice 1 on a private itch.io page, rebuilt after every slice. Then the player places a tower that shoots and kills; the path recalculates around it, and an invalid placement is refused with a message.
+- [ ] **Slice 3:** waves, gold and selling towers.
 - [ ] **Slice 4:** two elements, with x2 and x0.25 damage.
 - [ ] **Slice 5:** level up through XP and pick one perk.
 
@@ -64,3 +66,4 @@ Each slice ends in something Eduardo can see or play.
 
 ## Parking lot
 Ideas raised mid-slice, one line each. Review them when a slice closes.
+- An art-direction and UX agent (element colours, top-down readability, HUD and perk screen, choosing CC0 assets). Revisit when slice 4 brings the first real visuals.

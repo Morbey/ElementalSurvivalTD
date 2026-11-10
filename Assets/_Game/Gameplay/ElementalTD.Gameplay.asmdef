@@ -1,0 +1,17 @@
+{
+    "name": "ElementalTD.Gameplay",
+    "rootNamespace": "ElementalTD.Gameplay",
+    "references": [
+        "ElementalTD.Core",
+        "ElementalTD.Data"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
