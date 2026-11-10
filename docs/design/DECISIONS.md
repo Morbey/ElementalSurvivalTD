@@ -48,7 +48,10 @@
 ### Prototype slices
 Each slice ends in something Eduardo can see or play.
 - [x] **Slice 1:** a grid and one enemy crossing it with pathfinding. Includes the first ADR (folder structure, asmdefs and layers), limited to what this slice needs.
-- [ ] **Slice 2:** starts with a WebGL build of slice 1 on a private itch.io page, rebuilt after every slice. Then the player places a tower that shoots and kills; the path recalculates around it, and an invalid placement is refused with a message.
+- [ ] **Slice 2**, in three steps that Eduardo accepts one at a time:
+  - [ ] **2a:** a WebGL build of slice 1 that runs in the browser. It goes to a private itch.io page, rebuilt after every slice, once Eduardo provides the account.
+  - [ ] **2b:** the player places and removes blocking towers with the mouse; the path recalculates, and an invalid placement is refused with a message. The enemy respawns at the spawn when it reaches the exit, so the maze can be tried continuously.
+  - [ ] **2c:** towers shoot and kill; the enemy has health.
 - [ ] **Slice 3:** waves, gold and selling towers.
 - [ ] **Slice 4:** two elements, with x2 and x0.25 damage.
 - [ ] **Slice 5:** level up through XP and pick one perk.
@@ -67,3 +70,4 @@ Each slice ends in something Eduardo can see or play.
 ## Parking lot
 Ideas raised mid-slice, one line each. Review them when a slice closes.
 - An `art-director` agent for art direction and UX (element colours, top-down readability, HUD and perk screen, choosing CC0 assets). Revisit when slice 4 brings the first real visuals.
+- Colour the hover highlight by whether a tower can be placed there (needs a path check per hovered cell).
