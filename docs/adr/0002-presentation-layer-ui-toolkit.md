@@ -1,6 +1,6 @@
 # ADR 0002 – Presentation layer and UI Toolkit
 
-Status: Accepted (prototype slice 2). Rule 3 applies from 2a; the assembly and the UI arrive in 2b. Amended by ADR 0003 (who raises events, who owns views, health bars).
+Status: Accepted (prototype slice 2). Rule 3 applies from 2a; the assembly and the UI arrive in 2b. Amended by ADR 0003 (who raises events, who owns views, health bars) and by ADR 0004 (clicks on the UI).
 
 ## Context
 ADR 0001 deferred the `Presentation` layer until the first real visual or UI. Slice 2 hits that trigger twice. The first WebGL build (2a) cannot use `GameObject.CreatePrimitive` or materials cloned at runtime: the player strips unused engine code, and the built-in default material is not a URP material. Slice 2b then adds the first UI (the placement refusal message) and the first visuals the player creates (towers and the hover highlight).
@@ -20,4 +20,4 @@ ADR 0001 deferred the `Presentation` layer until the first real visual or UI. Sl
 ## Consequences
 - The PlayMode test assembly also references Presentation.
 - Presentation, not Gameplay, owns the camera framing and everything that only shows state, so Gameplay components stay testable without visuals.
-- Once the UI has clickable elements (slice 3), a click on the UI must not reach the board.
+- A click on the UI must not reach the board. ADR 0004 covers the end screen; the general rule waits for the first button shown during play.

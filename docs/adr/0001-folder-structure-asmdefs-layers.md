@@ -1,6 +1,6 @@
 # ADR 0001 – Folder structure, asmdefs and layers
 
-Status: Accepted (prototype slice 1). Amended by ADR 0002, which adds the Presentation layer, and by ADR 0003, which adds the simulation tick and pooling.
+Status: Accepted (prototype slice 1). Amended by ADR 0002, which adds the Presentation layer, by ADR 0003, which adds the simulation tick and pooling, and by ADR 0004, which pools enemies.
 
 ## Context
 The project has no game code yet. Slice 1 (a grid and one enemy crossing it with pathfinding) needs a home for pure rules, data assets, Unity glue and tests. CLAUDE.md section 7 sets the layer rules and the WebGL performance rules. This ADR fixes only what slice 1 uses and records what is deferred.
@@ -27,8 +27,8 @@ Pathfinding is one **flow field**: a breadth-first search from the exit over a 4
 ### Deferred section 7 rules
 | Rule | Status | Comes back when |
 |---|---|---|
-| Object pooling | Projectiles are pooled from slice 2c (ADR 0003). Enemies are deferred: one enemy, reused when it re-enters. | Slice 3 (waves). |
-| GPU instancing | Deferred. A few hundred primitives with a shared material batch through the SRP Batcher. | Slice 3, when the enemy count grows; measure first. |
+| Object pooling | **Applies.** Projectiles from slice 2c (ADR 0003), enemies from slice 3a (ADR 0004). | – |
+| GPU instancing | Deferred. A few hundred primitives with a shared material batch through the SRP Batcher; slice 3a has about twenty enemies at most (ADR 0004). | A browser measurement shows the enemy peak costing frames. |
 | Fixed-tick logic | **Applies from slice 2c** (ADR 0003). | – |
 | Modifier system | Deferred. Enemy and tower stats are read directly from data. | The first modifier (slice 5 perks, or Slowed). |
 | Seeded, injectable RNG | Not needed. Nothing is random yet. | The first random draw (slice 5 perk options). |
