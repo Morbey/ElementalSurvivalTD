@@ -29,7 +29,7 @@
 - Prototype numbers (lives, gold, costs, refund, waves) are provisional and live in `docs/balance/0001-prototype-economy.md`.
 - Heroes: data plus reusable abilities (tank, sorcerer, support). They fight on their own and can be repositioned.
 - Talents between runs: every attempt earns experience, which becomes points to spend on talents. Trees per tower, per hero and for economy/luck (gold earned among them). They are permanent modifiers saved in the profile.
-- Synergies are discovered: the player unlocks them by playing the scenarios, and later also "specials", stronger forms in the way spells evolve in Vampire Survivors. Known synergies are listed on the tower's panel.
+- Synergies are discovered: the player unlocks them by playing the scenarios, and later also "specials", stronger forms in the way spells evolve in Vampire Survivors. Known synergies are listed on the tower's panel, and the ones not yet discovered show as locked "?" slots, so the player sees how many are left to find.
 - Enemies: data plus behaviours (fly, regenerate, turn invisible, split).
 - Scenario: defines a subset of enemy elements, shown in the menu and on pause. Each scenario has its own look; element colours are the same in all of them, so every scenario's palette must keep all elements readable.
 - 3D boss: phase 2, not essential. It only goes ahead after the demo validates the game.
