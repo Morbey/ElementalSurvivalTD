@@ -1,6 +1,6 @@
 # Technical plan 0004 – Prototype slice 3, step 3a
 
-Ten automatic waves, lives lost at the exit, and a win or lose screen with a restart. Architecture: `docs/adr/0004-run-waves-outcome-restart.md`, on top of ADR 0001 to 0003. Prototype mode: this plan carries the acceptance criteria. Gold (3b) and selling (3c) are not planned here.
+Ten automatic waves, lives lost at the exit, and a win or lose screen with a restart. Architecture: `docs/adr/0004-run-waves-outcome-restart.md`, on top of ADR 0001 to 0003. Prototype mode: this plan carries the acceptance criteria. Gold and selling (3b) are in plan 0005.
 
 ## Approach
 The looping enemy of 2c becomes a run. A new asset, `RunDefinition`, holds the lives and the ten waves. Core gets a small `WaveSchedule` that counts the delays and says when an enemy enters, and `Battle` gains the lives and an outcome: its tick is now waves, enemies, towers, projectiles, outcome. The re-entry goes completely. Enemy objects are reused through a free list on `Board`, as projectiles already are in `Battle`, so a spawn creates nothing once the pool has grown.

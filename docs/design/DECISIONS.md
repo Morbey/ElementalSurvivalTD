@@ -80,3 +80,4 @@ Ideas raised mid-slice, one line each. Review them when a slice closes.
 - Smarter tower targeting: count damage already in flight, so towers do not waste shots on an enemy about to die.
 - A click uses the pointer position of the frame that handles it, not of the press, so a click followed by a fast move inside one long frame lands on the wrong cell.
 - The run HUD (wave, lives, countdown) is drawn over the top-left cells of the board. Move it off the grid when the HUD gets its first real layout.
+- The tower's price and sell value are shown nowhere, and a misclick sells a tower that has fired at a loss with no confirmation.
