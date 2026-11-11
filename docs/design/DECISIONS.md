@@ -14,12 +14,13 @@
 - Luck: 0 is a pure draw. More luck means higher rarity, more options and more elements that are strong against the scenario.
 - Automatic waves on a timer, 5 to 20 s apart, with no manual pause. The screen always shows the next wave, with its enemy and element.
 - A run has a fixed number of waves (ten in the prototype). Clearing the last wave wins the run.
-- An enemy that reaches the exit leaves the board and costs the player a life. At zero lives the run is lost. (Number of lives still open.)
+- An enemy that reaches the exit leaves the board and costs the player a life. At zero lives the run is lost.
 - Map: an open grid where the player builds a maze with towers. There is pathfinding, and flyers go in a straight line.
   - Enemies always take a shortest path. Between equally short ways they keep going straight, otherwise turn, and go back only when that is strictly the shortest way.
   - A tower can only be placed if the spawn and every living enemy can still reach the exit, and never on the spawn cell, the exit cell or a cell an enemy occupies. Otherwise the game refuses it and tells the player why.
-  - Towers can be sold, so the player can rework the board freely. The refund is total until the tower fires its first shot and partial after that (value still open).
+  - Towers can be sold, so the player can rework the board freely. The refund is total until the tower fires its first shot and partial after that.
 - Economy: gold per kill and interest at the start of each wave, with a cap that rises through talents.
+- Prototype numbers (lives, gold, costs, refund, waves) are provisional and live in `docs/balance/0001-prototype-economy.md`.
 - Heroes: data plus reusable abilities (tank, sorcerer, support). They fight on their own and can be repositioned.
 - Talents between runs: trees per tower, per hero and for economy/luck. They are permanent modifiers saved in the profile.
 - Enemies: data plus behaviours (fly, regenerate, turn invisible, split).
@@ -81,3 +82,5 @@ Ideas raised mid-slice, one line each. Review them when a slice closes.
 - A click uses the pointer position of the frame that handles it, not of the press, so a click followed by a fast move inside one long frame lands on the wrong cell.
 - The run HUD (wave, lives, countdown) is drawn over the top-left cells of the board. Move it off the grid when the HUD gets its first real layout.
 - The tower's price and sell value are shown nowhere, and a misclick sells a tower that has fired at a loss with no confirmation.
+- A flat gold income at each wave start: with kills as the only income the economy is knife-edged (10 percent less gold per kill loses nearly every simulated run). Eduardo decides after playing 3b.
+- Wave health comes from one enemy asset per wave. Replace it with a per-wave modifier when the modifier system exists.
