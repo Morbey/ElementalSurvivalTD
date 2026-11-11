@@ -18,6 +18,8 @@ What the team has learned about driving this project with the `unity` CLI. Add a
 - For multi-step asset or scene work, write a C# script outside `Assets/` and run `unity command script eval --file <path>`. In it, do not use `??` on `GetComponent` or `GameObject.Find` results: Unity's fake null defeats it.
 - Smoke-check a scene with `unity command editor.playmode start`, then `script eval` calls on the live objects, then `editor.playmode stop`; Play mode changes are discarded.
 - In a `script eval`, `EditorSceneManager.OpenScene` destroys objects loaded or created before it. Open the scene first, then load or create assets.
+- In a `script eval`, extension methods do not resolve: call `UnityEngine.UIElements.UQueryExtensions.Q<Label>(root, name)`, not `root.Q<Label>(name)`.
+- Saving a scene after a script rename keeps the old `m_EditorClassIdentifier`. Set it through `SerializedObject.FindProperty("m_EditorClassIdentifier")`, then save.
 - In Play mode, send a real click with `InputSystem.QueueStateEvent(Mouse.current, …)` over a few frames from `EditorApplication.update`; UI Toolkit receives it with no `EventSystem`. `Mouse.current` read from that callback does not show the queued state.
 - Opening the editor on a worktree rewrites `.vscode/settings.json`. Revert it before the commit.
 - A malformed `unity command` writes "No command named …" errors to the editor console. Clear it (`unity command console clear`) before a clean-compile check.

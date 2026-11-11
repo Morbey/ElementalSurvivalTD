@@ -595,14 +595,16 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ad91bd2aa42c74d8cb1530a2efc8f269, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.PlacementMessageView
+  m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.MessageView
   document: {fileID: 1997445110}
   placementInput: {fileID: 1930703239}
+  bootstrap: {fileID: 1930703238}
   spawnOrExitText: Cannot build on the spawn or the exit.
   cellBlockedText: Cannot build on a wall.
   enemyInTheWayText: An enemy is in the way.
   wouldBlockPathText: That would block the path.
   notEnoughGoldText: Not enough gold.
+  waveSurvivedText: Wave {0} survived +{1}
   duration: 2
 --- !u!114 &1997445110
 MonoBehaviour:
