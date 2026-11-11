@@ -21,7 +21,7 @@
   - A diagonal step is allowed only when both cells it passes between are free: towers and walls take up their corners, so two that touch by a corner form a wall and no enemy clips a corner.
   - A tower can only be placed if the spawn and every living enemy can still reach the exit, and never on the spawn cell, the exit cell or a cell an enemy occupies. Otherwise the game refuses it and tells the player why.
   - Towers can be sold, so the player can rework the board freely. The refund is total until the tower fires its first shot and partial after that.
-  - A click on a tower selects it: the tower is highlighted and the player is offered Upgrade and Sell. Sell shows the gold it returns before the player confirms it. (Upgrade is shown and does nothing yet.)
+  - A click on a tower selects it: the tower is highlighted and the player is offered Upgrade and Sell. Sell shows the gold it returns, and the value shown is always what a click pays at that moment: it drops the moment the tower fires its first shot, also while the pointer rests on Sell. (Upgrade is shown and does nothing yet.)
 - Economy: gold per kill, a gold bonus for each wave survived, and interest at the start of each wave, with a cap that rises through talents.
   - The wave bonus is paid when the last enemy of that wave has left the board, killed or not, to a player who is still alive. It does not depend on kills, so a leak does not starve the next wave.
   - A run is fair without talents; talents add growth, they do not repair the base economy.
