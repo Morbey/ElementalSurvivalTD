@@ -21,6 +21,7 @@
   - A diagonal step is allowed only when both cells it passes between are free: towers and walls take up their corners, so two that touch by a corner form a wall and no enemy clips a corner.
   - A tower can only be placed if the spawn and every living enemy can still reach the exit, and never on the spawn cell, the exit cell or a cell an enemy occupies. Otherwise the game refuses it and tells the player why.
   - Towers can be sold, so the player can rework the board freely. The refund is total until the tower fires its first shot and partial after that.
+  - A click on a tower selects it: the tower is highlighted and the player is offered Upgrade and Sell. Sell shows the gold it returns before the player confirms it. (Upgrade is shown and does nothing yet.)
 - Economy: gold per kill, a gold bonus for each wave survived, and interest at the start of each wave, with a cap that rises through talents.
   - The wave bonus is paid when the last enemy of that wave has left the board, killed or not, to a player who is still alive. It does not depend on kills, so a leak does not starve the next wave.
   - A run is fair without talents; talents add growth, they do not repair the base economy.
@@ -28,7 +29,7 @@
 - Heroes: data plus reusable abilities (tank, sorcerer, support). They fight on their own and can be repositioned.
 - Talents between runs: every attempt earns experience, which becomes points to spend on talents. Trees per tower, per hero and for economy/luck (gold earned among them). They are permanent modifiers saved in the profile.
 - Enemies: data plus behaviours (fly, regenerate, turn invisible, split).
-- Scenario: defines a subset of enemy elements, shown in the menu and on pause.
+- Scenario: defines a subset of enemy elements, shown in the menu and on pause. Each scenario has its own look; element colours are the same in all of them, so every scenario's palette must keep all elements readable.
 - 3D boss: phase 2, not essential. It only goes ahead after the demo validates the game.
 
 ## Elemental system
@@ -68,7 +69,12 @@ Each slice ends in something Eduardo can see or play.
   - [ ] **3a:** ten automatic waves of several enemies, lives lost at the exit, and a win or lose screen with a restart.
   - [ ] **3b:** gold and selling: towers cost gold, kills pay gold, the screen shows the balance, and a click on a tower sells it, with the full refund until its first shot and a partial one after. Interest waits for a later slice.
   - [ ] **3c:** enemies move diagonally, without cutting corners; the prototype numbers are retuned for the shorter routes.
-- [ ] **Slice 4:** the wave bonus, and Light and Shadow. The player buys Light or Shadow towers, both available from the start, and each wave is of one element, announced before it arrives. Damage is x2 against the other element and none against the own. The x0.25 case waits for a third element: with immunity to the own element, two elements of the main cycle leave one tower with no good target.
+- [ ] **Slice 4**, in steps that Eduardo accepts one at a time:
+  - [ ] **4a:** a gold bonus for each wave survived.
+  - [ ] **4b:** Light and Shadow. The player buys Light or Shadow towers, both available from the start, and each wave is of one element, announced before it arrives. Damage is x2 against the other element and none against the own. The x0.25 case waits for a third element: with immunity to the own element, two elements of the main cycle leave one tower with no good target.
+  - [ ] **4c:** selecting a tower, with Upgrade (not yet working) and Sell showing its value.
+  - [ ] **4d:** damage numbers over the enemies, and the refusal message at the refused cell.
+  - [ ] **4e:** waves of mixed elements.
 - [ ] **Slice 5:** level up through XP and pick one perk.
 
 ### After the prototype
@@ -89,7 +95,6 @@ Ideas raised mid-slice, one line each. Review them when a slice closes.
 - Smarter tower targeting: count damage already in flight, so towers do not waste shots on an enemy about to die.
 - A click uses the pointer position of the frame that handles it, not of the press, so a click followed by a fast move inside one long frame lands on the wrong cell.
 - The run HUD (wave, lives, countdown) is drawn over the top-left cells of the board. Move it off the grid when the HUD gets its first real layout.
-- The sell value is shown nowhere, and a misclick sells a tower that has fired at a loss with no confirmation.
 - Health bars hidden until the enemy first takes damage (visual direction 3): a few lines in the enemy view.
 - Walls as raised blocks, and a thin edge line on the range disc (visual direction 3).
 - Spawn and exit as rings (visual direction 3, open choice 2), when the first green or red element is built.
