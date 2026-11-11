@@ -7,6 +7,8 @@ What the team has learned about driving this project with the `unity` CLI. Add a
 - `unity command …` needs the interactive editor open: `unity projects open <worktree> --until-ready`. Close it with `unity command --project-path <worktree> editor quit --save true`, or `unity close <worktree> --force` if it is stuck.
 - An editor opened with `--until-ready` once quit cleanly seconds after reporting ready, with no error in `Logs/Editor.log`. Check `unity status` before the first command and open it again if the list is empty.
 - `unity test` and `unity build` start their own batch editor and refuse to run while the interactive editor has the project open.
+- Only one editor, batch or interactive, may use a checkout at a time. Hold the lock through `tools/unity-lock.sh`: `run <command>` around a `unity test` or build, `take` and `release` around an interactive session. Never hand-write a wait loop: one with a wrong path waited for ever.
+- A reviewer who compiles Core with the .NET SDK bundled in Unity sets `DOTNET_CLI_HOME` and `NUGET_PACKAGES` to a scratch folder and `DOTNET_CLI_TELEMETRY_OPTOUT=1`, so nothing is written to the home directory.
 - Do not run tests inside the open editor (`unity command test run`): it hung on a save-scene prompt and blocked every later command.
 
 ## Scenes, assets and settings
@@ -35,4 +37,5 @@ What the team has learned about driving this project with the `unity` CLI. Add a
 - `unity test <project> --mode EditMode|PlayMode --report-format junit --output <path outside Assets/>`.
 - When a test fails, `unity test` exits 8 and prints only "Unity process exited with code 2"; the junit report is still written, so read the failures there. Compiler warnings are in the worktree's `Logs/Editor.log`.
 - An asmdef with no scripts is not compiled and Unity warns about it.
+- `unity test … --filter <test name> --retries <n>` re-runs one test, to tell a flaky failure from a real one without the whole suite.
 - A batch `unity test` empties `Library/LastSceneManagerSetup.txt`, so the next interactive editor on that checkout opens an untitled scene and Play shows nothing. Open `Assets/_Game/Scenes/Prototype.unity`.
