@@ -32,3 +32,4 @@ What the team has learned about driving this project with the `unity` CLI. Add a
 ## Tests
 - `unity test <project> --mode EditMode|PlayMode --report-format junit --output <path outside Assets/>`.
 - An asmdef with no scripts is not compiled and Unity warns about it.
+- A batch `unity test` empties `Library/LastSceneManagerSetup.txt`, so the next interactive editor on that checkout opens an untitled scene and Play shows nothing. Open `Assets/_Game/Scenes/Prototype.unity`.
