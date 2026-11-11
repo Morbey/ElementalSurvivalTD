@@ -20,10 +20,12 @@
   - A diagonal step is allowed only when both cells it passes between are free: towers and walls take up their corners, so two that touch by a corner form a wall and no enemy clips a corner.
   - A tower can only be placed if the spawn and every living enemy can still reach the exit, and never on the spawn cell, the exit cell or a cell an enemy occupies. Otherwise the game refuses it and tells the player why.
   - Towers can be sold, so the player can rework the board freely. The refund is total until the tower fires its first shot and partial after that.
-- Economy: gold per kill and interest at the start of each wave, with a cap that rises through talents.
+- Economy: gold per kill, a gold bonus for each wave survived, and interest at the start of each wave, with a cap that rises through talents.
+  - The wave bonus is paid when the last enemy of that wave has left the board, killed or not, to a player who is still alive. It does not depend on kills, so a leak does not starve the next wave.
+  - A run is fair without talents; talents add growth, they do not repair the base economy.
 - Prototype numbers (lives, gold, costs, refund, waves) are provisional and live in `docs/balance/0001-prototype-economy.md`.
 - Heroes: data plus reusable abilities (tank, sorcerer, support). They fight on their own and can be repositioned.
-- Talents between runs: trees per tower, per hero and for economy/luck. They are permanent modifiers saved in the profile.
+- Talents between runs: every attempt earns experience, which becomes points to spend on talents. Trees per tower, per hero and for economy/luck (gold earned among them). They are permanent modifiers saved in the profile.
 - Enemies: data plus behaviours (fly, regenerate, turn invisible, split).
 - Scenario: defines a subset of enemy elements, shown in the menu and on pause.
 - 3D boss: phase 2, not essential. It only goes ahead after the demo validates the game.
@@ -62,7 +64,7 @@ Each slice ends in something Eduardo can see or play.
   - [ ] **3a:** ten automatic waves of several enemies, lives lost at the exit, and a win or lose screen with a restart.
   - [ ] **3b:** gold and selling: towers cost gold, kills pay gold, the screen shows the balance, and a click on a tower sells it, with the full refund until its first shot and a partial one after. Interest waits for a later slice.
   - [ ] **3c:** enemies move diagonally, without cutting corners; the prototype numbers are retuned for the shorter routes.
-- [ ] **Slice 4:** Light and Shadow. The player buys Light or Shadow towers, both available from the start, and each wave is of one element, announced before it arrives. Damage is x2 against the other element and none against the own. The x0.25 case waits for a third element: with immunity to the own element, two elements of the main cycle leave one tower with no good target.
+- [ ] **Slice 4:** the wave bonus, and Light and Shadow. The player buys Light or Shadow towers, both available from the start, and each wave is of one element, announced before it arrives. Damage is x2 against the other element and none against the own. The x0.25 case waits for a third element: with immunity to the own element, two elements of the main cycle leave one tower with no good target.
 - [ ] **Slice 5:** level up through XP and pick one perk.
 
 ### After the prototype
@@ -85,7 +87,6 @@ Ideas raised mid-slice, one line each. Review them when a slice closes.
 - A click uses the pointer position of the frame that handles it, not of the press, so a click followed by a fast move inside one long frame lands on the wrong cell.
 - The run HUD (wave, lives, countdown) is drawn over the top-left cells of the board. Move it off the grid when the HUD gets its first real layout.
 - The tower's price and sell value are shown nowhere, and a misclick sells a tower that has fired at a loss with no confirmation.
-- A flat gold income at each wave start: with kills as the only income the economy is knife-edged (10 percent less gold per kill loses nearly every simulated run). Eduardo decides after playing 3b.
 - Wave health comes from one enemy asset per wave. Replace it with a per-wave modifier when the modifier system exists.
 - The cells beside a diagonal lane are refused while an enemy is on that step, about 70 percent of a wave. If it annoys in play, queue the placement until the cell is free.
 - On open ground enemies walk straight and then diagonal instead of the straightest line. Free-angle movement would fix the look, at a much higher cost.
