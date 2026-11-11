@@ -84,7 +84,7 @@ Each slice ends in something Eduardo can see or play.
 
 ## Parking lot
 Ideas raised mid-slice, one line each. Review them when a slice closes.
-- An `art-director` agent for art direction and UX (element colours, top-down readability, HUD and perk screen, choosing CC0 assets). Revisit when slice 4 brings the first real visuals.
+- An `art-director` agent for art direction and UX (element colours, top-down readability, HUD and perk screen, choosing CC0 assets). Create it when the prototype moves from coloured primitives to real visuals. Its first input is every look already decided here or parked below: the element colours, the look of the damage numbers, the HUD and its buttons, the hover and range disc, and the placement and wave messages.
 - Colour the hover highlight by whether a tower can be placed there (needs a path check per hovered cell).
 - The hover highlight washes out the tower under it, and may stick when the mouse leaves the canvas fast. Tune both when Eduardo has tried 2b.
 - Smarter tower targeting: count damage already in flight, so towers do not waste shots on an enemy about to die.
