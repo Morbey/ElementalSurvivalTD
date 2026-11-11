@@ -13,9 +13,11 @@ namespace ElementalTD.Data
         [SerializeField, Min(0f)] private float shotsPerSecond;
         [Tooltip("Must be above 0.")]
         [SerializeField, Min(0f)] private float projectileSpeedCellsPerSecond;
+        [Tooltip("Gold to buy it.")]
+        [SerializeField, Min(0)] private int cost;
 
         public float RangeCells => rangeCells;
 
-        public TowerStats ToStats() => new TowerStats(rangeCells, damage, shotsPerSecond, projectileSpeedCellsPerSecond);
+        public TowerStats ToStats() => new TowerStats(rangeCells, damage, shotsPerSecond, projectileSpeedCellsPerSecond, cost);
     }
 }

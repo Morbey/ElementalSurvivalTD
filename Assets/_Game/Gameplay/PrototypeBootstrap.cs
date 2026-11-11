@@ -40,7 +40,7 @@ namespace ElementalTD.Gameplay
                 return;
             }
 
-            Battle = new Battle(Board, run.ToWaves(), run.Lives);
+            Battle = new Battle(Board, run.ToWaves(), run.Lives, run.StartingGold, run.SellRefundPercent);
         }
 
         private void Update()

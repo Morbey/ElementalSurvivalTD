@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 
 namespace ElementalTD.Presentation
 {
-    /// <summary>Shows one line of text when a placement is refused, for a fixed time in unscaled seconds.</summary>
+    /// <summary>Shows one line of text when a purchase is refused, for a fixed time in unscaled seconds.</summary>
     public sealed class PlacementMessageView : MonoBehaviour
     {
         private const string LabelName = "placement-message";
@@ -18,6 +18,7 @@ namespace ElementalTD.Presentation
         [SerializeField] private string cellBlockedText;
         [SerializeField] private string enemyInTheWayText;
         [SerializeField] private string wouldBlockPathText;
+        [SerializeField] private string notEnoughGoldText;
 
         [Tooltip("Seconds of unscaled time the message stays on screen.")]
         [SerializeField, Min(0f)] private float duration = 2f;
@@ -71,6 +72,7 @@ namespace ElementalTD.Presentation
                 case PlacementResult.SpawnOrExit: return spawnOrExitText;
                 case PlacementResult.CellBlocked: return cellBlockedText;
                 case PlacementResult.EnemyInTheWay: return enemyInTheWayText;
+                case PlacementResult.NotEnoughGold: return notEnoughGoldText;
                 default: return wouldBlockPathText;
             }
         }

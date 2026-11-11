@@ -6,13 +6,14 @@ using UnityEngine.UIElements;
 namespace ElementalTD.Presentation
 {
     /// <summary>
-    /// Shows the state of the run: wave, lives, the countdown to the next wave and, once it ends, the end screen.
+    /// Shows the state of the run: wave, lives, gold, the countdown to the next wave and, once it ends, the end screen.
     /// Polls the battle every frame and rewrites a label only when its number changes (ADR 0004).
     /// </summary>
     public sealed class RunHudView : MonoBehaviour
     {
         private const string WaveLabelName = "wave-label";
         private const string LivesLabelName = "lives-label";
+        private const string GoldLabelName = "gold-label";
         private const string NextWaveLabelName = "next-wave-label";
         private const string EndScreenName = "end-screen";
         private const string EndTitleName = "end-title";
@@ -26,6 +27,8 @@ namespace ElementalTD.Presentation
         [SerializeField] private string waveText;
         [Tooltip("{0}: lives left.")]
         [SerializeField] private string livesText;
+        [Tooltip("{0}: gold.")]
+        [SerializeField] private string goldText;
         [Tooltip("{0}: whole seconds left, rounded up.")]
         [SerializeField] private string nextWaveText;
         [SerializeField] private string victoryText;
@@ -34,6 +37,7 @@ namespace ElementalTD.Presentation
         private Battle _battle;
         private Label _waveLabel;
         private Label _livesLabel;
+        private Label _goldLabel;
         private Label _nextWaveLabel;
         private VisualElement _endScreen;
         private Label _endTitle;
@@ -42,6 +46,7 @@ namespace ElementalTD.Presentation
         // -1 forces the first frame to write every label.
         private int _shownWaves = -1;
         private int _shownLives = -1;
+        private int _shownGold = -1;
         private int _shownSeconds = -1;
         private int _shownOutcome = -1;
         private string _waveCountText;
@@ -53,16 +58,17 @@ namespace ElementalTD.Presentation
             {
                 _waveLabel = root.Q<Label>(WaveLabelName);
                 _livesLabel = root.Q<Label>(LivesLabelName);
+                _goldLabel = root.Q<Label>(GoldLabelName);
                 _nextWaveLabel = root.Q<Label>(NextWaveLabelName);
                 _endScreen = root.Q<VisualElement>(EndScreenName);
                 _endTitle = root.Q<Label>(EndTitleName);
                 _restartButton = root.Q<Button>(RestartButtonName);
             }
 
-            if (_waveLabel == null || _livesLabel == null || _nextWaveLabel == null || _endScreen == null
+            if (_waveLabel == null || _livesLabel == null || _goldLabel == null || _nextWaveLabel == null || _endScreen == null
                 || _endTitle == null || _restartButton == null || bootstrap == null || bootstrap.Battle == null)
             {
-                Debug.LogError($"RunHudView: assign the UI document (with {WaveLabelName}, {LivesLabelName}, {NextWaveLabelName}, " +
+                Debug.LogError($"RunHudView: assign the UI document (with {WaveLabelName}, {LivesLabelName}, {GoldLabelName}, {NextWaveLabelName}, " +
                     $"{EndScreenName}, {EndTitleName} and {RestartButtonName}) and the bootstrap; the battle must exist.", this);
                 _restartButton = null;
                 enabled = false;
@@ -95,6 +101,13 @@ namespace ElementalTD.Presentation
             {
                 _shownLives = lives;
                 _livesLabel.text = string.Format(livesText, lives.ToString());
+            }
+
+            int gold = _battle.Gold;
+            if (gold != _shownGold)
+            {
+                _shownGold = gold;
+                _goldLabel.text = string.Format(goldText, gold.ToString());
             }
 
             float secondsLeft = waves.SecondsToNextWave;

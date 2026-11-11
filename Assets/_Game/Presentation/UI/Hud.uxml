@@ -3,6 +3,7 @@
     <ui:VisualElement name="run-status" picking-mode="Ignore">
         <ui:Label name="wave-label" picking-mode="Ignore" />
         <ui:Label name="lives-label" picking-mode="Ignore" />
+        <ui:Label name="gold-label" picking-mode="Ignore" />
         <ui:Label name="next-wave-label" picking-mode="Ignore" />
     </ui:VisualElement>
     <ui:Label name="placement-message" picking-mode="Ignore" />

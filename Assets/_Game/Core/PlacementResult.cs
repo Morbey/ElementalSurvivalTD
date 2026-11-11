@@ -4,6 +4,8 @@ namespace ElementalTD.Core
     public enum PlacementResult
     {
         Placed,
+        /// <summary>Checked by the battle before the board rule.</summary>
+        NotEnoughGold,
         OutOfBounds,
         SpawnOrExit,
         /// <summary>A fixed wall or an existing tower.</summary>

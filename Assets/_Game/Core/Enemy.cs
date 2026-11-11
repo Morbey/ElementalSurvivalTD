@@ -12,6 +12,7 @@ namespace ElementalTD.Core
         public float MaxHealth { get; private set; }
         /// <summary>Keeps its last value while off the board.</summary>
         public float Health { get; private set; }
+        public int GoldReward { get; private set; }
         public bool IsOnBoard { get; internal set; }
         public float X { get; private set; }
         public float Y { get; private set; }
@@ -36,6 +37,7 @@ namespace ElementalTD.Core
             Speed = stats.Speed;
             MaxHealth = stats.MaxHealth;
             Health = MaxHealth;
+            GoldReward = stats.GoldReward;
             Follower.Restart(spawn);
             SyncPosition();
             KeepPosition();

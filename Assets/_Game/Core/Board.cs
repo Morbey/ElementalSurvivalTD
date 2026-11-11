@@ -44,7 +44,10 @@ namespace ElementalTD.Core
             Field.Compute(exit);
         }
 
-        public bool HasTower(GridPos cell) => Map.InBounds(cell) && _towerAt[Map.Index(cell)] != null;
+        public bool HasTower(GridPos cell) => TowerOn(cell) != null;
+
+        /// <summary>Null off the grid or with no tower on the cell.</summary>
+        public Tower TowerOn(GridPos cell) => Map.InBounds(cell) ? _towerAt[Map.Index(cell)] : null;
 
         public PlacementResult TryPlaceTower(GridPos cell, in TowerStats stats)
         {
