@@ -55,10 +55,9 @@ Each slice ends in something Eduardo can see or play.
   - [ ] **2a:** a WebGL build of slice 1 that runs in the browser. It goes to a private itch.io page, rebuilt after every slice, once Eduardo provides the account.
   - [ ] **2b:** the player places and removes blocking towers with the mouse; the path recalculates, and an invalid placement is refused with a message. The enemy respawns at the spawn when it reaches the exit, so the maze can be tried continuously.
   - [ ] **2c:** towers shoot visible projectiles at the enemy in range that is closest to the exit, with no line of sight; the enemy shows its health, dies, and re-enters at the spawn with full health one second later (also after reaching the exit).
-- [ ] **Slice 3**, in three steps that Eduardo accepts one at a time:
+- [ ] **Slice 3**, in two steps that Eduardo accepts one at a time:
   - [ ] **3a:** ten automatic waves of several enemies, lives lost at the exit, and a win or lose screen with a restart.
-  - [ ] **3b:** gold: towers cost gold, kills pay gold, and the screen shows the balance. Interest waits for a later slice.
-  - [ ] **3c:** selling towers, with the full refund until the first shot and a partial one after.
+  - [ ] **3b:** gold and selling: towers cost gold, kills pay gold, the screen shows the balance, and a click on a tower sells it, with the full refund until its first shot and a partial one after. Interest waits for a later slice.
 - [ ] **Slice 4:** two elements, with x2 and x0.25 damage.
 - [ ] **Slice 5:** level up through XP and pick one perk.
 
