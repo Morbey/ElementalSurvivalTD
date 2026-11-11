@@ -17,7 +17,7 @@ namespace ElementalTD.Core
         private float _speed;
         private int _targetEntry;
 
-        /// <summary>True once the target has left the board, even if it has since re-entered.</summary>
+        /// <summary>True once the target has left the board, even if its object has since been reused by another enemy.</summary>
         internal bool TargetGone => !Target.IsOnBoard || Target.Entry != _targetEntry;
 
         internal void Launch(GridPos from, Enemy target, in TowerStats stats)

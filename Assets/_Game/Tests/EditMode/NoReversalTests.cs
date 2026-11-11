@@ -60,8 +60,7 @@ namespace ElementalTD.Core.Tests
             int bx, int by, int cx, int cy, int tx, int ty, int ex, int ey)
         {
             Board board = PrototypeBoard();
-            var enemy = new Enemy(board.Field, board.Spawn, new EnemyStats(2f, 100f));
-            board.AddEnemy(enemy);
+            Enemy enemy = board.SpawnEnemy(new EnemyStats(2f, 100f));
             PathFollower f = enemy.Follower;
             var before = new GridPos(bx, by);
             var corner = new GridPos(cx, cy);
@@ -77,8 +76,7 @@ namespace ElementalTD.Core.Tests
         public void S2c_AC16_The_Default_Route_Is_Unchanged_27_Steps_Through_The_Corners()
         {
             Board board = PrototypeBoard();
-            var enemy = new Enemy(board.Field, board.Spawn, new EnemyStats(2f, 100f));
-            board.AddEnemy(enemy);
+            Enemy enemy = board.SpawnEnemy(new EnemyStats(2f, 100f));
             PathFollower f = enemy.Follower;
             var visited = new List<GridPos> { f.From };
             for (int i = 0; i < 4000 && !f.HasArrived; i++)

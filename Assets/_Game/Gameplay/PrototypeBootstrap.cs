@@ -1,22 +1,19 @@
 using ElementalTD.Core;
 using ElementalTD.Data;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ElementalTD.Gameplay
 {
     /// <summary>
     /// Wires the prototype scene: builds the Core board and battle from data, and is the battle's only driver,
-    /// running whole fixed ticks from the frame time. Holds no game rules.
+    /// running whole fixed ticks from the frame time until the run is won or lost. Holds no game rules.
     /// </summary>
     public sealed class PrototypeBootstrap : MonoBehaviour
     {
         [Header("Data")]
         [SerializeField] private MapDefinition map;
-        [SerializeField] private EnemyDefinition enemy;
-
-        [Header("Prototype loop")]
-        [Tooltip("Seconds between the enemy leaving the board, killed or at the exit, and re-entering at the spawn.")]
-        [SerializeField, Min(0f)] private float reentryDelaySeconds;
+        [SerializeField] private RunDefinition run;
 
         private float _accumulator;
 
@@ -30,32 +27,40 @@ namespace ElementalTD.Gameplay
 
         private void Awake()
         {
-            if (map == null || enemy == null)
+            if (map == null || run == null)
             {
-                Debug.LogError("PrototypeBootstrap: assign the map and the enemy.", this);
+                Debug.LogError("PrototypeBootstrap: assign the map and the run.", this);
                 return;
             }
 
             Board = new Board(map.ToGridMap(), map.Spawn, map.Exit);
             if (!Board.Field.IsReachable(Board.Spawn))
             {
-                Debug.LogError($"PrototypeBootstrap: spawn {map.Spawn} cannot reach exit {map.Exit}. No enemy spawned.", this);
+                Debug.LogError($"PrototypeBootstrap: spawn {map.Spawn} cannot reach exit {map.Exit}. No run started.", this);
                 return;
             }
 
-            Battle = new Battle(Board, enemy.ToStats(), reentryDelaySeconds);
+            Battle = new Battle(Board, run.ToWaves(), run.Lives);
         }
 
         private void Update()
         {
-            if (Battle == null) return;
+            if (Battle == null || Battle.Outcome != RunOutcome.Running) return;
 
             _accumulator += Time.deltaTime;
             while (_accumulator >= Battle.TickSeconds)
             {
                 Battle.Tick();
                 _accumulator -= Battle.TickSeconds;
+                // Stopping on the tick that ends the run freezes TickAlpha, so no view moves afterwards.
+                if (Battle.Outcome != RunOutcome.Running) break;
             }
+        }
+
+        /// <summary>Starts a fresh run by reloading the scene, so no state of this run can leak into the next (ADR 0004).</summary>
+        public void Restart()
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
     }
 }

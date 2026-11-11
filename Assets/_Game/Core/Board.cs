@@ -12,6 +12,7 @@ namespace ElementalTD.Core
         private readonly Tower[] _towerAt;
         private readonly List<Tower> _towers = new List<Tower>();
         private readonly List<Enemy> _enemies = new List<Enemy>();
+        private readonly Stack<Enemy> _freeEnemies = new Stack<Enemy>();
 
         /// <summary>Raised after the board has changed.</summary>
         public event Action<GridPos> TowerPlaced;
@@ -82,21 +83,26 @@ namespace ElementalTD.Core
             return true;
         }
 
-        /// <summary>The enemy enters at the spawn with full health; its previous position is its position.</summary>
-        public void AddEnemy(Enemy enemy)
+        /// <summary>
+        /// An enemy enters at the spawn with these stats and full health; its previous position is its position.
+        /// Reuses an object that left the board, so a spawn allocates only at a new peak of enemies on the board.
+        /// </summary>
+        public Enemy SpawnEnemy(in EnemyStats stats)
         {
-            if (enemy == null) throw new ArgumentNullException(nameof(enemy));
-            if (enemy.IsOnBoard) throw new InvalidOperationException("The enemy is already on the board.");
-            enemy.Enter(Spawn);
+            Enemy enemy = _freeEnemies.Count > 0 ? _freeEnemies.Pop() : new Enemy(Field, Spawn);
+            enemy.Enter(Spawn, stats);
             _enemies.Add(enemy);
+            return enemy;
         }
 
+        /// <summary>The enemy leaves the board and its object returns to the free list.</summary>
         public void RemoveEnemy(Enemy enemy)
         {
             int index = IndexOf(_enemies, enemy);
             if (index < 0) return;
             _enemies.RemoveAt(index);
             enemy.IsOnBoard = false;
+            _freeEnemies.Push(enemy);
         }
 
         private bool IsUnderEnemy(GridPos cell)

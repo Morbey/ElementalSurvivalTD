@@ -8,6 +8,7 @@ namespace ElementalTD.Gameplay
 {
     /// <summary>
     /// Turns the pointer into board cells: hover, and a click that removes a tower or tries to place one.
+    /// Picks nothing once the run is over, so a click on the end screen never reaches the board.
     /// The rule itself lives in the Core Board.
     /// </summary>
     public sealed class TowerPlacementInput : MonoBehaviour
@@ -61,6 +62,8 @@ namespace ElementalTD.Gameplay
         {
             cell = default;
             if (bootstrap == null || bootstrap.Board == null || viewCamera == null || tower == null) return false;
+            Battle battle = bootstrap.Battle;
+            if (battle != null && battle.Outcome != RunOutcome.Running) return false;
 
             Ray ray = viewCamera.ScreenPointToRay(screenPosition);
             if (!Ground.Raycast(ray, out float distance)) return false;

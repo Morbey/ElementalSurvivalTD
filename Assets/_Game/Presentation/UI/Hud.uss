@@ -11,3 +11,42 @@
     -unity-text-outline-color: rgb(0, 0, 0);
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
+
+#run-status {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+}
+
+#run-status > Label {
+    -unity-font-style: bold;
+    font-size: 20px;
+    color: rgb(255, 255, 255);
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgb(0, 0, 0);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+#end-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+#end-title {
+    margin-bottom: 24px;
+    -unity-font-style: bold;
+    font-size: 48px;
+    color: rgb(255, 255, 255);
+}
+
+#restart-button {
+    padding: 8px 24px;
+    font-size: 24px;
+}

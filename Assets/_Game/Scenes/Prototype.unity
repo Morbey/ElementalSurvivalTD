@@ -287,6 +287,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.CombatView
   bootstrap: {fileID: 1930703238}
   enemyPrefab: {fileID: 3349037151500947416, guid: 2f22a8e21e83c4b29b38fe7efec2e4de, type: 3}
+  prewarmEnemies: 32
   projectilePrefab: {fileID: 1798104514909842710, guid: bb53354b8551442d1b5071c47b2555b0, type: 3}
   prewarmProjectiles: 16
 --- !u!4 &447701796
@@ -547,8 +548,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ElementalTD.Gameplay::ElementalTD.Gameplay.PrototypeBootstrap
   map: {fileID: 11400000, guid: 9a2f4aaf9b0ff453ca125385fd2f9dd9, type: 2}
-  enemy: {fileID: 11400000, guid: 1fa08f7a9bf1841548026b203ab65fdf, type: 2}
-  reentryDelaySeconds: 1
+  run: {fileID: 11400000, guid: 0fa7f4495a5764a9aa23363fc0ec42b2, type: 2}
 --- !u!114 &1930703239
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -576,6 +576,7 @@ GameObject:
   - component: {fileID: 1997445110}
   - component: {fileID: 1997445109}
   - component: {fileID: 1997445112}
+  - component: {fileID: 1997445113}
   m_Layer: 0
   m_Name: Hud
   m_TagString: Untagged
@@ -698,6 +699,25 @@ PanelRenderer:
   m_PivotReferenceSize: 0
   m_Pivot: 0
   m_Position: 0
+--- !u!114 &1997445113
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1997445108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a98e7df5f902344238256a80a956cc36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.RunHudView
+  document: {fileID: 1997445110}
+  bootstrap: {fileID: 1930703238}
+  waveText: Wave {0}/{1}
+  livesText: Lives {0}
+  nextWaveText: Next wave in {0} s
+  victoryText: Victory
+  defeatText: Defeat
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

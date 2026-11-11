@@ -24,7 +24,7 @@ A restart reloads the scene, so no state can leak from one run into the next. Di
 - **3a-AC12 Data.** Lives and waves come only from `Run_Prototype.asset`: 10 lives; ten waves of `Enemy_Prototype` with 3, 4, 5 … 12 enemies; a spawn interval of 1 s; a delay of 15 s before wave 1 and 8 s before the others. Every delay is within 5 to 20 s. No code holds one of these numbers.
 - **3a-AC13 Provisional design target.** With those values on the prototype map: a player who builds nothing is defeated 50 to 53 s into the run, when the third enemy of wave 3 reaches the exit; the last enemy enters 152 s in; towers on (3,5), (6,6), (8,6), (8,3), (11,2), (13,2), (14,3) and (3,3), placed before wave 1, win with all 10 lives between 2 min 30 s and 3 min. The numbers come from a rough planning simulation; the `balance-designer` replaces them and this criterion in 3b. 2c-AC9 still holds for one enemy.
 - **3a-AC14 Tick and layers.** `Battle.Tick()` runs waves, enemies, towers, projectiles and the outcome, in that order. Waves, lives and the outcome are rules of `ElementalTD.Core`, which still compiles with `noEngineReferences: true`. Gameplay instantiates nothing. A whole run with the same placements at the same ticks ends at the same tick with the same outcome (2c-AC10).
-- **3a-AC15 Allocation.** `Battle.Tick()` allocates 0 bytes, also on a spawn, a kill, an exit and a lost life, except when more enemies or projectiles are on the board than ever before in the run. The per-frame view code has no `new` of a reference type, LINQ, closure or boxing, and builds a HUD text only when its number changes.
+- **3a-AC15 Allocation.** `Battle.Tick()` allocates 0 bytes, also on a spawn, a kill, an exit and a lost life, except on a tick where a pool grows: more enemies or projectiles on the board, or more of their objects free at once, than ever before in the run. The per-frame view code has no `new` of a reference type, LINQ, closure or boxing, and builds a HUD text only when its number changes.
 - **3a-AC16 WebGL.** All of the above works in the worktree build at `http://localhost:8766`, in Chrome and Safari, with no visible stutter in wave 10. `http://localhost:8765` keeps serving the 2c build.
 
 ## Editor sequencing
@@ -155,7 +155,7 @@ All on the worktree with its editor closed. The EditMode tests need no scene, so
 - **3a-AC12:** `Run_Prototype.asset` holds the closed values and every delay is within 5 to 20 s; `ToWaves()` returns them and throws for no wave or a missing enemy.
 - **3a-AC13, named as a provisional design target:** from the three prototype assets, the three checks of the criterion; the 2c-AC9 tests pass on a one-enemy wave.
 - **3a-AC14:** two battles with the same waves and the same placements at the same ticks are identical after every tick of a whole run. The Core asmdef and source tests pass.
-- **3a-AC15:** `Is.Not.AllocatingGCMemory` over several hundred ticks that cover spawns, kills, exits and lost lives, after a warm-up. Put the largest wave first, so the warm-up reaches the peak.
+- **3a-AC15:** `Is.Not.AllocatingGCMemory` over several hundred ticks that cover spawns, kills, exits and lost lives, after a warm-up. Put the largest wave first, so the warm-up reaches the peak; the warm-up must include the board emptying after the peak.
 
 **PlayMode**, in `Prototype.unity`, driven tick by tick as in 2c:
 - **3a-AC8, AC9, at start:** no enemy view is active, 32 inactive objects named `Enemy` exist, the labels read "Wave 0/10", "Lives 10" and "Next wave in 15 s", and `end-screen` is hidden.

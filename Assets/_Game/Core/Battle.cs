@@ -4,47 +4,48 @@ using System.Collections.Generic;
 namespace ElementalTD.Core
 {
     /// <summary>
-    /// Advances the board in fixed ticks: re-entry, enemies, towers, projectiles, in that order.
-    /// The prototype's one enemy loops: after leaving the board (killed or at the exit) it re-enters at the spawn.
+    /// Plays one run in fixed ticks: waves, enemies, towers, projectiles, then the outcome, in that order.
+    /// Enemies enter by the wave schedule, cost a life at the exit and leave for good when killed.
     /// </summary>
     public sealed class Battle
     {
         public const float TickSeconds = 1f / 60f;
 
-        private readonly Enemy _enemy;
-        private readonly float _reentryDelaySeconds;
-        private float _reentryTimer;
         private readonly List<Projectile> _projectiles = new List<Projectile>();
         private readonly Stack<Projectile> _freeProjectiles = new Stack<Projectile>();
 
         public Board Board { get; }
+        public WaveSchedule Waves { get; }
+        public int Lives { get; private set; }
+        public RunOutcome Outcome { get; private set; }
         public int ProjectileCount => _projectiles.Count;
         public Projectile ProjectileAt(int index) => _projectiles[index];
 
-        public Battle(Board board, in EnemyStats enemy, float reentryDelaySeconds)
+        public Battle(Board board, Wave[] waves, int lives)
         {
             Board = board ?? throw new ArgumentNullException(nameof(board));
-            if (reentryDelaySeconds < 0f)
-                throw new ArgumentOutOfRangeException(nameof(reentryDelaySeconds), reentryDelaySeconds, "The re-entry delay cannot be negative.");
+            if (lives < 1) throw new ArgumentOutOfRangeException(nameof(lives), lives, "A run needs at least one life.");
 
-            _reentryDelaySeconds = reentryDelaySeconds;
-            _enemy = new Enemy(board.Field, board.Spawn, enemy);
-            board.AddEnemy(_enemy);
+            Waves = new WaveSchedule(waves);
+            Lives = lives;
+            Outcome = RunOutcome.Running;
         }
 
+        /// <summary>Does nothing once the run is won or lost.</summary>
         public void Tick()
         {
-            StepReentry();
+            if (Outcome != RunOutcome.Running) return;
+
+            StepWaves();
             StepEnemies();
             StepTowers();
             StepProjectiles();
+            JudgeOutcome();
         }
 
-        private void StepReentry()
+        private void StepWaves()
         {
-            if (_enemy.IsOnBoard) return;
-            _reentryTimer -= TickSeconds;
-            if (_reentryTimer <= 0f) Board.AddEnemy(_enemy);
+            if (Waves.Step(TickSeconds, out EnemyStats enemy)) Board.SpawnEnemy(enemy);
         }
 
         private void StepEnemies()
@@ -53,7 +54,11 @@ namespace ElementalTD.Core
             while (i < Board.EnemyCount)
             {
                 Enemy enemy = Board.EnemyAt(i);
-                if (enemy.Step(TickSeconds)) Leave(enemy); // removed from the list, so i now holds the next one
+                if (enemy.Step(TickSeconds))
+                {
+                    Board.RemoveEnemy(enemy); // removed from the list, so i now holds the next one
+                    if (Lives > 0) Lives--;
+                }
                 else i++;
             }
         }
@@ -101,7 +106,7 @@ namespace ElementalTD.Core
                 Enemy target = projectile.Target;
                 target.TakeDamage(projectile.Damage);
                 Release(i);
-                if (target.Health <= 0f) Leave(target);
+                if (target.Health <= 0f) Board.RemoveEnemy(target);
             }
         }
 
@@ -130,10 +135,19 @@ namespace ElementalTD.Core
             return best;
         }
 
-        private void Leave(Enemy enemy)
+        /// <summary>The loss is judged first, so the last enemy of the run reaching the exit with the last life loses.</summary>
+        private void JudgeOutcome()
         {
-            Board.RemoveEnemy(enemy);
-            if (enemy == _enemy) _reentryTimer = _reentryDelaySeconds;
+            if (Lives == 0)
+            {
+                Outcome = RunOutcome.Lost;
+                return;
+            }
+
+            if (!Waves.IsFinished || Board.EnemyCount > 0) return;
+
+            Outcome = RunOutcome.Won;
+            while (_projectiles.Count > 0) Release(_projectiles.Count - 1);
         }
 
         private void Release(int index)

@@ -8,12 +8,7 @@ namespace ElementalTD.Core.Tests
     {
         private static readonly TowerStats Stats = new TowerStats(2.5f, 10f, 1.5f, 10f);
 
-        private static Enemy AddEnemy(Board board)
-        {
-            var enemy = new Enemy(board.Field, board.Spawn, new EnemyStats(2f, 100f));
-            board.AddEnemy(enemy);
-            return enemy;
-        }
+        private static Enemy AddEnemy(Board board) => board.SpawnEnemy(new EnemyStats(2f, 100f));
 
         private static Board PrototypeBoard()
         {

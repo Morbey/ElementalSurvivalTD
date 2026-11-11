@@ -1,95 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using ElementalTD.Core;
-using ElementalTD.Data;
-using ElementalTD.Gameplay;
 using ElementalTD.Presentation;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.TestTools;
 using UnityEngine.UIElements;
 using Is = UnityEngine.TestTools.Constraints.Is;
 using UnityEngine.TestTools.Constraints;
+using UnityEngine.TestTools;
 
 namespace ElementalTD.PlayModeTests
 {
-    public class PrototypeSceneTests
+    public class PrototypeSceneTests : SceneTestBase
     {
         private const string SpawnOrExitText = "Cannot build on the spawn or the exit.";
         private const string WallText = "Cannot build on a wall.";
         private const string EnemyText = "An enemy is in the way.";
         private const string PathText = "That would block the path.";
-
-        private MapDefinition _map;
-        private PrototypeBootstrap _bootstrap;
-        private TowerPlacementInput _input;
-        private Camera _camera;
-        private Label _label;
-
-        [UnitySetUp]
-        public IEnumerator SetUp()
-        {
-#if UNITY_EDITOR
-            _map = UnityEditor.AssetDatabase.LoadAssetAtPath<MapDefinition>("Assets/_Game/Data/Assets/Map_Prototype.asset");
-#endif
-            Assert.IsNotNull(_map, "Map_Prototype.asset not found");
-            Time.timeScale = 0f; // enemy must not move before the first assertions
-            yield return SceneManager.LoadSceneAsync("Prototype", LoadSceneMode.Single);
-            yield return null;
-            yield return null;
-
-            _bootstrap = Object.FindAnyObjectByType<PrototypeBootstrap>();
-            _input = Object.FindAnyObjectByType<TowerPlacementInput>();
-            _camera = Object.FindAnyObjectByType<Camera>();
-            Assert.IsNotNull(_bootstrap);
-            Assert.IsNotNull(_input);
-            Assert.IsNotNull(_camera);
-            // A real mouse device would overwrite the hover and could click; the tests drive the public methods.
-            _input.enabled = false;
-            var document = Object.FindAnyObjectByType<UIDocument>();
-            Assert.IsNotNull(document);
-            _label = document.rootVisualElement.Q<Label>("placement-message");
-            Assert.IsNotNull(_label);
-        }
-
-        [UnityTearDown]
-        public IEnumerator TearDown()
-        {
-            Time.timeScale = 1f;
-            if (_camera != null) _camera.ResetAspect();
-            yield return null;
-        }
-
-        private static EnemyView[] Agents() => Object.FindObjectsByType<EnemyView>(FindObjectsInactive.Include);
-
-        private GridPos CellOf(Vector3 p) =>
-            new GridPos(Mathf.FloorToInt(p.x / _map.CellSize), Mathf.FloorToInt(p.z / _map.CellSize));
-
-        private Vector2 ScreenOf(GridPos cell) => _camera.WorldToScreenPoint(_map.CellToWorld(cell));
-
-        private void ClickCell(int x, int y) => _input.Click(ScreenOf(new GridPos(x, y)));
-
-        // A screen corner is always off the grid: the frame leaves half a cell of padding on the fitting side.
-        private static readonly Vector2 OffGrid = Vector2.zero;
-
-        private bool MessageShown() => _label.resolvedStyle.display == DisplayStyle.Flex;
-
-        private static Transform FindByName(string name)
-        {
-            foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include))
-                if (t.name == name) return t;
-            return null;
-        }
-
-        [Test]
-        public void AC2_Scene_Has_Exactly_One_Enemy_At_The_Spawn_Cell_Centre()
-        {
-            EnemyView[] agents = Agents();
-            Assert.AreEqual(1, agents.Length);
-            Vector3 expected = _map.CellToWorld(_map.Spawn);
-            Assert.Less(Vector3.Distance(expected, agents[0].transform.position), 0.01f);
-        }
 
         [Test]
         public void AC1_Scene_Camera_Is_Orthographic_And_Straight_Down()
@@ -158,75 +85,23 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(0, Object.FindObjectsByType<Collider>(FindObjectsInactive.Include).Length);
         }
 
-        // ---- 2c: driven tick by tick (timeScale 0 in SetUp), rendering every few ticks
-
-        private Battle Battle => _bootstrap.Battle;
-
-        private static Transform FillPivot() => FindByName("FillPivot");
-
-        /// <summary>Ticks the battle until the condition holds (checked after every tick), letting views render every 5 ticks, then once more.</summary>
-        private IEnumerator TickUntil(System.Func<bool> condition, int maxTicks)
-        {
-            int ticks = 0;
-            while (!condition() && ticks < maxTicks)
-            {
-                Battle.Tick();
-                ticks++;
-                if (ticks % 5 == 0) yield return null;
-            }
-            Assert.IsTrue(condition(), "the condition was never reached");
-            yield return null;
-        }
-
-        private void PlaceKillingTowers()
-        {
-            ClickCell(6, 6);
-            ClickCell(11, 2);
-            Assert.IsTrue(_bootstrap.Board.HasTower(new GridPos(6, 6)));
-            Assert.IsTrue(_bootstrap.Board.HasTower(new GridPos(11, 2)));
-        }
-
-        [UnityTest]
-        public IEnumerator S2c_AC4_AC6_Enemy_Reaches_The_Exit_View_Is_Inactive_For_About_1s_Then_The_Same_View_Is_Back_On_The_Spawn()
-        {
-            Board board = _bootstrap.Board;
-            Enemy enemy = board.EnemyAt(0);
-            EnemyView view = Agents()[0];
-            Assert.IsTrue(view.gameObject.activeSelf);
-
-            yield return TickUntil(() => board.EnemyCount == 0, 2000);
-            Assert.AreEqual(enemy.MaxHealth, enemy.Health, "no tower: it reached the exit");
-            Assert.IsFalse(view.gameObject.activeSelf, "not drawn while off the board");
-
-            int ticks = 0;
-            while (board.EnemyCount == 0 && ticks < 200) { Battle.Tick(); ticks++; }
-            yield return null;
-
-            Assert.That(ticks, Is.InRange(60, 62), "about one second of game time");
-            Assert.IsTrue(view.gameObject.activeSelf);
-            Assert.Less(Vector3.Distance(_map.CellToWorld(_map.Spawn), view.transform.position), 0.01f);
-            EnemyView[] all = Agents();
-            Assert.AreEqual(1, all.Length, "a single enemy view throughout");
-            Assert.AreSame(view, all[0]);
-            Assert.AreEqual(1f, FillPivot().localScale.x, 1e-4f);
-        }
-
         [UnityTest]
         public IEnumerator S2b_AC1_AC5_Enemy_Routes_Around_A_Tower_Placed_On_The_S_Route()
         {
             ClickCell(5, 7); // the gap of wall A: the route must go through (5,8)
-            Assert.IsTrue(_bootstrap.Board.HasTower(new GridPos(5, 7)));
-            Assert.AreEqual(29, _bootstrap.Board.Field.Distance(_map.Spawn), "route recalculated in the same frame");
+            Assert.IsTrue(Board.HasTower(new GridPos(5, 7)));
+            Assert.AreEqual(29, Board.Field.Distance(_map.Spawn), "route recalculated in the same frame");
 
+            yield return TickUntilFirstEnemy();
+            Enemy enemy = Board.EnemyAt(0);
             var visited = new HashSet<GridPos>();
-            Time.timeScale = 5f;
-            float deadline = Time.realtimeSinceStartup + 6f;
-            while (!visited.Contains(new GridPos(9, 7)) && Time.realtimeSinceStartup < deadline)
+            for (int tick = 0; tick < 1500 && !visited.Contains(new GridPos(9, 7)) && enemy.IsOnBoard; tick++)
             {
-                yield return null;
-                GridPos cell = CellOf(Agents()[0].transform.position);
-                Assert.IsFalse(_bootstrap.Board.Map.IsBlocked(cell), $"enemy inside blocked cell {cell}");
+                Battle.Tick();
+                GridPos cell = enemy.Follower.From;
+                Assert.IsFalse(Board.Map.IsBlocked(cell), $"enemy inside blocked cell {cell}");
                 visited.Add(cell);
+                if (tick % 20 == 0) yield return null;
             }
 
             Assert.IsTrue(visited.Contains(new GridPos(9, 7)), "enemy never got past the tower");
@@ -268,7 +143,12 @@ namespace ElementalTD.PlayModeTests
             {
                 case "spawnOrExit": ClickCell(_map.Spawn.X, _map.Spawn.Y); expected = SpawnOrExitText; break;
                 case "wall": ClickCell(5, 0); expected = WallText; break;
-                case "enemy": ClickCell(1, 4); expected = EnemyText; break; // the follower's To at start
+                case "enemy":
+                    yield return TickUntilFirstEnemy();
+                    GridPos heading = Board.EnemyAt(0).Follower.To; // the cell it is walking to
+                    ClickCell(heading.X, heading.Y);
+                    expected = EnemyText;
+                    break;
                 default:
                     ClickCell(5, 7);
                     yield return null;
@@ -380,105 +260,50 @@ namespace ElementalTD.PlayModeTests
         {
             var towerCell = new GridPos(1, 3);
             ClickCell(1, 3);
-            Enemy enemy = _bootstrap.Board.EnemyAt(0);
-            Assert.AreEqual(1f, FillPivot().localScale.x, 1e-4f, "full on entry");
+            yield return TickUntilFirstEnemy();
+            Enemy enemy = Board.EnemyAt(0);
+            Assert.AreEqual(1f, FillOf(EnemyViewAt(0)).localScale.x, 1e-4f, "full on entry");
 
             yield return TickUntil(() => Battle.ProjectileCount > 0, 100);
 
-            Transform root = FindByName("Projectiles");
             Transform shown = null;
-            foreach (Transform child in root)
+            foreach (Transform child in FindByName("Projectiles"))
                 if (child.gameObject.activeSelf) shown = child;
             Assert.IsNotNull(shown, "an active projectile view");
             Vector3 tower = _map.CellToWorld(towerCell);
-            Vector3 target = Agents()[0].transform.position;
+            Vector3 target = EnemyViewAt(0).position;
             float detour = Vector3.Distance(tower, shown.position) + Vector3.Distance(shown.position, target) - Vector3.Distance(tower, target);
             Assert.Less(detour, 0.3f * _map.CellSize, "on the way from the tower to the enemy");
 
             yield return TickUntil(() => enemy.Health < enemy.MaxHealth, 300);
             Assert.AreEqual(90f, enemy.Health);
-            Assert.AreEqual(enemy.Health / enemy.MaxHealth, FillPivot().localScale.x, 1e-4f);
-        }
-
-        [UnityTest]
-        public IEnumerator S2c_AC5_With_Towers_On_6_6_And_11_2_The_Enemy_View_Hides_Before_The_Exit_And_Returns_With_A_Full_Bar()
-        {
-            PlaceKillingTowers();
-            Board board = _bootstrap.Board;
-            Enemy enemy = board.EnemyAt(0);
-            EnemyView view = Agents()[0];
-
-            yield return TickUntil(() => board.EnemyCount == 0, 3000);
-            Assert.LessOrEqual(enemy.Health, 0f, "killed, not arrived");
-            Assert.IsFalse(view.gameObject.activeSelf);
-
-            yield return TickUntil(() => board.EnemyCount == 1, 200);
-            Assert.IsTrue(view.gameObject.activeSelf);
-            Assert.AreEqual(1f, FillPivot().localScale.x, 1e-4f, "full bar on the first visible frame");
-            Assert.Less(Vector3.Distance(_map.CellToWorld(_map.Spawn), view.transform.position), 0.01f);
-        }
-
-        [UnityTest]
-        public IEnumerator S2c_AC6_After_Several_Passes_With_Three_Towers_No_Enemy_Or_Projectile_View_Was_Created_Or_Destroyed()
-        {
-            ClickCell(6, 6);
-            ClickCell(11, 2);
-            ClickCell(2, 2);
-            yield return null;
-
-            var before = new List<Transform>();
-            foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include))
-                if (t.name == "Enemy" || t.name == "Projectile") before.Add(t);
-            Assert.AreEqual(17, before.Count, "one enemy view and a pool of 16");
-
-            int deaths = 0, maxShown = 0;
-            Enemy enemy = _bootstrap.Board.EnemyAt(0);
-            bool wasOn = true;
-            for (int tick = 0; tick < 4000; tick++)
-            {
-                Battle.Tick();
-                if (wasOn && !enemy.IsOnBoard) deaths++;
-                wasOn = enemy.IsOnBoard;
-                if (Battle.ProjectileCount > maxShown) maxShown = Battle.ProjectileCount;
-                if (tick % 5 == 0) yield return null;
-            }
-            yield return null;
-
-            Assert.GreaterOrEqual(deaths, 3, "a few passes");
-            Assert.Greater(maxShown, 0);
-            Assert.LessOrEqual(maxShown, 16, "the pool did not need to grow");
-            var after = new List<Transform>();
-            foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include))
-                if (t.name == "Enemy" || t.name == "Projectile") after.Add(t);
-            CollectionAssert.AreEquivalent(before, after, "the same view objects, none created or destroyed");
-            foreach (Transform t in before) Assert.IsTrue(t != null);
-            Assert.AreEqual(0, Object.FindObjectsByType<Collider>(FindObjectsInactive.Include).Length);
+            Assert.AreEqual(enemy.Health / enemy.MaxHealth, FillOf(EnemyViewAt(0)).localScale.x, 1e-4f);
         }
 
         [UnityTest]
         public IEnumerator S2c_AC11_On_A_Straight_Stretch_The_Enemy_View_Moves_On_Every_Frame_By_Speed_Times_Frame_Time()
         {
+            yield return TickUntilFirstEnemy();
+            Enemy enemy = Board.EnemyAt(0);
+            for (int i = 0; i < 5; i++) Battle.Tick(); // two tick positions to interpolate between
+            Transform view = EnemyViewAt(0);
             Time.timeScale = 1f;
-            EnemyView view = Agents()[0];
-            float speed = _bootstrap.Board.EnemyAt(0).Speed;
-            Enemy enemy = _bootstrap.Board.EnemyAt(0);
-            // Let the new time scale take effect and the enemy leave the spawn: until its first ticks the view has nothing to interpolate.
-            for (int i = 0; i < 3 || enemy.X < 0.2f; i++) yield return null;
-            Vector3 last = view.transform.position;
+            for (int i = 0; i < 3; i++) yield return null; // let the new time scale take effect
+            Vector3 last = view.position;
             float lastDt = Time.deltaTime;
             for (int frame = 0; frame < 40; frame++)
             {
                 yield return null;
-                Vector3 now = view.transform.position;
+                Vector3 now = view.position;
                 // The view shown now was drawn by the previous frame's LateUpdate, from that frame's delta time.
-                float expected = speed * lastDt * _map.CellSize;
+                float expected = enemy.Speed * lastDt * _map.CellSize;
                 float moved = Vector3.Distance(last, now);
                 Assert.Greater(moved, 0f, $"frame {frame}: the enemy did not move");
                 Assert.AreEqual(expected, moved, 0.15f * expected + 0.002f, $"frame {frame}");
                 last = now;
                 lastDt = Time.deltaTime;
             }
-            Assert.IsTrue(_bootstrap.Board.EnemyAt(0).Follower.To.X <= 4, "still on the first straight stretch");
+            Assert.IsTrue(enemy.Follower.To.X <= 4, "still on the first straight stretch");
         }
 
         [UnityTest]

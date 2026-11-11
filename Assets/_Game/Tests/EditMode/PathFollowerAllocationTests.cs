@@ -35,8 +35,7 @@ namespace ElementalTD.Core.Tests
             var a = new GridPos(2, 2);
             var c1 = new GridPos(5, 7);
             var c2 = new GridPos(5, 8);
-            var enemy = new Enemy(board.Field, board.Spawn, new EnemyStats(2f, 100f));
-            board.AddEnemy(enemy);
+            Enemy enemy = board.SpawnEnemy(new EnemyStats(2f, 100f));
             PathFollower follower = enemy.Follower;
             var stats = new TowerStats(2.5f, 10f, 1.5f, 10f);
 
