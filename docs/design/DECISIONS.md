@@ -34,6 +34,7 @@
   - Damage is **x2** against the weak element and **x0.25** against the strong one.
 - Secondary resistances (damage **x0.75**): Earth resists Fire, Fire resists Shadow, Air resists Light and Shadow resists Earth.
 - Immunity to the own element is absolute and nothing breaks it, not even Cursed.
+- A tower never targets an enemy that is immune to it.
 - Hybrids: there are 15 combinations of two elements, and each base element takes part in five. Some three-element hybrids appear late in the run, as rares.
 - First batch of hybrids, with each base element appearing once:
   - **Nature** = Earth + Water
@@ -61,7 +62,7 @@ Each slice ends in something Eduardo can see or play.
   - [ ] **3a:** ten automatic waves of several enemies, lives lost at the exit, and a win or lose screen with a restart.
   - [ ] **3b:** gold and selling: towers cost gold, kills pay gold, the screen shows the balance, and a click on a tower sells it, with the full refund until its first shot and a partial one after. Interest waits for a later slice.
   - [ ] **3c:** enemies move diagonally, without cutting corners; the prototype numbers are retuned for the shorter routes.
-- [ ] **Slice 4:** two elements, with x2 and x0.25 damage.
+- [ ] **Slice 4:** Light and Shadow. The player buys Light or Shadow towers, both available from the start, and each wave is of one element, announced before it arrives. Damage is x2 against the other element and none against the own. The x0.25 case waits for a third element: with immunity to the own element, two elements of the main cycle leave one tower with no good target.
 - [ ] **Slice 5:** level up through XP and pick one perk.
 
 ### After the prototype
