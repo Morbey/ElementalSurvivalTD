@@ -20,4 +20,4 @@ ADR 0001 deferred the `Presentation` layer until the first real visual or UI. Sl
 ## Consequences
 - The PlayMode test assembly also references Presentation.
 - Presentation, not Gameplay, owns the camera framing and everything that only shows state, so Gameplay components stay testable without visuals.
-- A click on the UI must not reach the board. ADR 0004 covers the end screen; the general rule waits for the first button shown during play.
+- A click on the UI must not reach the board; ADR 0004 holds the rule.

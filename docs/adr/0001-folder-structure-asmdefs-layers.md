@@ -30,7 +30,7 @@ Pathfinding is one **flow field**: shortest distances from the exit over an 8-ne
 | Object pooling | **Applies.** Projectiles from slice 2c (ADR 0003), enemies from slice 3a (ADR 0004). | – |
 | GPU instancing | Deferred. A few hundred primitives with a shared material batch through the SRP Batcher; slice 3a has about twenty enemies at most (ADR 0004). | A browser measurement shows the enemy peak costing frames. |
 | Fixed-tick logic | **Applies from slice 2c** (ADR 0003). | – |
-| Modifier system | Deferred. Enemy and tower stats are read directly from data. | The first modifier (slice 5 perks, or Slowed). |
+| Modifier system | Deferred. Enemy and tower stats are read directly from data; the elemental multiplier is not a modifier (ADR 0005). | The first modifier (slice 5 perks, or Slowed). |
 | Seeded, injectable RNG | Not needed. Nothing is random yet. | The first random draw (slice 5 perk options). |
 | Zero allocations in `Update` | **Applies now.** Arrays are allocated once; no LINQ, boxing or closures in the movement path. | – |
 
