@@ -4,7 +4,7 @@ using UnityEditor;
 
 namespace ElementalTD.Core.Tests
 {
-    /// <summary>The prototype run asset (3a-AC12) and the provisional design targets built on it (3a-AC13).</summary>
+    /// <summary>The prototype assets (3b-AC8) and the design targets of docs/balance/0001-prototype-economy.md built on them (3b-AC9). The wave entry ticks stay a 3a-AC13 test.</summary>
     public class RealAssetRunTests
     {
         private const string Dir = "Assets/_Game/Data/Assets/";
@@ -22,26 +22,41 @@ namespace ElementalTD.Core.Tests
             var run = Load<RunDefinition>("Run_Prototype.asset");
             tower = Load<TowerDefinition>("Tower_Prototype.asset").ToStats();
             board = new Board(map.ToGridMap(), map.Spawn, map.Exit);
-            return new Battle(board, run.ToWaves(), lives ?? run.Lives);
+            return new Battle(board, run.ToWaves(), lives ?? run.Lives, run.StartingGold, run.SellRefundPercent);
         }
 
+        // ---- 3b-AC8 Data: the values of the balance document
+
+        private static readonly string[] WaveAssets =
+        {
+            "Enemy_Health45.asset", "Enemy_Health55.asset", "Enemy_Health65.asset", "Enemy_Health75.asset", "Enemy_Health90.asset",
+            "Enemy_Prototype.asset", "Enemy_Health115.asset", "Enemy_Health130.asset", "Enemy_Health150.asset", "Enemy_Health175.asset"
+        };
+        private static readonly float[] WaveHealth = { 45f, 55f, 65f, 75f, 90f, 100f, 115f, 130f, 150f, 175f };
+
         [Test]
-        public void S3a_AC12_Run_Prototype_Holds_The_Closed_Values()
+        public void S3b_AC8_The_Assets_Hold_The_Values_Of_The_Balance_Document()
         {
             var run = Load<RunDefinition>("Run_Prototype.asset");
-            var enemy = Load<EnemyDefinition>("Enemy_Prototype.asset").ToStats();
+            TowerStats tower = Load<TowerDefinition>("Tower_Prototype.asset").ToStats();
+
+            Assert.AreEqual(100, run.StartingGold);
+            Assert.AreEqual(50, run.SellRefundPercent);
+            Assert.AreEqual(10, run.Lives);
+            Assert.AreEqual(50, tower.Cost);
+            Assert.AreEqual((2.5f, 10f, 1.5f, 10f), (tower.Range, tower.Damage, tower.ShotsPerSecond, tower.ProjectileSpeed), "combat stats unchanged");
 
             Wave[] waves = run.ToWaves();
-
-            Assert.AreEqual(10, run.Lives);
             Assert.AreEqual(10, waves.Length);
             for (int i = 0; i < waves.Length; i++)
             {
+                EnemyStats asset = Load<EnemyDefinition>(WaveAssets[i]).ToStats();
                 Assert.AreEqual(3 + i, waves[i].Count, $"wave {i + 1} count");
                 Assert.AreEqual(1f, waves[i].SpawnIntervalSeconds, $"wave {i + 1} interval");
                 Assert.AreEqual(i == 0 ? 15f : 8f, waves[i].DelayBeforeSeconds, $"wave {i + 1} delay");
                 Assert.That(waves[i].DelayBeforeSeconds, Is.InRange(5f, 20f));
-                Assert.AreEqual((enemy.Speed, enemy.MaxHealth), (waves[i].Enemy.Speed, waves[i].Enemy.MaxHealth), $"wave {i + 1} enemy");
+                Assert.AreEqual((2f, WaveHealth[i], 10), (waves[i].Enemy.Speed, waves[i].Enemy.MaxHealth, waves[i].Enemy.GoldReward), $"wave {i + 1} enemy");
+                Assert.AreEqual((asset.Speed, asset.MaxHealth, asset.GoldReward), (waves[i].Enemy.Speed, waves[i].Enemy.MaxHealth, waves[i].Enemy.GoldReward), $"wave {i + 1} uses {WaveAssets[i]}");
             }
         }
 
@@ -68,39 +83,83 @@ namespace ElementalTD.Core.Tests
             Assert.AreEqual(9120, last, 1, "the last enemy enters 152 s in");
         }
 
-        [Test]
-        public void S3a_AC13_ProvisionalTarget_Building_Nothing_Is_Defeated_50_To_53_Seconds_In()
-        {
-            Battle battle = Build(out _, out _);
-            int lostAt = -1;
-            for (int tick = 1; tick <= 6000 && lostAt < 0; tick++)
-            {
-                battle.Tick();
-                if (battle.Outcome == RunOutcome.Lost) lostAt = tick;
-            }
 
-            Assert.Greater(lostAt, 0, "never lost");
-            Assert.That(lostAt / 60f, Is.InRange(50f, 53f));
-            Assert.AreEqual(0, battle.Lives);
+        // ---- 3b-AC9 Design target (provisional, from the balance document)
+
+        // Tick (Tick() calls done before the action), cell, true = buy / false = sell.
+        private static readonly (int tick, int x, int y, bool buy)[] ReferenceOrder =
+        {
+            (0, 0, 8, true), (0, 0, 8, false), (0, 2, 5, true), (0, 3, 5, true),
+            (1740, 3, 6, true), (2460, 6, 6, true), (3210, 7, 6, true), (3930, 8, 5, true),
+            (4350, 2, 5, false), (4350, 3, 5, false), (4350, 9, 3, true), (4350, 8, 2, true),
+            (5280, 6, 5, true), (5820, 7, 5, true), (6240, 8, 3, true), (6840, 8, 6, true),
+            (7260, 9, 2, true), (7890, 2, 5, true), (8280, 3, 5, true), (8820, 13, 2, true), (9300, 14, 2, true),
+        };
+
+        [Test]
+        public void S3b_AC9_DesignTarget_At_The_Start_The_Gold_Buys_Exactly_Two_Towers_And_Refuses_The_Third()
+        {
+            Battle battle = Build(out _, out TowerStats tower);
+
+            Assert.AreEqual(PlacementResult.Placed, battle.TryBuyTower(new GridPos(2, 5), tower));
+            Assert.AreEqual(PlacementResult.Placed, battle.TryBuyTower(new GridPos(3, 5), tower));
+            Assert.AreEqual(0, battle.Gold);
+            Assert.AreEqual(PlacementResult.NotEnoughGold, battle.TryBuyTower(new GridPos(6, 6), tower));
+            Assert.AreEqual(2, battle.Board.TowerCount);
         }
 
         [Test]
-        public void S3a_AC13_ProvisionalTarget_The_Eight_Planned_Towers_Win_With_All_Lives_Between_2_30_And_3_00()
+        public void S3b_AC9_DesignTarget_Building_Nothing_Is_Defeated_At_Tick_3089_With_The_Gold_Unspent()
         {
-            Battle battle = Build(out Board board, out TowerStats tower);
-            foreach (var (x, y) in new[] { (3, 5), (6, 6), (8, 6), (8, 3), (11, 2), (13, 2), (14, 3), (3, 3) })
-                Assert.AreEqual(PlacementResult.Placed, board.TryPlaceTower(new GridPos(x, y), tower), $"({x},{y})");
-
-            int wonAt = -1;
-            for (int tick = 1; tick <= 12000 && battle.Outcome == RunOutcome.Running; tick++)
+            Battle battle = Build(out _, out _);
+            int ticks = 0;
+            while (battle.Outcome == RunOutcome.Running && ticks < 6000)
             {
                 battle.Tick();
-                if (battle.Outcome != RunOutcome.Running) wonAt = tick;
+                ticks++;
             }
 
+            Assert.AreEqual(RunOutcome.Lost, battle.Outcome);
+            Assert.AreEqual(3089, ticks, 1, "document: lost on the 3089th Tick()");
+            Assert.AreEqual(0, battle.Lives);
+            Assert.AreEqual(100, battle.Gold);
+            Assert.That(ticks / 60f, Is.InRange(50f, 53f));
+        }
+
+        [Test]
+        public void S3b_AC9_DesignTarget_The_Reference_Build_Order_Wins_With_All_Lives_And_50_Gold_Left()
+        {
+            Battle battle = Build(out Board board, out TowerStats tower);
+            int next = 0, ticks = 0, firstKillTick = -1;
+            int rewardedAt = -1;
+            while (battle.Outcome == RunOutcome.Running && ticks < 12000)
+            {
+                while (next < ReferenceOrder.Length && ReferenceOrder[next].tick == ticks)
+                {
+                    var a = ReferenceOrder[next++];
+                    var cell = new GridPos(a.x, a.y);
+                    if (a.buy)
+                    {
+                        Assert.GreaterOrEqual(battle.Gold, tower.Cost, $"tick {a.tick} ({a.x},{a.y}): affordable");
+                        Assert.AreEqual(PlacementResult.Placed, battle.TryBuyTower(cell, tower), $"tick {a.tick} buy ({a.x},{a.y})");
+                    }
+                    else Assert.IsTrue(battle.TrySellTower(cell), $"tick {a.tick} sell ({a.x},{a.y})");
+                }
+
+                int gold = battle.Gold;
+                battle.Tick();
+                ticks++;
+                if (firstKillTick < 0 && battle.Gold > gold) { firstKillTick = ticks; rewardedAt = battle.Gold - gold; }
+            }
+
+            Assert.AreEqual(ReferenceOrder.Length, next, "every action ran");
             Assert.AreEqual(RunOutcome.Won, battle.Outcome);
-            Assert.AreEqual(10, battle.Lives, "all lives");
-            Assert.That(wonAt / 60f, Is.InRange(150f, 180f));
+            Assert.AreEqual(10, battle.Lives);
+            Assert.AreEqual(50, battle.Gold);
+            Assert.AreEqual(9577, ticks, 1, "document: won on the 9577th Tick()");
+            Assert.AreEqual(988, firstKillTick, 1, "document: the first kill pays on tick 988");
+            Assert.AreEqual(10, rewardedAt);
+            Assert.AreEqual(15, board.TowerCount, "net towers of the order");
         }
     }
 }

@@ -5,6 +5,7 @@ What the team has learned about driving this project with the `unity` CLI. Add a
 ## Editor open or closed
 - The team works in a git worktree with its own `Library` and never touches the editor on Eduardo's checkout. Every `unity` call names the worktree by its full path, never by project name (`unity test <worktree> …`, `unity command --project-path <worktree> …`), and `unity status --project-path <worktree>` comes before any `unity command`.
 - `unity command …` needs the interactive editor open: `unity projects open <worktree> --until-ready`. Close it with `unity command --project-path <worktree> editor quit --save true`, or `unity close <worktree> --force` if it is stuck.
+- An editor opened with `--until-ready` once quit cleanly seconds after reporting ready, with no error in `Logs/Editor.log`. Check `unity status` before the first command and open it again if the list is empty.
 - `unity test` and `unity build` start their own batch editor and refuse to run while the interactive editor has the project open.
 - Do not run tests inside the open editor (`unity command test run`): it hung on a save-scene prompt and blocked every later command.
 

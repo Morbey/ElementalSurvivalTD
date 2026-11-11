@@ -122,14 +122,54 @@ namespace ElementalTD.PlayModeTests
 
         protected IEnumerator TickUntilFirstEnemy() => TickUntil(() => Board.EnemyCount > 0, 1200, 50);
 
-        /// <summary>The eight towers of the 3a-AC13 plan, placed through the input before the first wave.</summary>
-        protected void PlaceEightTowers()
+        /// <summary>
+        /// The reference build order of docs/balance/0001-prototype-economy.md: after this many Tick() calls, click this cell
+        /// (a purchase, or a sale when the cell holds a tower). The same table is in RealAssetRunTests.
+        /// </summary>
+        protected static readonly (int tick, int x, int y, bool buy)[] ReferenceOrder =
         {
-            foreach (var (x, y) in new[] { (3, 5), (6, 6), (8, 6), (8, 3), (11, 2), (13, 2), (14, 3), (3, 3) })
+            (0, 0, 8, true), (0, 0, 8, false), (0, 2, 5, true), (0, 3, 5, true),
+            (1740, 3, 6, true), (2460, 6, 6, true), (3210, 7, 6, true), (3930, 8, 5, true),
+            (4350, 2, 5, false), (4350, 3, 5, false), (4350, 9, 3, true), (4350, 8, 2, true),
+            (5280, 6, 5, true), (5820, 7, 5, true), (6240, 8, 3, true), (6840, 8, 6, true),
+            (7260, 9, 2, true), (7890, 2, 5, true), (8280, 3, 5, true), (8820, 13, 2, true), (9300, 14, 2, true),
+        };
+
+        private int _nextAction;
+
+        /// <summary>Clicks the reference actions that are due after this many ticks, checking that each one did what it should.</summary>
+        protected void RunReferenceActionsAt(int ticks)
+        {
+            int cost = _input.Tower.ToStats().Cost;
+            while (_nextAction < ReferenceOrder.Length && ReferenceOrder[_nextAction].tick == ticks)
             {
+                var (tick, x, y, buy) = ReferenceOrder[_nextAction++];
+                int gold = Battle.Gold;
                 ClickCell(x, y);
-                Assert.IsTrue(Board.HasTower(new GridPos(x, y)), $"tower on ({x},{y})");
+                if (buy)
+                {
+                    Assert.GreaterOrEqual(gold, cost, $"tick {tick} ({x},{y}): affordable");
+                    Assert.IsTrue(Board.HasTower(new GridPos(x, y)), $"tick {tick}: bought ({x},{y})");
+                    Assert.AreEqual(gold - cost, Battle.Gold, $"tick {tick}: paid for ({x},{y})");
+                }
+                else
+                {
+                    Assert.IsFalse(Board.HasTower(new GridPos(x, y)), $"tick {tick}: sold ({x},{y})");
+                    Assert.Greater(Battle.Gold, gold, $"tick {tick}: refund for ({x},{y})");
+                }
             }
+        }
+
+        protected Label GoldLabel => Root.Q<Label>("gold-label");
+
+        protected int StartingGold()
+        {
+            int gold = -1;
+#if UNITY_EDITOR
+            gold = UnityEditor.AssetDatabase.LoadAssetAtPath<RunDefinition>("Assets/_Game/Data/Assets/Run_Prototype.asset").StartingGold;
+#endif
+            Assert.GreaterOrEqual(gold, 0, "Run_Prototype.asset not found");
+            return gold;
         }
 
         /// <summary>A real left click through the Input System, which the UI Toolkit panel and the placement input both read.</summary>

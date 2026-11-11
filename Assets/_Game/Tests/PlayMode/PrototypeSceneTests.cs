@@ -92,8 +92,9 @@ namespace ElementalTD.PlayModeTests
             Assert.IsTrue(Board.HasTower(new GridPos(5, 7)));
             Assert.AreEqual(29, Board.Field.Distance(_map.Spawn), "route recalculated in the same frame");
 
-            yield return TickUntilFirstEnemy();
-            Enemy enemy = Board.EnemyAt(0);
+            // The tower now kills a wave-1 enemy (45 health) before it gets far, so the walker is a test enemy that cannot die.
+            Enemy enemy = Board.SpawnEnemy(new EnemyStats(2f, 1_000_000f));
+            yield return null;
             var visited = new HashSet<GridPos>();
             for (int tick = 0; tick < 1500 && !visited.Contains(new GridPos(9, 7)) && enemy.IsOnBoard; tick++)
             {
@@ -113,7 +114,10 @@ namespace ElementalTD.PlayModeTests
         public IEnumerator S2b_AC1_AC2_Click_Places_Tower_On_Cell_Centre_And_Blocks_It_Second_Click_Removes_It()
         {
             var cell = new GridPos(2, 2);
+            int gold = Battle.Gold;
+            int cost = _input.Tower.ToStats().Cost;
             ClickCell(2, 2);
+            Assert.AreEqual(gold - cost, Battle.Gold, "the purchase is paid");
             GameObject tower = GameObject.Find("Tower 2,2");
             Assert.IsNotNull(tower);
             Assert.Less(Vector3.Distance(_map.CellToWorld(cell), tower.transform.position), 0.01f);
@@ -123,6 +127,7 @@ namespace ElementalTD.PlayModeTests
             ClickCell(2, 2);
             yield return null;
             Assert.IsNull(GameObject.Find("Tower 2,2"));
+            Assert.AreEqual(gold, Battle.Gold, "3b-AC5: a tower that never fired refunds everything");
             Assert.IsFalse(_bootstrap.Board.HasTower(cell));
             Assert.IsFalse(_bootstrap.Board.Map.IsBlocked(cell));
 
@@ -276,7 +281,7 @@ namespace ElementalTD.PlayModeTests
             Assert.Less(detour, 0.3f * _map.CellSize, "on the way from the tower to the enemy");
 
             yield return TickUntil(() => enemy.Health < enemy.MaxHealth, 300);
-            Assert.AreEqual(90f, enemy.Health);
+            Assert.AreEqual(enemy.MaxHealth - 10f, enemy.Health, "one hit of 10");
             Assert.AreEqual(enemy.Health / enemy.MaxHealth, FillOf(EnemyViewAt(0)).localScale.x, 1e-4f);
         }
 

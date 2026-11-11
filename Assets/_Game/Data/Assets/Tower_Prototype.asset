@@ -16,3 +16,4 @@ MonoBehaviour:
   damage: 10
   shotsPerSecond: 1.5
   projectileSpeedCellsPerSecond: 10
+  cost: 50

@@ -13,24 +13,26 @@ MonoBehaviour:
   m_Name: Run_Prototype
   m_EditorClassIdentifier: ElementalTD.Data::ElementalTD.Data.RunDefinition
   lives: 10
+  startingGold: 100
+  sellRefundPercent: 50
   waves:
-  - enemy: {fileID: 11400000, guid: 1fa08f7a9bf1841548026b203ab65fdf, type: 2}
+  - enemy: {fileID: 11400000, guid: 1b2931de768704ba38f477125d5a08f8, type: 2}
     count: 3
     spawnIntervalSeconds: 1
     delayBeforeSeconds: 15
-  - enemy: {fileID: 11400000, guid: 1fa08f7a9bf1841548026b203ab65fdf, type: 2}
+  - enemy: {fileID: 11400000, guid: e3a283ddee4954ed5a5eff44c38519d2, type: 2}
     count: 4
     spawnIntervalSeconds: 1
     delayBeforeSeconds: 8
-  - enemy: {fileID: 11400000, guid: 1fa08f7a9bf1841548026b203ab65fdf, type: 2}
+  - enemy: {fileID: 11400000, guid: edb7bd9d7c50246a1b5156901c7c0760, type: 2}
     count: 5
     spawnIntervalSeconds: 1
     delayBeforeSeconds: 8
-  - enemy: {fileID: 11400000, guid: 1fa08f7a9bf1841548026b203ab65fdf, type: 2}
+  - enemy: {fileID: 11400000, guid: 454534eb44ddf4dc4aff7056a51bf918, type: 2}
     count: 6
     spawnIntervalSeconds: 1
     delayBeforeSeconds: 8
-  - enemy: {fileID: 11400000, guid: 1fa08f7a9bf1841548026b203ab65fdf, type: 2}
+  - enemy: {fileID: 11400000, guid: 7b7ce5431194c4604a330fff383ea604, type: 2}
     count: 7
     spawnIntervalSeconds: 1
     delayBeforeSeconds: 8
@@ -38,19 +40,19 @@ MonoBehaviour:
     count: 8
     spawnIntervalSeconds: 1
     delayBeforeSeconds: 8
-  - enemy: {fileID: 11400000, guid: 1fa08f7a9bf1841548026b203ab65fdf, type: 2}
+  - enemy: {fileID: 11400000, guid: 3a6cba5056bec447db70941edc52c0ca, type: 2}
     count: 9
     spawnIntervalSeconds: 1
     delayBeforeSeconds: 8
-  - enemy: {fileID: 11400000, guid: 1fa08f7a9bf1841548026b203ab65fdf, type: 2}
+  - enemy: {fileID: 11400000, guid: 4b7a516877c604bfe89b7805dc3ab1fd, type: 2}
     count: 10
     spawnIntervalSeconds: 1
     delayBeforeSeconds: 8
-  - enemy: {fileID: 11400000, guid: 1fa08f7a9bf1841548026b203ab65fdf, type: 2}
+  - enemy: {fileID: 11400000, guid: 392acdc06acaa40c5bfba7801a41c17e, type: 2}
     count: 11
     spawnIntervalSeconds: 1
     delayBeforeSeconds: 8
-  - enemy: {fileID: 11400000, guid: 1fa08f7a9bf1841548026b203ab65fdf, type: 2}
+  - enemy: {fileID: 11400000, guid: 99d26eb22ca8f4694a8baf671f7437f8, type: 2}
     count: 12
     spawnIntervalSeconds: 1
     delayBeforeSeconds: 8

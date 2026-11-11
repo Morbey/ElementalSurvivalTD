@@ -602,6 +602,7 @@ MonoBehaviour:
   cellBlockedText: Cannot build on a wall.
   enemyInTheWayText: An enemy is in the way.
   wouldBlockPathText: That would block the path.
+  notEnoughGoldText: Not enough gold.
   duration: 2
 --- !u!114 &1997445110
 MonoBehaviour:
@@ -715,6 +716,7 @@ MonoBehaviour:
   bootstrap: {fileID: 1930703238}
   waveText: Wave {0}/{1}
   livesText: Lives {0}
+  goldText: Gold {0}
   nextWaveText: Next wave in {0} s
   victoryText: Victory
   defeatText: Defeat

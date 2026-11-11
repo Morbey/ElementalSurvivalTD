@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: ElementalTD.Data::ElementalTD.Data.EnemyDefinition
   speedCellsPerSecond: 2
   maxHealth: 100
+  goldReward: 10

@@ -43,6 +43,7 @@ namespace ElementalTD.PlayModeTests
             WaveSchedule waves = Battle.Waves;
             Assert.AreEqual($"Wave {waves.StartedWaves}/{Waves}", Text("wave-label").text);
             Assert.AreEqual($"Lives {Battle.Lives}", Text("lives-label").text);
+            Assert.AreEqual($"Gold {Battle.Gold}", GoldLabel.text);
             Label countdown = Text("next-wave-label");
             if (waves.SecondsToNextWave > 0f)
             {
@@ -93,7 +94,7 @@ namespace ElementalTD.PlayModeTests
         private readonly HashSet<Enemy> _previouslyShown = new HashSet<Enemy>();
 
         /// <summary>Plays the whole run by ticking (some ticks per frame), checking every frame, until the outcome is decided.</summary>
-        private IEnumerator PlayToTheEnd(int ticksPerFrame, int maxTicks)
+        private IEnumerator PlayToTheEnd(int ticksPerFrame, int maxTicks, bool referenceOrder = false)
         {
             CaptureViews();
             yield return null;
@@ -101,7 +102,11 @@ namespace ElementalTD.PlayModeTests
             int ticks = 0;
             while (Battle.Outcome == RunOutcome.Running && ticks < maxTicks)
             {
-                for (int i = 0; i < ticksPerFrame && Battle.Outcome == RunOutcome.Running; i++, ticks++) Battle.Tick();
+                for (int i = 0; i < ticksPerFrame && Battle.Outcome == RunOutcome.Running; i++, ticks++)
+                {
+                    if (referenceOrder) RunReferenceActionsAt(ticks);
+                    Battle.Tick();
+                }
                 yield return null;
                 AssertFrame();
             }
@@ -122,6 +127,7 @@ namespace ElementalTD.PlayModeTests
 
             Assert.AreEqual("Wave 0/10", Text("wave-label").text);
             Assert.AreEqual("Lives 10", Text("lives-label").text);
+            Assert.AreEqual($"Gold {StartingGold()}", GoldLabel.text, "3b-AC7: the start shows the asset's starting gold");
             Assert.AreEqual("Next wave in 15 s", Text("next-wave-label").text);
             Assert.IsTrue(Shown(Text("next-wave-label")));
             Assert.IsFalse(Shown(End), "the end screen starts hidden");
@@ -156,13 +162,14 @@ namespace ElementalTD.PlayModeTests
         // ---- 3a-AC5, AC6, AC8, AC9, AC13: a run with the eight planned towers is won
 
         [UnityTest]
-        public IEnumerator S3a_AC9_AC8_A_Run_With_Eight_Towers_Wins_Every_Frame_Is_Consistent_And_No_View_Is_Created_Or_Destroyed()
+        public IEnumerator S3b_AC9_AC8_A_Run_Of_The_Reference_Build_Order_Wins_Every_Frame_Is_Consistent_And_No_View_Is_Created_Or_Destroyed()
         {
-            PlaceEightTowers();
-            yield return PlayToTheEnd(3, 12000);
+            yield return PlayToTheEnd(3, 12000, referenceOrder: true);
 
             Assert.AreEqual(RunOutcome.Won, Battle.Outcome);
             Assert.AreEqual(10, Battle.Lives);
+            Assert.AreEqual(50, Battle.Gold);
+            Assert.AreEqual("Gold 50", GoldLabel.text);
             Assert.AreEqual("Wave 10/10", Text("wave-label").text);
             Assert.IsFalse(Shown(Text("next-wave-label")), "hidden from wave 10 on");
             Assert.AreEqual("Victory", Text("end-title").text);
@@ -175,12 +182,18 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(16, CountNamed("Projectile"));
             Assert.AreEqual(0, Object.FindObjectsByType<Collider>(FindObjectsInactive.Include).Length);
 
-            // The run is over: a click on a free cell places nothing, and the hover hides.
+            // 3b-AC6: the run is over, so a click on a tower and a click on a free cell change neither the towers nor the gold.
             int towers = Board.TowerCount;
+            ClickCell(14, 2); // a tower of the order
             ClickCell(2, 2);
             _input.Hover(ScreenOf(new GridPos(2, 2)));
             yield return null;
+            yield return null;
+            Assert.IsTrue(Board.HasTower(new GridPos(14, 2)));
             Assert.AreEqual(towers, Board.TowerCount);
+            Assert.AreEqual(towers, FindByName("Towers").childCount);
+            Assert.AreEqual(50, Battle.Gold);
+            Assert.AreEqual("Gold 50", GoldLabel.text);
             Assert.IsFalse(_input.HasHoverCell);
             Assert.IsFalse(FindByName("Hover").gameObject.activeSelf);
         }
@@ -227,6 +240,31 @@ namespace ElementalTD.PlayModeTests
             Assert.IsFalse(_input.HasHoverCell);
             Assert.IsFalse(FindByName("Hover").gameObject.activeSelf);
             Assert.AreEqual(0, Board.TowerCount);
+            Assert.IsFalse(MessageShown());
+        }
+
+        // ---- 3b-AC6: after a defeat, a click on a tower and on a free cell change nothing
+
+        [UnityTest]
+        public IEnumerator S3b_AC6_After_A_Defeat_A_Click_On_A_Tower_Or_A_Free_Cell_Changes_Neither_The_Towers_Nor_The_Gold()
+        {
+            ClickCell(0, 0); // far from the route: the run is lost
+            ClickCell(1, 0);
+            Assert.AreEqual(0, Battle.Gold);
+            yield return TickUntil(() => Battle.Outcome == RunOutcome.Lost, 6000, 50);
+            yield return null;
+            Assert.AreEqual(0, Battle.Gold);
+
+            ClickCell(0, 0); // a tower
+            ClickCell(4, 0); // a free cell
+            yield return null;
+            yield return null;
+
+            Assert.AreEqual(2, Board.TowerCount);
+            Assert.AreEqual(2, FindByName("Towers").childCount);
+            Assert.IsTrue(Board.HasTower(new GridPos(0, 0)));
+            Assert.AreEqual(0, Battle.Gold);
+            Assert.AreEqual("Gold 0", GoldLabel.text);
             Assert.IsFalse(MessageShown());
         }
 
@@ -280,6 +318,8 @@ namespace ElementalTD.PlayModeTests
                 Assert.AreEqual(10, Battle.Lives);
                 Assert.AreEqual("Wave 0/10", Text("wave-label").text);
                 Assert.AreEqual("Lives 10", Text("lives-label").text);
+                Assert.AreEqual($"Gold {StartingGold()}", GoldLabel.text, $"round {round}: the starting gold again");
+                Assert.AreEqual(StartingGold(), Battle.Gold);
                 Assert.AreEqual("Next wave in 15 s", Text("next-wave-label").text);
                 Assert.IsFalse(Shown(End), $"round {round}: end screen hidden");
                 _input.enabled = false;
