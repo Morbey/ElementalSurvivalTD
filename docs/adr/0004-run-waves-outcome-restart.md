@@ -1,6 +1,6 @@
 # ADR 0004 – Runs: waves as data, the outcome and the restart
 
-Status: Accepted (prototype slice 3a; gold added in step 3b; wave groups, the survival bonus and the general click rule in slice 4). Amends ADR 0001 (enemy pooling, GPU instancing), ADR 0002 (clicks on the UI) and ADR 0003 (tick order, enemies). Amended by ADR 0005 (elements).
+Status: Accepted (prototype slice 3a; gold added in step 3b; wave groups and the survival bonus in slice 4). Amends ADR 0001 (enemy pooling, GPU instancing), ADR 0002 (clicks on the UI) and ADR 0003 (tick order, enemies). Amended by ADR 0005 (elements).
 
 ## Context
 Slice 3a turns the one looping enemy of 2c into a run: ten waves of several enemies, lives lost at the exit, a win or a loss, and a restart. That needs a data format for waves, a home for the state of a run, many enemies drawn at once, and the first clickable UI. Step 3b adds gold: towers cost it, kills pay it and a sale refunds it. Slice 4 adds a gold bonus for each wave survived and the first buttons shown during play, and the design now lets a wave mix enemies of several elements.
@@ -12,7 +12,7 @@ Slice 3a turns the one looping enemy of 2c into a run: ten waves of several enem
 4. **Enemies are pooled like projectiles.** `Board` owns a free list of enemy objects: `SpawnEnemy` takes one and gives it the wave's stats, `RemoveEnemy` returns it. The entry count of ADR 0003 still tells a reused object from the one a shot was fired at. In Presentation the n-th pooled enemy view shows the n-th enemy on the board; views stay anonymous.
 5. **A restart reloads the scene.** The state of a run is never reset in place: a fresh run is a new `Board`, a new `Battle` and new views.
 6. **The HUD polls.** Views read `Battle` every frame and rewrite a label only when its number changes; the line that announces a survived wave polls a count of survived waves. The HUD and the end screen live in the one `UIDocument`.
-7. **A click on the UI never reaches the board.** Before it picks a cell, the placement input asks the UI panel what is under the pointer: over an element that takes clicks (a button, the end screen) there is no hover and no purchase or sale. Labels ignore picking, so the cells under them still work. The board input is also off once the run is over.
+7. **The board and the UI never share a click.** During a run no element that takes clicks lies over a cell: the HUD layout keeps the board in an area of its own (ADR 0002). The end screen covers the board only once the run is over, and board input is then off.
 
 ## Alternatives
 - **One asset per wave.** Ten files to keep in order, plus a list of them. A run is edited and balanced as a whole. Rejected.
@@ -26,7 +26,7 @@ Slice 3a turns the one looping enemy of 2c into a run: ten waves of several enem
 - **A view bound to each enemy through spawn and death events.** Needed once a view has state of its own, such as a death effect. Not yet; see ADR 0003.
 - **Reset in place** (clear the board, reset the battle, rebind the views). A faster restart, but every new piece of state needs its own reset, and a missed one leaks into the next run. Rejected.
 - **`Time.timeScale = 0` at the end.** It would have to be undone on restart, and a simulation that calls `Tick()` directly would not stop. Rejected.
-- **An `EventSystem` and `IsPointerOverGameObject` for the click rule.** One more scene object and a uGUI reference in Gameplay, for the answer the panel already gives. Rejected.
+- **Ask the UI panel what is under the pointer before every board click.** The general rule; deferred until an element that takes clicks lies over a board that takes input.
 - **GPU instancing for enemies.** 3a has about twenty enemies on the board at most, three renderers each, on the SRP Batcher. Still deferred, until a browser measurement says otherwise.
 
 ## Consequences
@@ -36,6 +36,6 @@ Slice 3a turns the one looping enemy of 2c into a run: ten waves of several enem
 - An enemy view may show a different enemy from one frame to the next, so a view keeps nothing that belongs to one enemy.
 - Every enemy shares one view prefab, and its element changes only its material (ADR 0005). A look per enemy definition needs a pool per prefab.
 - A mixed wave is a wave with more than one group. That step adds the walk over the groups in `WaveSchedule`, with the gap between two groups, and lifts the refusal; the data format, the wave count, the countdown, the bonus and the HUD already take it.
-- The placement input holds the `UIDocument`, an engine type; Gameplay still does not reference Presentation.
+- A screen that covers the board during a run (the perk choice) must turn board input off, as the end screen does, or bring the general click rule.
 - The HUD polls the gold, so nothing announces a single kill or sale. A view that needs the moment itself (a gold pop-up) needs the events ADR 0003 deferred.
 - `Board.TryPlaceTower` and `TryRemoveTower` stay public for tests and simulations; production code outside Core buys and sells through `Battle` only.

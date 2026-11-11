@@ -84,12 +84,15 @@ Each slice ends in something Eduardo can see or play.
 
 ## Parking lot
 Ideas raised mid-slice, one line each. Review them when a slice closes.
-- Colour the hover highlight by whether a tower can be placed there (needs a path check per hovered cell).
-- The hover highlight washes out the tower under it, and may stick when the mouse leaves the canvas fast. Tune both when Eduardo has tried 2b.
+- A red hover and a hidden range disc on a cell that would refuse the purchase (visual direction 1.4): needs a dry run of the placement per hovered cell, redone as enemies move.
+- The hover may stick when the mouse leaves the canvas fast (visual direction 1.4 wants it hidden): needs a pointer-leave signal from the browser.
 - Smarter tower targeting: count damage already in flight, so towers do not waste shots on an enemy about to die.
 - A click uses the pointer position of the frame that handles it, not of the press, so a click followed by a fast move inside one long frame lands on the wrong cell.
 - The run HUD (wave, lives, countdown) is drawn over the top-left cells of the board. Move it off the grid when the HUD gets its first real layout.
-- The tower's price and sell value are shown nowhere, and a misclick sells a tower that has fired at a loss with no confirmation.
+- The sell value is shown nowhere, and a misclick sells a tower that has fired at a loss with no confirmation.
+- Health bars hidden until the enemy first takes damage (visual direction 3): a few lines in the enemy view.
+- Walls as raised blocks, and a thin edge line on the range disc (visual direction 3).
+- Spawn and exit as rings (visual direction 3, open choice 2), when the first green or red element is built.
 - Wave health comes from one enemy asset per wave. Replace it with a per-wave modifier when the modifier system exists.
 - The cells beside a diagonal lane are refused while an enemy is on that step, about 70 percent of a wave. If it annoys in play, queue the placement until the cell is free.
 - On open ground enemies walk straight and then diagonal instead of the straightest line. Free-angle movement would fix the look, at a much higher cost.
