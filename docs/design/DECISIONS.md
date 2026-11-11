@@ -38,6 +38,7 @@
 - Secondary resistances (damage **x0.75**): Earth resists Fire, Fire resists Shadow, Air resists Light and Shadow resists Earth.
 - Immunity to the own element is absolute and nothing breaks it, not even Cursed.
 - A tower shoots the enemy closest to the exit in its range, even one immune to it; those shots are wasted. A talent teaches towers never to attack an enemy of their own element.
+- Every hit shows its damage over the enemy, and the look of the number tells an immune, a weak, a normal, a strong and a critical hit apart (for 8 base damage: 0, 2, 8, 16; a critical doubles it). It must stay readable with many enemies on screen. (Exact look still open.)
 - Hybrids: there are 15 combinations of two elements, and each base element takes part in five. Some three-element hybrids appear late in the run, as rares.
 - First batch of hybrids, with each base element appearing once:
   - **Nature** = Earth + Water
@@ -92,4 +93,3 @@ Ideas raised mid-slice, one line each. Review them when a slice closes.
 - The cells beside a diagonal lane are refused while an enemy is on that step, about 70 percent of a wave. If it annoys in play, queue the placement until the cell is free.
 - On open ground enemies walk straight and then diagonal instead of the straightest line. Free-angle movement would fix the look, at a much higher cost.
 - Mazing only pays late on the 16 x 9 map: a maze build holds 8 to 12 percent more enemy health than a plain one from 12 towers up and nothing more below 10. A bigger map or a cheap blocking cell would make it matter from the start.
-- A shot at an immune enemy shows nothing. Add a visible "immune" cue so the player understands why a tower is wasting shots.
