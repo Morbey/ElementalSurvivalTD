@@ -14,6 +14,7 @@
 - Luck: 0 is a pure draw. More luck means higher rarity, more options and more elements that are strong against the scenario.
 - Automatic waves on a timer, 5 to 20 s apart, with no manual pause. The screen always shows the next wave, with its enemy and element.
 - A run has a fixed number of waves (ten in the prototype). Clearing the last wave wins the run.
+- A wave may mix enemies of several elements. Slice 4 ships with one element per wave; mixed waves follow it.
 - An enemy that reaches the exit leaves the board and costs the player a life. At zero lives the run is lost.
 - Map: an open grid where the player builds a maze with towers. There is pathfinding, and flyers go in a straight line.
   - Enemies move in eight directions and always take a shortest path. Between equally short ways they keep going straight, otherwise turn, and go back only when that is strictly the shortest way.
