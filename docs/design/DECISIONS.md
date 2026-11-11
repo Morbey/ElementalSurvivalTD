@@ -86,3 +86,5 @@ Ideas raised mid-slice, one line each. Review them when a slice closes.
 - The tower's price and sell value are shown nowhere, and a misclick sells a tower that has fired at a loss with no confirmation.
 - A flat gold income at each wave start: with kills as the only income the economy is knife-edged (10 percent less gold per kill loses nearly every simulated run). Eduardo decides after playing 3b.
 - Wave health comes from one enemy asset per wave. Replace it with a per-wave modifier when the modifier system exists.
+- The cells beside a diagonal lane are refused while an enemy is on that step, about 70 percent of a wave. If it annoys in play, queue the placement until the cell is free.
+- On open ground enemies walk straight and then diagonal instead of the straightest line. Free-angle movement would fix the look, at a much higher cost.
