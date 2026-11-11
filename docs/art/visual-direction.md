@@ -67,7 +67,7 @@ Nothing permanent sits over the board. The camera frames the board inside the sc
   - wave bonus `Wave 3 survived +25`: `#FFC23D`, 3.0 s;
   - placement refusal, until it moves to the refused cell (below): `#FFFFFF`, 2.0 s, the texts of today.
 - Right, right-aligned: the tower buttons, 12 apart.
-- Growth: from four buyable towers the buttons switch to a compact form, 64 x 56: the key hint top-left (14) over an element tile of 28 x 28 with the price under it (14, `#FFC23D`); no name, the tile's initial carries it. Six compact buttons take 424, leaving the message line about 370 at 960 wide. The bar is built from the tower list, so this is a USS class, not a new layout.
+- From 4c the tower buttons move to the side column (1.5), where six fit; the bottom bar keeps the gold and the message line.
 
 **Tower button** (`.tower-button`), one per buyable element, in element order (Light, Shadow):
 - 152 x 56, row, centred vertically, padding 0 10, background `#45413B`, border 2 `#6B655A`, radius 6.
@@ -99,13 +99,20 @@ No sale look on towers in 4b: a click still sells there, but 4c replaces it a st
 ### 1.5 Tower selection (4c)
 **Selection frame**: a square frame of four bars around the selected tower's cell, outer 1.1 cells, bar width 0.08 cells, at height 0.03, Unlit, opaque `#FFFFFF` (contrast 3.2 with the stone floor). It lies outside the tile, over the grid lines, with a ring of floor between it and the tower, so it never touches or tints the tower: Light and Shadow keep their contrast with the floor. It differs from the hover by being opaque, larger than the cell and a frame, not a fill. One pooled frame; no pulse.
 
-**Options in the bottom bar** (recommended). While a tower is selected, the tower panel replaces the buy buttons in the same place, right-aligned. Nothing clickable comes over the board, so the input rule of 4b holds, and no cell or enemy is covered. The cost is eye travel from the tower to the bar; the frame on the board and the element tile and name in the panel tie the two together. A panel beside the tower would remove that travel, but it brings back the rule that a click on it must not reach the cell, it covers up to two cells and the enemies on them, and it needs placing and clamping at the board edges.
+**Side column** (from 4c). The panel must later hold four or five stats and a list of synergies, which a 72-high bar cannot. So 4c adds a column on the right, width **216**, between the top and the bottom bar, padding 12, no background; the camera frames the board in the area left of it. It holds the buy buttons while no tower is selected and the tower panel while one is. Nothing in it lies over a cell, so the input rule of 4b holds.
+- Cost: on a 16:9 screen the board loses nothing (it is height-bound); on the 16:10 browser canvas a cell goes from about 39 to 35 px. A bottom bar tall enough for the panel would cost height on every screen; a panel beside the tower would cover cells and enemies and bring back the click rule.
+- Buy buttons in the column: the tower button of 1.3, 192 x 56, stacked 8 apart from the top; six take 376 of the 488 available. The compact form is no longer needed.
 
-**Tower panel** (`#tower-panel`), one row, centred vertically, children 12 apart:
-- Element tile 28 x 28 (1.3) and, 8 to its right, the name `Light tower`, 18, bold, `#FFFFFF`.
-- **Upgrade**, not available yet: 120 x 56, background `#3A3733`, border 2 `#4F4A43`, radius 6; `Upgrade` 18 bold over `Soon` 14 regular, both `#8A8478`. Takes no clicks and has no hover or pressed look, so it reads as planned, not broken.
-- **Sell**: 120 x 56, background `#45413B`, radius 6; hover and pressed `#57524A`. `Sell` 18 bold `#FFFFFF` over the value line. A click sells at once and ends the selection.
-- Width: 28 + 8 + about 100 + 12 + 120 + 12 + 120 = about 400, inside the 424 of six compact buy buttons, so the panel fits the bar at every stage.
+**Tower panel** (`#tower-panel`), stacked from the top of the column; the actions sit at its bottom:
+- **Header**: element tile 28 x 28 (1.3) and, 8 to its right, `Light tower`, 18, bold, `#FFFFFF`.
+- **Stats**, 12 below: one row each, height 22, label left 16 regular `#B5AFA3`, value right 16 bold `#FFFFFF`. In 4c: `Element` (the name in its UI colour), `Damage` `10`, `Shots/s` `1.5`, `Range` `2.5`. Later rows (kind of shot, and so on) append below. Recommended for 4c: the values exist, it costs four labels, and the panel gets its real shape now.
+- **Synergies**, 16 below: heading `Synergies`, 14 bold `#B5AFA3`, then rows of height 28, up to six. In 4c it holds one line, `Found by playing the scenarios`, 14 regular `#8A8478`, marking the empty place.
+  - Known synergy: a 24 x 24 icon in its colours and its name, 16 bold `#FFFFFF`.
+  - Not yet discovered, if shown: a 24 x 24 tile `#3A3733` with border 1 `#6B655A` and a `?` (14, bold, `#8A8478`), with no name.
+- **Actions**, at the bottom of the column: Upgrade and Sell side by side, each 90 x 56, 12 apart.
+- **Upgrade**, not available yet: background `#3A3733`, border 2 `#4F4A43`, radius 6; `Upgrade` 18 bold over `Soon` 14 regular, both `#8A8478`. Takes no clicks and has no hover or pressed look, so it reads as planned, not broken.
+- **Sell**: background `#45413B`, radius 6; hover and pressed `#57524A`. `Sell` 18 bold `#FFFFFF` over the value line. A click sells at once and ends the selection.
+- Height: about 28 + 12 + 88 + 16 + 18 + 168 + 16 + 56 = 402 of the 488 available.
 
 **Sell value**, always what a click pays now. The value line is live while the panel is open, hovered or not: it follows the tower's state, never a pointer event.
 
