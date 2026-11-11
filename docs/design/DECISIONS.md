@@ -63,16 +63,16 @@
 ### Prototype slices
 Each slice ends in something Eduardo can see or play.
 - [x] **Slice 1:** a grid and one enemy crossing it with pathfinding. Includes the first ADR (folder structure, asmdefs and layers), limited to what this slice needs.
-- [ ] **Slice 2**, in three steps that Eduardo accepts one at a time:
-  - [ ] **2a:** a WebGL build of slice 1 that runs in the browser. It goes to a private itch.io page, rebuilt after every slice, once Eduardo provides the account.
-  - [ ] **2b:** the player places and removes blocking towers with the mouse; the path recalculates, and an invalid placement is refused with a message. The enemy respawns at the spawn when it reaches the exit, so the maze can be tried continuously.
-  - [ ] **2c:** towers shoot visible projectiles at the enemy in range that is closest to the exit, with no line of sight; the enemy shows its health, dies, and re-enters at the spawn with full health one second later (also after reaching the exit).
-- [ ] **Slice 3**, in three steps that Eduardo accepts one at a time:
-  - [ ] **3a:** ten automatic waves of several enemies, lives lost at the exit, and a win or lose screen with a restart.
-  - [ ] **3b:** gold and selling: towers cost gold, kills pay gold, the screen shows the balance, and a click on a tower sells it, with the full refund until its first shot and a partial one after. Interest waits for a later slice.
-  - [ ] **3c:** enemies move diagonally, without cutting corners; the prototype numbers are retuned for the shorter routes.
+- [x] **Slice 2**, in three steps that Eduardo accepts one at a time:
+  - [x] **2a:** a WebGL build of slice 1 that runs in the browser. It goes to a private itch.io page, rebuilt after every slice, once Eduardo provides the account.
+  - [x] **2b:** the player places and removes blocking towers with the mouse; the path recalculates, and an invalid placement is refused with a message. The enemy respawns at the spawn when it reaches the exit, so the maze can be tried continuously.
+  - [x] **2c:** towers shoot visible projectiles at the enemy in range that is closest to the exit, with no line of sight; the enemy shows its health, dies, and re-enters at the spawn with full health one second later (also after reaching the exit).
+- [x] **Slice 3**, in three steps that Eduardo accepts one at a time:
+  - [x] **3a:** ten automatic waves of several enemies, lives lost at the exit, and a win or lose screen with a restart.
+  - [x] **3b:** gold and selling: towers cost gold, kills pay gold, the screen shows the balance, and a click on a tower sells it, with the full refund until its first shot and a partial one after. Interest waits for a later slice.
+  - [x] **3c:** enemies move diagonally, without cutting corners; the prototype numbers are retuned for the shorter routes.
 - [ ] **Slice 4**, in steps that Eduardo accepts one at a time:
-  - [ ] **4a:** a gold bonus for each wave survived.
+  - [x] **4a:** a gold bonus for each wave survived.
   - [ ] **4b:** Light and Shadow. The player buys Light or Shadow towers, both available from the start, and each wave is of one element, announced before it arrives. Damage is x2 against the other element and none against the own. The x0.25 case waits for a third element: with immunity to the own element, two elements of the main cycle leave one tower with no good target.
   - [ ] **4c:** selecting a tower, with Upgrade (not yet working) and Sell showing its value.
   - [ ] **4d:** damage numbers over the enemies, and the refusal message at the refused cell.
