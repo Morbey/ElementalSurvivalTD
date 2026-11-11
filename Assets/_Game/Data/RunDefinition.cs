@@ -4,24 +4,43 @@ using UnityEngine;
 
 namespace ElementalTD.Data
 {
-    /// <summary>A whole run: the lives, the gold and the waves in order, edited and balanced as one asset (ADR 0004).</summary>
+    /// <summary>A whole run: the lives, the gold and the waves in order, each with its groups, edited and balanced as one asset (ADR 0004).</summary>
     [CreateAssetMenu(fileName = "Run_", menuName = "ElementalTD/Run Definition")]
     public sealed class RunDefinition : ScriptableObject
     {
         [Serializable]
-        private sealed class WaveEntry
+        private sealed class GroupEntry
         {
             [SerializeField] private EnemyDefinition enemy;
             [SerializeField, Min(1)] private int count = 1;
             [Tooltip("Must be above 0.")]
             [SerializeField, Min(0f)] private float spawnIntervalSeconds = 1f;
+
+            public WaveGroup ToGroup(string runName, int waveNumber, int groupNumber)
+            {
+                if (enemy == null) throw new InvalidOperationException($"{runName}: wave {waveNumber}, group {groupNumber} has no enemy.");
+                return new WaveGroup(enemy.ToStats(), count, spawnIntervalSeconds);
+            }
+        }
+
+        [Serializable]
+        private sealed class WaveEntry
+        {
             [Tooltip("Wave 1: from the start of the run. Others: from the entry of the previous wave's last enemy.")]
             [SerializeField, Min(0f)] private float delayBeforeSeconds;
+            [Tooltip("Gold paid once the wave's last enemy has left the board, to a player still alive.")]
+            [SerializeField, Min(0)] private int survivalBonus;
+            [Tooltip("In spawn order.")]
+            [SerializeField] private GroupEntry[] groups = new GroupEntry[0];
 
             public Wave ToWave(string runName, int number)
             {
-                if (enemy == null) throw new InvalidOperationException($"{runName}: wave {number} has no enemy.");
-                return new Wave(enemy.ToStats(), count, spawnIntervalSeconds, delayBeforeSeconds);
+                if (groups == null || groups.Length == 0) throw new InvalidOperationException($"{runName}: wave {number} has no group.");
+
+                var result = new WaveGroup[groups.Length];
+                for (int i = 0; i < groups.Length; i++)
+                    result[i] = groups[i].ToGroup(runName, number, i + 1);
+                return new Wave(result, delayBeforeSeconds, survivalBonus);
             }
         }
 

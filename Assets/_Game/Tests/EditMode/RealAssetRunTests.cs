@@ -51,12 +51,12 @@ namespace ElementalTD.Core.Tests
             for (int i = 0; i < waves.Length; i++)
             {
                 EnemyStats asset = Load<EnemyDefinition>(WaveAssets[i]).ToStats();
-                Assert.AreEqual(3 + i, waves[i].Count, $"wave {i + 1} count");
-                Assert.AreEqual(1f, waves[i].SpawnIntervalSeconds, $"wave {i + 1} interval");
+                Assert.AreEqual(3 + i, waves[i].GroupAt(0).Count, $"wave {i + 1} count");
+                Assert.AreEqual(1f, waves[i].GroupAt(0).SpawnIntervalSeconds, $"wave {i + 1} interval");
                 Assert.AreEqual(i == 0 ? 15f : 8f, waves[i].DelayBeforeSeconds, $"wave {i + 1} delay");
                 Assert.That(waves[i].DelayBeforeSeconds, Is.InRange(5f, 20f));
-                Assert.AreEqual((2f, WaveHealth[i], 10), (waves[i].Enemy.Speed, waves[i].Enemy.MaxHealth, waves[i].Enemy.GoldReward), $"wave {i + 1} enemy");
-                Assert.AreEqual((asset.Speed, asset.MaxHealth, asset.GoldReward), (waves[i].Enemy.Speed, waves[i].Enemy.MaxHealth, waves[i].Enemy.GoldReward), $"wave {i + 1} uses {WaveAssets[i]}");
+                Assert.AreEqual((2f, WaveHealth[i], 10), (waves[i].GroupAt(0).Enemy.Speed, waves[i].GroupAt(0).Enemy.MaxHealth, waves[i].GroupAt(0).Enemy.GoldReward), $"wave {i + 1} enemy");
+                Assert.AreEqual((asset.Speed, asset.MaxHealth, asset.GoldReward), (waves[i].GroupAt(0).Enemy.Speed, waves[i].GroupAt(0).Enemy.MaxHealth, waves[i].GroupAt(0).Enemy.GoldReward), $"wave {i + 1} uses {WaveAssets[i]}");
             }
         }
 

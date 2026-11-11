@@ -88,12 +88,13 @@ namespace ElementalTD.Core
 
         /// <summary>
         /// An enemy enters at the spawn with these stats and full health; its previous position is its position.
+        /// It belongs to the wave of that index, or to none at -1.
         /// Reuses an object that left the board, so a spawn allocates only at a new peak of enemies on the board.
         /// </summary>
-        public Enemy SpawnEnemy(in EnemyStats stats)
+        public Enemy SpawnEnemy(in EnemyStats stats, int waveIndex = -1)
         {
             Enemy enemy = _freeEnemies.Count > 0 ? _freeEnemies.Pop() : new Enemy(Field, Spawn);
-            enemy.Enter(Spawn, stats);
+            enemy.Enter(Spawn, stats, waveIndex);
             _enemies.Add(enemy);
             return enemy;
         }

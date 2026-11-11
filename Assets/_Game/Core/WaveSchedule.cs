@@ -4,7 +4,7 @@ namespace ElementalTD.Core
 {
     /// <summary>
     /// Says when the next enemy of a run enters: the waves in order, each after its delay, its enemies one per spawn interval.
-    /// One timer counts both; at most one enemy enters per step.
+    /// One timer counts both; at most one enemy enters per step. Every wave has exactly one group until mixed waves are built (ADR 0004).
     /// </summary>
     public sealed class WaveSchedule
     {
@@ -17,6 +17,8 @@ namespace ElementalTD.Core
         public int WaveCount => _waves.Length;
         /// <summary>Waves whose first enemy has entered.</summary>
         public int StartedWaves { get; private set; }
+        /// <summary>Waves whose last enemy has entered.</summary>
+        public int EnteredWaves => _wave;
         /// <summary>Above 0 only while a wave's delay runs.</summary>
         public float SecondsToNextWave => _inDelay && _timer > 0f ? _timer : 0f;
         /// <summary>The last enemy of the last wave has entered.</summary>
@@ -27,13 +29,15 @@ namespace ElementalTD.Core
             if (waves == null) throw new ArgumentNullException(nameof(waves));
             if (waves.Length == 0) throw new ArgumentException("A run needs at least one wave.", nameof(waves));
             for (int i = 0; i < waves.Length; i++)
-                if (waves[i].Count < 1) throw new ArgumentException($"Wave {i + 1} has no enemy.", nameof(waves));
+                if (waves[i].GroupCount != 1) throw new ArgumentException($"Wave {i + 1} must have exactly one group.", nameof(waves));
 
             // A copy, so changing the caller's array cannot change a running schedule.
             _waves = (Wave[])waves.Clone();
             _inDelay = true;
             _timer = _waves[0].DelayBeforeSeconds;
         }
+
+        public Wave WaveAt(int index) => _waves[index];
 
         /// <summary>Advances the timer by dt; returns true, with the enemy's stats, when an enemy enters now.</summary>
         public bool Step(float dt, out EnemyStats enemy)
@@ -48,15 +52,15 @@ namespace ElementalTD.Core
             // shorter than a tick from eating into the next wave's delay.
             if (_timer < -dt) _timer = -dt;
 
-            Wave wave = _waves[_wave];
-            enemy = wave.Enemy;
+            WaveGroup group = _waves[_wave].GroupAt(0);
+            enemy = group.Enemy;
             if (_enteredInWave == 0) StartedWaves++;
             _enteredInWave++;
             _inDelay = false;
 
-            if (_enteredInWave < wave.Count)
+            if (_enteredInWave < group.Count)
             {
-                _timer += wave.SpawnIntervalSeconds;
+                _timer += group.SpawnIntervalSeconds;
                 return true;
             }
 

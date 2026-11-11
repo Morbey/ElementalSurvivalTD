@@ -4,8 +4,9 @@ using System.Collections.Generic;
 namespace ElementalTD.Core
 {
     /// <summary>
-    /// Plays one run in fixed ticks: waves, enemies, towers, projectiles, then the outcome, in that order.
-    /// Enemies enter by the wave schedule, cost a life at the exit and pay their gold reward when killed.
+    /// Plays one run in fixed ticks: waves, enemies, towers, projectiles, wave bonuses, then the outcome, in that order.
+    /// Enemies enter by the wave schedule, cost a life at the exit and pay their gold reward when killed;
+    /// a wave pays its survival bonus once its last enemy has entered and none of its enemies is on the board.
     /// Towers are bought and sold here: the battle checks the gold, the board keeps the placement rule.
     /// </summary>
     public sealed class Battle
@@ -15,6 +16,7 @@ namespace ElementalTD.Core
         private readonly List<Projectile> _projectiles = new List<Projectile>();
         private readonly Stack<Projectile> _freeProjectiles = new Stack<Projectile>();
         private readonly int _sellRefundPercent;
+        private readonly bool[] _paidWaves;
 
         public Board Board { get; }
         public WaveSchedule Waves { get; }
@@ -22,6 +24,10 @@ namespace ElementalTD.Core
         /// <summary>Whole gold, never below 0.</summary>
         public int Gold { get; private set; }
         public RunOutcome Outcome { get; private set; }
+        /// <summary>Waves that have paid their survival bonus.</summary>
+        public int SurvivedWaves { get; private set; }
+        /// <summary>The number, from 1, of the wave that paid last; 0 before the first.</summary>
+        public int LastSurvivedWave { get; private set; }
         public int ProjectileCount => _projectiles.Count;
         public Projectile ProjectileAt(int index) => _projectiles[index];
 
@@ -34,6 +40,7 @@ namespace ElementalTD.Core
                 throw new ArgumentOutOfRangeException(nameof(sellRefundPercent), sellRefundPercent, "The sell refund percent must be 0 to 100.");
 
             Waves = new WaveSchedule(waves);
+            _paidWaves = new bool[Waves.WaveCount];
             Lives = lives;
             Gold = startingGold;
             _sellRefundPercent = sellRefundPercent;
@@ -75,12 +82,13 @@ namespace ElementalTD.Core
             StepEnemies();
             StepTowers();
             StepProjectiles();
+            StepWaveBonuses();
             JudgeOutcome();
         }
 
         private void StepWaves()
         {
-            if (Waves.Step(TickSeconds, out EnemyStats enemy)) Board.SpawnEnemy(enemy);
+            if (Waves.Step(TickSeconds, out EnemyStats enemy)) Board.SpawnEnemy(enemy, Waves.StartedWaves - 1);
         }
 
         private void StepEnemies()
@@ -149,6 +157,33 @@ namespace ElementalTD.Core
                     Board.RemoveEnemy(target);
                 }
             }
+        }
+
+        /// <summary>
+        /// Judged one by one, so waves may be survived out of order or on the same tick, each once.
+        /// The tick that takes the last life pays nothing; the last wave pays on the tick that wins.
+        /// </summary>
+        private void StepWaveBonuses()
+        {
+            if (Lives == 0) return;
+
+            int entered = Waves.EnteredWaves;
+            for (int w = 0; w < entered; w++)
+            {
+                if (_paidWaves[w] || HasEnemyOfWave(w)) continue;
+
+                _paidWaves[w] = true;
+                Gold += Waves.WaveAt(w).SurvivalBonus;
+                SurvivedWaves++;
+                LastSurvivedWave = w + 1;
+            }
+        }
+
+        private bool HasEnemyOfWave(int waveIndex)
+        {
+            for (int i = 0; i < Board.EnemyCount; i++)
+                if (Board.EnemyAt(i).WaveIndex == waveIndex) return true;
+            return false;
         }
 
         /// <summary>The enemy in range nearest the exit; on a tie, the first to enter.</summary>

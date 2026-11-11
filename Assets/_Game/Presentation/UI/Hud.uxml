@@ -6,7 +6,7 @@
         <ui:Label name="gold-label" picking-mode="Ignore" />
         <ui:Label name="next-wave-label" picking-mode="Ignore" />
     </ui:VisualElement>
-    <ui:Label name="placement-message" picking-mode="Ignore" />
+    <ui:Label name="message" picking-mode="Ignore" />
     <ui:VisualElement name="end-screen">
         <ui:Label name="end-title" picking-mode="Ignore" />
         <ui:Button name="restart-button" text="Restart" />

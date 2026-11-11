@@ -45,8 +45,8 @@ namespace ElementalTD.Core.Tests
 
                 Assert.AreEqual(7, run.Lives);
                 Assert.AreEqual(2, waves.Length);
-                Assert.AreEqual((2f, 100f, 3, 1f, 15f), (waves[0].Enemy.Speed, waves[0].Enemy.MaxHealth, waves[0].Count, waves[0].SpawnIntervalSeconds, waves[0].DelayBeforeSeconds));
-                Assert.AreEqual((3f, 40f, 4, 0.5f, 8f), (waves[1].Enemy.Speed, waves[1].Enemy.MaxHealth, waves[1].Count, waves[1].SpawnIntervalSeconds, waves[1].DelayBeforeSeconds));
+                Assert.AreEqual((2f, 100f, 3, 1f, 15f), (waves[0].GroupAt(0).Enemy.Speed, waves[0].GroupAt(0).Enemy.MaxHealth, waves[0].GroupAt(0).Count, waves[0].GroupAt(0).SpawnIntervalSeconds, waves[0].DelayBeforeSeconds));
+                Assert.AreEqual((3f, 40f, 4, 0.5f, 8f), (waves[1].GroupAt(0).Enemy.Speed, waves[1].GroupAt(0).Enemy.MaxHealth, waves[1].GroupAt(0).Count, waves[1].GroupAt(0).SpawnIntervalSeconds, waves[1].DelayBeforeSeconds));
             }
             finally
             {

@@ -13,6 +13,8 @@ namespace ElementalTD.Core
         /// <summary>Keeps its last value while off the board.</summary>
         public float Health { get; private set; }
         public int GoldReward { get; private set; }
+        /// <summary>The index of the wave it entered with; -1 outside a wave.</summary>
+        public int WaveIndex { get; private set; }
         public bool IsOnBoard { get; internal set; }
         public float X { get; private set; }
         public float Y { get; private set; }
@@ -32,8 +34,9 @@ namespace ElementalTD.Core
             Follower = new PathFollower(field, start);
         }
 
-        internal void Enter(GridPos spawn, in EnemyStats stats)
+        internal void Enter(GridPos spawn, in EnemyStats stats, int waveIndex)
         {
+            WaveIndex = waveIndex;
             Speed = stats.Speed;
             MaxHealth = stats.MaxHealth;
             Health = MaxHealth;

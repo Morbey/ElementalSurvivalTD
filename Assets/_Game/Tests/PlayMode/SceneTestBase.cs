@@ -74,7 +74,7 @@ namespace ElementalTD.PlayModeTests
             Assert.IsNotNull(_document);
             // A real mouse device would overwrite the hover and could click; the tests drive the public methods.
             if (disableInput) _input.enabled = false;
-            _label = Root.Q<Label>("placement-message");
+            _label = Root.Q<Label>("message");
             Assert.IsNotNull(_label);
         }
 
