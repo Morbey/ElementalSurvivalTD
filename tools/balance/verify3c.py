@@ -35,7 +35,7 @@ def play(B, acts, trace=False):
 print('3b numbers, nothing:', play(Battle, [])[:4])
 print('3b numbers, 3b reference:', play(Battle, REF3B)[:5])
 # tick-by-tick against core8.py
-sys.path.insert(0, '../plan3c'); import core8
+sys.path.insert(0, 'ref3c'); import core8
 rng = random.Random(7); diffs = 0
 free = [(x, y) for x in range(W) for y in range(H) if (x, y) not in WALLS and (x, y) not in (SPAWN, EXIT)]
 for trial in range(12):
