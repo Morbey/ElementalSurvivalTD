@@ -35,7 +35,7 @@ namespace ElementalTD.Core.Tests
         private static readonly float[] WaveHealth = { 45f, 55f, 65f, 75f, 90f, 100f, 130f, 175f, 230f, 305f };
 
         [Test]
-        public void S3b_AC8_The_Assets_Hold_The_Values_Of_The_Balance_Document()
+        public void S3b_AC8_S4a_AC5_The_Assets_Hold_The_Values_Of_The_Balance_Document()
         {
             var run = Load<RunDefinition>("Run_Prototype.asset");
             TowerStats tower = Load<TowerDefinition>("Tower_Prototype.asset").ToStats();
@@ -51,6 +51,8 @@ namespace ElementalTD.Core.Tests
             for (int i = 0; i < waves.Length; i++)
             {
                 EnemyStats asset = Load<EnemyDefinition>(WaveAssets[i]).ToStats();
+                Assert.AreEqual(1, waves[i].GroupCount, $"wave {i + 1}: one group");
+                Assert.AreEqual(10, waves[i].SurvivalBonus, $"wave {i + 1} bonus");
                 Assert.AreEqual(3 + i, waves[i].GroupAt(0).Count, $"wave {i + 1} count");
                 Assert.AreEqual(1f, waves[i].GroupAt(0).SpawnIntervalSeconds, $"wave {i + 1} interval");
                 Assert.AreEqual(i == 0 ? 15f : 8f, waves[i].DelayBeforeSeconds, $"wave {i + 1} delay");
@@ -110,25 +112,30 @@ namespace ElementalTD.Core.Tests
         }
 
         [Test]
-        public void S3c_AC8_DesignTarget_Building_Nothing_Is_Defeated_At_Tick_2931_With_The_Gold_Unspent()
+        public void S3c_AC8_S4a_AC6_DesignTarget_Building_Nothing_Is_Defeated_At_Tick_2931_With_The_Gold_Unspent_Plus_Two_Bonuses()
         {
             Battle battle = Build(out _, out _);
-            int ticks = 0;
+            int ticks = 0, wave1 = -1, wave2 = -1;
             while (battle.Outcome == RunOutcome.Running && ticks < 6000)
             {
                 battle.Tick();
                 ticks++;
+                if (wave1 < 0 && battle.SurvivedWaves >= 1) { wave1 = ticks; Assert.AreEqual(125, battle.Gold, "wave 1 pays 10"); }
+                if (wave2 < 0 && battle.SurvivedWaves >= 2) { wave2 = ticks; Assert.AreEqual(135, battle.Gold, "wave 2 pays 10"); }
             }
 
             Assert.AreEqual(RunOutcome.Lost, battle.Outcome);
             Assert.AreEqual(2931, ticks, 1, "document: lost on the 2931st Tick()");
+            Assert.AreEqual(1672, wave1, 1, "document: wave 1 pays on tick 1672");
+            Assert.AreEqual(2332, wave2, 1, "document: wave 2 pays on tick 2332");
+            Assert.AreEqual(2, battle.SurvivedWaves, "wave 3 is still on the board on the losing tick and pays nothing");
             Assert.AreEqual(0, battle.Lives);
-            Assert.AreEqual(115, battle.Gold);
+            Assert.AreEqual(135, battle.Gold, "115 + two bonuses");
             Assert.AreEqual(0, battle.Board.TowerCount);
         }
 
         [Test]
-        public void S3c_AC8_DesignTarget_The_Reference_Build_Order_Wins_With_All_Lives_And_45_Gold_Left()
+        public void S3c_AC8_S4a_AC6_DesignTarget_The_Reference_Build_Order_Wins_With_All_Lives_And_145_Gold_Left()
         {
             Battle battle = Build(out Board board, out TowerStats tower);
             int next = 0, ticks = 0, firstKillTick = -1;
@@ -156,7 +163,7 @@ namespace ElementalTD.Core.Tests
             Assert.AreEqual(ReferenceOrder.Length, next, "every action ran");
             Assert.AreEqual(RunOutcome.Won, battle.Outcome);
             Assert.AreEqual(10, battle.Lives);
-            Assert.AreEqual(45, battle.Gold);
+            Assert.AreEqual(145, battle.Gold, "45 plus the ten bonuses");
             Assert.AreEqual(10136, ticks, 1, "document: won on the 10136th Tick()");
             Assert.AreEqual(1332, firstKillTick, 1, "document: the first kill pays on tick 1332");
             Assert.AreEqual(10, rewardedAt);

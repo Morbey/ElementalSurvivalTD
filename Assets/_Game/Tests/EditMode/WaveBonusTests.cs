@@ -315,6 +315,48 @@ namespace ElementalTD.Core.Tests
         }
 
         [Test]
+        public void S4a_AC2_Every_Enemy_Of_A_Wave_Holds_It_Not_Only_The_Last_To_Enter()
+        {
+            // Two enemies five seconds apart at one cell per second; the first is still walking when the second enters on tick 300.
+            Battle battle = Run(new[] { W(Runner(1f, 3), 2, 5f, 0f, 25), Far }, 5, 0);
+            Ticks(battle, 290);
+            Assert.AreEqual(1, battle.Board.EnemyCount);
+            Assert.AreEqual(0, battle.Board.EnemyAt(0).WaveIndex);
+            Assert.AreEqual(PlacementResult.Placed, battle.TryBuyTower(Near, Gun(2f))); // reaches the spawn only
+
+            int ticks = 290;
+            while (battle.Waves.EnteredWaves == 0 && ticks < 400) { battle.Tick(); ticks++; }
+
+            Assert.AreEqual(300, ticks, 1, "the second enemy enters on tick 300 and dies at once");
+            Assert.AreEqual(1, battle.Board.EnemyCount, "one enemy left: the first");
+            Assert.AreEqual(0, battle.Board.EnemyAt(0).WaveIndex);
+            Assert.AreEqual(3, battle.Gold, "the kill reward only");
+            Assert.AreEqual(0, battle.SurvivedWaves, "the first enemy still holds the wave");
+
+            while (battle.Lives == 5 && ticks < 2000)
+            {
+                battle.Tick();
+                ticks++;
+                if (battle.Lives == 5) Assert.AreEqual(3, battle.Gold);
+            }
+            Assert.AreEqual(901, ticks, 2, "the first enemy exits about 15 s after tick 1");
+            Assert.AreEqual(3 + 25, battle.Gold, "the bonus on the exit tick");
+            Assert.AreEqual(1, battle.SurvivedWaves);
+        }
+
+        [Test]
+        public void S4a_AC2_Every_Enemy_Of_A_Multi_Enemy_Wave_Carries_Its_Waves_Index()
+        {
+            Battle battle = Run(new[] { W(Still(), 3, 0.1f, 0f, 1), W(Still(), 2, 0.1f, 0f, 1), Far }, 5, 0);
+            Ticks(battle, 40);
+
+            Assert.AreEqual(5, battle.Board.EnemyCount);
+            var counts = new int[2];
+            for (int i = 0; i < battle.Board.EnemyCount; i++) counts[battle.Board.EnemyAt(i).WaveIndex]++;
+            Assert.AreEqual((3, 2), (counts[0], counts[1]));
+        }
+
+        [Test]
         public void S4a_AC2_An_Enemy_Spawned_Through_The_Board_Alone_Delays_No_Bonus()
         {
             Battle battle = Run(new[] { W(Runner(31f), 1, 1f, 0f, 25), Far }, 5, 0);

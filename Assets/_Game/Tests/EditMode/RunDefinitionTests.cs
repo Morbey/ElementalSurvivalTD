@@ -66,6 +66,50 @@ namespace ElementalTD.Core.Tests
         }
 
         [Test]
+        public void S4a_AC1_ToWaves_Converts_Every_Group_In_Asset_Order_And_The_Schedule_Refuses_A_Wave_Of_Two()
+        {
+            EnemyDefinition a = Enemy(2f, 100f), b = Enemy(3f, 40f);
+            var run = ScriptableObject.CreateInstance<RunDefinition>();
+            try
+            {
+                var so = new SerializedObject(run);
+                so.FindProperty("lives").intValue = 3;
+                SerializedProperty waves = so.FindProperty("waves");
+                waves.arraySize = 1;
+                SerializedProperty entry = waves.GetArrayElementAtIndex(0);
+                entry.FindPropertyRelative("delayBeforeSeconds").floatValue = 4f;
+                entry.FindPropertyRelative("survivalBonus").intValue = 15;
+                SerializedProperty groups = entry.FindPropertyRelative("groups");
+                groups.arraySize = 2;
+                (EnemyDefinition enemy, int count, float interval)[] spec = { (a, 3, 1f), (b, 5, 0.25f) };
+                for (int g = 0; g < 2; g++)
+                {
+                    SerializedProperty group = groups.GetArrayElementAtIndex(g);
+                    group.FindPropertyRelative("enemy").objectReferenceValue = spec[g].enemy;
+                    group.FindPropertyRelative("count").intValue = spec[g].count;
+                    group.FindPropertyRelative("spawnIntervalSeconds").floatValue = spec[g].interval;
+                }
+                so.ApplyModifiedPropertiesWithoutUndo();
+
+                Wave[] result = run.ToWaves();
+
+                Assert.AreEqual(1, result.Length);
+                Assert.AreEqual(2, result[0].GroupCount);
+                Assert.AreEqual((4f, 15), (result[0].DelayBeforeSeconds, result[0].SurvivalBonus));
+                WaveGroup first = result[0].GroupAt(0), second = result[0].GroupAt(1);
+                Assert.AreEqual((2f, 100f, 3, 1f), (first.Enemy.Speed, first.Enemy.MaxHealth, first.Count, first.SpawnIntervalSeconds));
+                Assert.AreEqual((3f, 40f, 5, 0.25f), (second.Enemy.Speed, second.Enemy.MaxHealth, second.Count, second.SpawnIntervalSeconds));
+                Assert.Throws<ArgumentException>(() => new WaveSchedule(result), "one group only until mixed waves are built");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(run);
+                UnityEngine.Object.DestroyImmediate(a);
+                UnityEngine.Object.DestroyImmediate(b);
+            }
+        }
+
+        [Test]
         public void S4a_AC1_ToWaves_Throws_For_No_Wave_A_Wave_Without_A_Group_And_A_Group_Without_An_Enemy()
         {
             EnemyDefinition a = Enemy(2f, 100f);

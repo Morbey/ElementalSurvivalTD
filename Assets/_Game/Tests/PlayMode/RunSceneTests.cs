@@ -168,8 +168,8 @@ namespace ElementalTD.PlayModeTests
 
             Assert.AreEqual(RunOutcome.Won, Battle.Outcome);
             Assert.AreEqual(10, Battle.Lives);
-            Assert.AreEqual(45, Battle.Gold);
-            Assert.AreEqual("Gold 45", GoldLabel.text);
+            Assert.AreEqual(145, Battle.Gold, "45 plus the ten bonuses");
+            Assert.AreEqual("Gold 145", GoldLabel.text);
             Assert.AreEqual("Wave 10/10", Text("wave-label").text);
             Assert.IsFalse(Shown(Text("next-wave-label")), "hidden from wave 10 on");
             Assert.AreEqual("Victory", Text("end-title").text);
@@ -192,8 +192,8 @@ namespace ElementalTD.PlayModeTests
             Assert.IsTrue(Board.HasTower(new GridPos(14, 2)));
             Assert.AreEqual(towers, Board.TowerCount);
             Assert.AreEqual(towers, FindByName("Towers").childCount);
-            Assert.AreEqual(45, Battle.Gold);
-            Assert.AreEqual("Gold 45", GoldLabel.text);
+            Assert.AreEqual(145, Battle.Gold);
+            Assert.AreEqual("Gold 145", GoldLabel.text);
             Assert.IsFalse(_input.HasHoverCell);
             Assert.IsFalse(FindByName("Hover").gameObject.activeSelf);
         }
@@ -240,6 +240,7 @@ namespace ElementalTD.PlayModeTests
             Assert.IsFalse(_input.HasHoverCell);
             Assert.IsFalse(FindByName("Hover").gameObject.activeSelf);
             Assert.AreEqual(0, Board.TowerCount);
+            yield return new WaitForSecondsRealtime(2.3f); // the survived line of the last wave paid has timed out
             Assert.IsFalse(MessageShown());
         }
 
@@ -254,6 +255,8 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(gold, Battle.Gold);
             yield return TickUntil(() => Battle.Outcome == RunOutcome.Lost, 6000, 50);
             yield return null;
+            gold += Battle.Waves.WaveAt(0).SurvivalBonus + Battle.Waves.WaveAt(1).SurvivalBonus; // waves 1 and 2 leaked and paid; wave 3 is on the board at the loss
+            Assert.AreEqual(2, Battle.SurvivedWaves);
             Assert.AreEqual(gold, Battle.Gold);
 
             ClickCell(0, 0); // a tower
@@ -266,6 +269,7 @@ namespace ElementalTD.PlayModeTests
             Assert.IsTrue(Board.HasTower(new GridPos(0, 0)));
             Assert.AreEqual(gold, Battle.Gold);
             Assert.AreEqual($"Gold {gold}", GoldLabel.text);
+            yield return new WaitForSecondsRealtime(2.3f); // the survived line has timed out; the clicks added no message
             Assert.IsFalse(MessageShown());
         }
 
