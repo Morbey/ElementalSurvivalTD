@@ -18,14 +18,14 @@ Elements are saturated and sit at the value extremes; the board is desaturated a
 | Camera background (grid lines and the area around the board) | taupe from the clear | solid colour `#2E2C29` |
 | Spawn, exit | `#33BF4D`, `#D94033` | keep (see section 3) |
 
-Contrast with the new board: Light body 2.5 against the free cell and 5.5 against the wall; Shadow body 4.3 and 1.9. Shadow never stands on a wall; only its projectile crosses one.
+Target contrast, computed from base colours (the lit screen differs; the art director checks it on build screenshots): Light body 2.5 against the free cell and 5.5 against the wall; Shadow body 4.3 and 1.9. Shadow never stands on a wall; only its projectile crosses one.
 
 ### 1.2 Element colours
 One row per base element, fixed now so later elements need no repaint. **Body** colours the tower and the enemy (URP Lit). **Projectile** is the Unlit sphere. **UI** is the element's name and accents on the dark HUD background. **Value** is the non-hue cue: elements that share a value tier differ on the blue–yellow axis, which colour-blind players keep.
 
 | Element | Body | Projectile | UI | Value | Extra |
 |---|---|---|---|---|---|
-| **Light** | `#FFE27A` | `#FFF6CC` | `#FFE27A` | brightest | body emission `#5C4A12`: it glows |
+| **Light** | `#FFE27A` | `#FFF6CC` | `#FFE27A` | brightest | body emission `#5C4A12`: every face stays bright, even in shade; no halo or bloom wanted |
 | **Shadow** | `#3B1F5C` | `#2A1340` | `#B48CFF` | darkest | smoothness 0: matte |
 | Air | `#BDF2EC` | `#FFFFFF` | `#BDF2EC` | bright, cool | |
 | Fire | `#F06A2B` | `#FFB347` | `#FF8A4C` | mid, warm | reads by saturation against the stone; recheck when Fire is built |
@@ -45,22 +45,27 @@ Nothing permanent sits over the board. The camera frames the board inside the sc
 
 **Top bar**: anchored top, full width, height **44**, padding 0 16, one row, centred vertically.
 - Left: `Wave 3/10: Shadow` then, 24 to its right, `Lives 10`. Both 20. The element name is the current wave's (the wave last started), in its UI colour; before wave 1 the label is `Wave 0/10`.
-- Right, right-aligned: `Next wave in 8 s: Shadow`, 20, element name in its UI colour; hidden when no wave is left. Mixed waves later list names joined by ` + `, each in its colour, so the label grows to the left (room for three names at 960 wide).
+- Right, right-aligned: `Next wave in 8 s: Shadow`, 20, element name in its UI colour; shown only while a countdown runs (hidden while a wave spawns and when no wave is left). Mixed waves later list names joined by ` + `, each in its colour, so the label grows to the left (room for three names at 960 wide).
+- If several upcoming waves are announced (open with Eduardo), the right side becomes `Next in 8 s` (20) followed by one chip per upcoming wave, up to three, 8 apart, in wave order. Chip: a row of element tiles (below), padding 2, gap 2, background `#45413B`, radius 4; the next wave's chip has border 2 `#FFFFFF`, later chips opacity 0.7. Three chips of three elements take about 230, so the bar still fits at 960. The current wave stays as text on the left.
+- **Element tile**, the reusable mark for an element in small UI: 20 x 20, the element's body colour, border 2 `#D9D4C8`, radius 3, its initial centred (14, bold; `#1A1918` on Light and Air, `#FFFFFF` on the others). Initials: L, S, F, W, E, A; a hybrid gets a letter that no other element uses when it is defined.
 - Element names are coloured with rich text, for example `<color=#B48CFF>Shadow</color>`. A label's text is rebuilt only when its seconds or elements change.
 
 **Bottom bar**: anchored bottom, full width, height **72**, padding 0 16, one row, centred vertically. Economy and building live here.
 - Left: `Gold 115`, 24, `#FFC23D`.
-- 16 to its right, the wave bonus `Wave 3 survived +25`, 20, `#FFC23D`; shown for 3.0 s, then opacity to 0 over 0.3 s (USS transition). A new bonus replaces it.
+- 16 to its right, the message line, 20, bold, one label shared by two kinds; a newer message replaces the one shown, and each fades to opacity 0 over 0.3 s (USS transition) at the end of its time:
+  - wave bonus `Wave 3 survived +25`: `#FFC23D`, 3.0 s;
+  - placement refusal, until it moves to the refused cell (below): `#FFFFFF`, 2.0 s, the texts of today.
 - Right, right-aligned: the tower buttons, 12 apart.
+- Growth: from four buyable towers the buttons switch to a compact form, 64 x 56: the key hint top-left (14) over an element tile of 28 x 28 with the price under it (14, `#FFC23D`); no name, the tile's initial carries it. Six compact buttons take 424, leaving the message line about 370 at 960 wide. The bar is built from the tower list, so this is a USS class, not a new layout.
 
 **Tower button** (`.tower-button`), one per buyable element, in element order (Light, Shadow):
 - 152 x 56, row, centred vertically, padding 0 10, background `#45413B`, border 2 `#6B655A`, radius 6.
-- Children, left to right: key hint `1` (16, regular, `#B5AFA3`, width 14); swatch 22 x 22 in the element's body colour, border 1 `#1A1918`, radius 3, margin 0 8; a column with the name `Light` (18, bold, `#FFFFFF`) over the price `40 gold` (16, regular, `#FFC23D`).
-- Hover: background `#57524A`.
+- Children, left to right: key hint `1` (16, regular, `#B5AFA3`, width 14); swatch 22 x 22 in the colour of the element's tower material, border 2 `#D9D4C8` (the light rim keeps the dark Shadow swatch visible on the button), radius 3, margin 0 8, no letter while the name is on the button; a column with the name `Light` (18, bold, `#FFFFFF`) over the price `40 gold` (16, regular, `#FFC23D`).
+- Hover and pressed: background `#57524A`. Not focusable: keys 1 and 2 are the keyboard path, so no focus look.
 - Selected: background `#6B655A`, border 3 `#FFFFFF` (padding 0 9 so the size holds). Exactly one button is selected; keys 1 and 2 select too.
 - Gold below the price: the price turns `#FF6B5E`. The button stays clickable, so the player can still select it.
 
-**Placement refusal**: shown at the refused cell instead of over the top rows. One pooled label, 18, bold, `#FFFFFF`, outline 1 `#000000`. Its bottom centre starts 0.6 cells above the cell centre (screen up), rises 16 over 1.5 s linear, and fades to 0 over the last 0.4 s; clamped 8 inside the board area. A new refusal restarts it. Texts are unchanged.
+**Placement refusal at the cell** (the damage-numbers step; until then it uses the message line): One pooled label, 18, bold, `#FFFFFF`, outline 1 `#000000`. Its bottom centre starts 0.6 cells above the cell centre (screen up), rises 16 over 1.5 s linear, and fades to 0 over the last 0.4 s; clamped 8 inside the board area. A new refusal restarts it. Texts are unchanged.
 
 **End screen**: overlay `rgba(20, 19, 17, 0.8)` over everything. Title 48, bold: `Victory` in `#FFC23D`, `Defeat` in `#FF6B5E`. 24 below, the Restart button: padding 10 32, background `#45413B`, border 2 `#FFFFFF`, radius 6, text 24 bold `#FFFFFF`; hover background `#57524A`.
 
@@ -71,11 +76,12 @@ The hover is a flat quad on the cell, **under** the tower, so it never washes a 
 | Hovered cell | Hover | Range disc |
 |---|---|---|
 | Placing the selected tower would succeed | `#FFFFFF` α 0.30 | selected element's |
-| Placing would be refused, for any reason including gold | `#E5483B` α 0.45 | hidden |
+| Placing would be refused for a reason that ignores enemies: spawn or exit, wall, gold, or cutting the spawn from the exit (parked; until then, like a free cell) | `#E5483B` α 0.45 | hidden |
 | A tower stands there (a click sells it) | `#FFC23D` α 0.60, read as a gold rim: money comes back | that tower's |
 
 - Range disc: flat at height 0.01, radius = range. Fill is the element's UI colour at α 0.18 (`RangeDisc_Light` `#FFE27A`, `RangeDisc_Shadow` `#B48CFF`), so the disc also says which tower is about to be built.
-- The hover state is recomputed only when the hovered cell, the selection, the gold or the board changes, not every frame. When the pointer leaves the canvas, hover and disc hide.
+- The hover state is recomputed only when the hovered cell, the selection, the gold or the board changes, not every frame. Refusals caused by enemies (an enemy on the cell, or a living enemy cut off) are not shown on the hover: they change every tick and would flicker; the click refuses them with its message.
+- When the pointer leaves the canvas, the hover and disc should hide (parked). Acceptable until then: leaving through the top or the bottom passes over a bar, where they already hide; only a side exit leaves them on an edge column.
 
 ## 2. Damage numbers
 The closed look, in values. Numbers are pooled; nothing allocates per hit.
