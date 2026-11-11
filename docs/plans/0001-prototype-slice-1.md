@@ -1,6 +1,6 @@
 # Technical plan 0001 – Prototype slice 1
 
-A grid and one enemy crossing it with pathfinding. Architecture decisions and deferrals: `docs/adr/0001-folder-structure-asmdefs-layers.md`.
+A grid and one enemy crossing it with pathfinding. Architecture decisions and deferrals: `docs/adr/0001-folder-structure-asmdefs-layers.md`. The four-neighbour path described here is replaced by eight directions in plan 0006.
 
 ## Approach
 Pathfinding is one flow field: a breadth-first search outward from the exit over a 4-neighbour grid, stored as a single `int[]` of distances. Each enemy steps to the neighbour with the lowest distance; on a tie it takes the first in a fixed order (+x, -x, +y, -y), so the route is the same every run. A* was discarded because it would be rerun per enemy and replaced as soon as enemies multiply. In slice 2, recalculating after a tower blocks a cell is running the flow field again, and the "never block the path" check is "the spawn cell's distance is still finite".
