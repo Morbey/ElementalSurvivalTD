@@ -66,7 +66,7 @@ namespace ElementalTD.Core
         {
             GridPos from = Follower.From;
             GridPos to = Follower.To;
-            float t = Follower.Progress;
+            float t = Follower.Progress / Follower.StepLength;
             X = from.X + (to.X - from.X) * t;
             Y = from.Y + (to.Y - from.Y) * t;
         }

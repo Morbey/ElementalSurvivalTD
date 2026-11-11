@@ -95,7 +95,7 @@ namespace ElementalTD.Core.Tests
         }
 
         [Test]
-        public void AC3_Full_Prototype_Run_27_Cells_At_2_CellsPerSecond_Is_13_5_Seconds()
+        public void S3c_AC4_Full_Prototype_Run_Is_21_73_Cells_At_2_CellsPerSecond_Is_10_86_Seconds()
         {
             FlowField field = TestMaps.PrototypeField(out GridMap map);
             var f = new PathFollower(field, TestMaps.Spawn);
@@ -108,7 +108,7 @@ namespace ElementalTD.Core.Tests
                 Assert.Less(frames, 5000);
             }
             frames++;
-            Assert.That(frames * 0.01f, Is.EqualTo(13.5f).Within(0.03f));
+            Assert.That(frames * 0.01f, Is.EqualTo(10.864f).Within(0.02f));
         }
 
         [Test]

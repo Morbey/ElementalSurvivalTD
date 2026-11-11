@@ -108,12 +108,18 @@ namespace ElementalTD.Core
             _freeEnemies.Push(enemy);
         }
 
+        /// <summary>
+        /// An enemy occupies the rectangle spanned by its step: two cells on a straight step, four on a diagonal one,
+        /// so a diagonal step it has started stays legal.
+        /// </summary>
         private bool IsUnderEnemy(GridPos cell)
         {
             for (int i = 0; i < _enemies.Count; i++)
             {
                 PathFollower f = _enemies[i].Follower;
-                if (f.From == cell || f.To == cell) return true;
+                if (cell.X >= Math.Min(f.From.X, f.To.X) && cell.X <= Math.Max(f.From.X, f.To.X)
+                    && cell.Y >= Math.Min(f.From.Y, f.To.Y) && cell.Y <= Math.Max(f.From.Y, f.To.Y))
+                    return true;
             }
             return false;
         }

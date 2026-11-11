@@ -58,7 +58,7 @@ namespace ElementalTD.Core.Tests
             Assert.AreEqual(PlacementResult.Placed, board.TryPlaceTower(cell, Stats));
             Assert.IsTrue(board.HasTower(cell));
             Assert.IsTrue(board.Map.IsBlocked(cell));
-            Assert.AreEqual(29, board.Field.Distance(TestMaps.Spawn)); // up to (5,8) and back: 2 extra cells
+            Assert.AreEqual(9442, board.Field.Distance(TestMaps.Spawn)); // through (5,8): 10 diagonal and 9 straight steps = 5770 + 3672
             CollectionAssert.AreNotEqual(before, Snapshot(board));
 
             Assert.IsTrue(board.TryRemoveTower(cell));
@@ -85,14 +85,16 @@ namespace ElementalTD.Core.Tests
         [TestCase("tower", PlacementResult.CellBlocked)]
         [TestCase("followerFrom", PlacementResult.EnemyInTheWay)]
         [TestCase("followerTo", PlacementResult.EnemyInTheWay)]
+        [TestCase("sideCellBelow", PlacementResult.EnemyInTheWay)]
+        [TestCase("sideCellAbove", PlacementResult.EnemyInTheWay)]
         [TestCase("outOfBounds", PlacementResult.OutOfBounds)]
         public void S2b_AC3_Refusal_Reason_And_Nothing_Changes(string which, PlacementResult expected)
         {
             Board board = PrototypeBoard();
             PathFollower f = AddEnemy(board).Follower;
-            f.Step(0.5f, 2f); // From (1,4), To (2,4)
+            f.Step(0.5f, 2f); // From (1,4), To (2,5): the diagonal step; its rectangle is (1..2, 4..5)
             Assert.AreEqual(new GridPos(1, 4), f.From);
-            Assert.AreEqual(new GridPos(2, 4), f.To);
+            Assert.AreEqual(new GridPos(2, 5), f.To);
             board.TryPlaceTower(new GridPos(3, 2), Stats);
 
             GridPos cell;
@@ -104,6 +106,8 @@ namespace ElementalTD.Core.Tests
                 case "tower": cell = new GridPos(3, 2); break;
                 case "followerFrom": cell = f.From; break;
                 case "followerTo": cell = f.To; break;
+                case "sideCellBelow": cell = new GridPos(2, 4); break;
+                case "sideCellAbove": cell = new GridPos(1, 5); break;
                 default: cell = new GridPos(16, 0); break;
             }
 
@@ -194,12 +198,17 @@ namespace ElementalTD.Core.Tests
                     Assert.IsFalse(board.Map.IsBlocked(f.To), $"seed {seed} i {i}: To {f.To} blocked");
                     Assert.IsTrue(board.Field.IsReachable(f.To), $"seed {seed} i {i}: To {f.To} unreachable");
                     Assert.IsFalse(f.From == f.To && !f.HasArrived, $"seed {seed} i {i}: follower stalled at {f.From}");
+                    if (f.From.X != f.To.X && f.From.Y != f.To.Y)
+                    {
+                        Assert.IsFalse(board.Map.IsBlocked(new GridPos(f.From.X, f.To.Y)), $"seed {seed} i {i}: corner {new GridPos(f.From.X, f.To.Y)} of the step {f.From}->{f.To} blocked");
+                        Assert.IsFalse(board.Map.IsBlocked(new GridPos(f.To.X, f.From.Y)), $"seed {seed} i {i}: corner {new GridPos(f.To.X, f.From.Y)} of the step {f.From}->{f.To} blocked");
+                    }
                 }
             }
 
             foreach (PathFollower f in followers)
             {
-                int budget = board.Field.Distance(f.To) + 2;
+                int budget = board.Field.Distance(f.To) / FlowField.StraightCost + 3; // a call covers one cell of path
                 int calls = 0;
                 while (!f.Step(0.5f, 2f) && calls++ < budget) { }
                 Assert.IsTrue(f.HasArrived, $"seed {seed}: did not arrive within {budget} cells");

@@ -46,8 +46,9 @@ namespace ElementalTD.Core.Tests
             {
                 var fa = new FlowField(a.ToGridMap()); fa.Compute(a.Exit);
                 var fb = new FlowField(b.ToGridMap()); fb.Compute(b.Exit);
-                Assert.AreEqual(4, fa.Distance(a.Spawn));
-                Assert.AreEqual(6, fb.Distance(b.Spawn));
+                // Open: 4 straight steps. Walled: (1,2) diagonal, (2,2), (3,2), then the diagonal to (4,1) = 2 * 577 + 2 * 408.
+                Assert.AreEqual(1632, fa.Distance(a.Spawn));
+                Assert.AreEqual(1970, fb.Distance(b.Spawn));
             }
             finally { Object.DestroyImmediate(a); Object.DestroyImmediate(b); }
         }

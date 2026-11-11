@@ -31,5 +31,6 @@ What the team has learned about driving this project with the `unity` CLI. Add a
 
 ## Tests
 - `unity test <project> --mode EditMode|PlayMode --report-format junit --output <path outside Assets/>`.
+- When a test fails, `unity test` exits 8 and prints only "Unity process exited with code 2"; the junit report is still written, so read the failures there. Compiler warnings are in the worktree's `Logs/Editor.log`.
 - An asmdef with no scripts is not compiled and Unity warns about it.
 - A batch `unity test` empties `Library/LastSceneManagerSetup.txt`, so the next interactive editor on that checkout opens an untitled scene and Play shows nothing. Open `Assets/_Game/Scenes/Prototype.unity`.
