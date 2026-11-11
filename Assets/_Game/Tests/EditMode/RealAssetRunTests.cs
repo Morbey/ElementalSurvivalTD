@@ -30,9 +30,9 @@ namespace ElementalTD.Core.Tests
         private static readonly string[] WaveAssets =
         {
             "Enemy_Health45.asset", "Enemy_Health55.asset", "Enemy_Health65.asset", "Enemy_Health75.asset", "Enemy_Health90.asset",
-            "Enemy_Prototype.asset", "Enemy_Health115.asset", "Enemy_Health130.asset", "Enemy_Health150.asset", "Enemy_Health175.asset"
+            "Enemy_Prototype.asset", "Enemy_Health130.asset", "Enemy_Health175.asset", "Enemy_Health230.asset", "Enemy_Health305.asset"
         };
-        private static readonly float[] WaveHealth = { 45f, 55f, 65f, 75f, 90f, 100f, 115f, 130f, 150f, 175f };
+        private static readonly float[] WaveHealth = { 45f, 55f, 65f, 75f, 90f, 100f, 130f, 175f, 230f, 305f };
 
         [Test]
         public void S3b_AC8_The_Assets_Hold_The_Values_Of_The_Balance_Document()
@@ -40,10 +40,10 @@ namespace ElementalTD.Core.Tests
             var run = Load<RunDefinition>("Run_Prototype.asset");
             TowerStats tower = Load<TowerDefinition>("Tower_Prototype.asset").ToStats();
 
-            Assert.AreEqual(100, run.StartingGold);
+            Assert.AreEqual(115, run.StartingGold);
             Assert.AreEqual(50, run.SellRefundPercent);
             Assert.AreEqual(10, run.Lives);
-            Assert.AreEqual(50, tower.Cost);
+            Assert.AreEqual(40, tower.Cost);
             Assert.AreEqual((2.5f, 10f, 1.5f, 10f), (tower.Range, tower.Damage, tower.ShotsPerSecond, tower.ProjectileSpeed), "combat stats unchanged");
 
             Wave[] waves = run.ToWaves();
@@ -86,30 +86,31 @@ namespace ElementalTD.Core.Tests
 
         // ---- 3b-AC9 Design target (provisional, from the balance document)
 
-        // Tick (Tick() calls done before the action), cell, true = buy / false = sell.
+        // The reference build order of docs/balance/0001-prototype-economy.md. Tick (Tick() calls done before the action), cell, true = buy / false = sell.
         private static readonly (int tick, int x, int y, bool buy)[] ReferenceOrder =
         {
-            (0, 0, 8, true), (0, 0, 8, false), (0, 2, 5, true), (0, 3, 5, true),
-            (1740, 3, 6, true), (2460, 6, 6, true), (3210, 7, 6, true), (3930, 8, 5, true),
-            (4350, 2, 5, false), (4350, 3, 5, false), (4350, 9, 3, true), (4350, 8, 2, true),
-            (5280, 6, 5, true), (5820, 7, 5, true), (6240, 8, 3, true), (6840, 8, 6, true),
-            (7260, 9, 2, true), (7890, 2, 5, true), (8280, 3, 5, true), (8820, 13, 2, true), (9300, 14, 2, true),
+            (0, 0, 8, true), (0, 0, 8, false), (0, 11, 2, true), (0, 11, 3, true),
+            (1350, 14, 2, true), (2100, 13, 2, true), (2760, 12, 0, true), (3690, 10, 1, true), (3690, 4, 7, true),
+            (4350, 3, 7, true), (4620, 4, 6, true), (5190, 1, 6, true), (5400, 11, 2, false), (5400, 6, 8, true),
+            (5730, 0, 6, true), (6270, 2, 5, true), (6540, 1, 3, true), (7200, 3, 4, true), (7590, 1, 2, true),
+            (7890, 3, 2, true), (8550, 6, 5, true), (8790, 7, 7, true), (9180, 7, 5, true), (9810, 3, 3, true),
         };
 
         [Test]
-        public void S3b_AC9_DesignTarget_At_The_Start_The_Gold_Buys_Exactly_Two_Towers_And_Refuses_The_Third()
+        public void S3c_AC7_AC8_At_The_Start_The_Gold_Buys_Exactly_Two_Towers_And_Refuses_The_Third()
         {
             Battle battle = Build(out _, out TowerStats tower);
 
+            Assert.AreEqual(115, battle.Gold);
             Assert.AreEqual(PlacementResult.Placed, battle.TryBuyTower(new GridPos(2, 5), tower));
             Assert.AreEqual(PlacementResult.Placed, battle.TryBuyTower(new GridPos(3, 5), tower));
-            Assert.AreEqual(0, battle.Gold);
+            Assert.AreEqual(35, battle.Gold);
             Assert.AreEqual(PlacementResult.NotEnoughGold, battle.TryBuyTower(new GridPos(6, 6), tower));
             Assert.AreEqual(2, battle.Board.TowerCount);
         }
 
         [Test]
-        public void S3b_AC9_DesignTarget_Building_Nothing_Is_Defeated_At_Tick_3089_With_The_Gold_Unspent()
+        public void S3c_AC8_DesignTarget_Building_Nothing_Is_Defeated_At_Tick_2931_With_The_Gold_Unspent()
         {
             Battle battle = Build(out _, out _);
             int ticks = 0;
@@ -120,14 +121,14 @@ namespace ElementalTD.Core.Tests
             }
 
             Assert.AreEqual(RunOutcome.Lost, battle.Outcome);
-            Assert.AreEqual(3089, ticks, 1, "document: lost on the 3089th Tick()");
+            Assert.AreEqual(2931, ticks, 1, "document: lost on the 2931st Tick()");
             Assert.AreEqual(0, battle.Lives);
-            Assert.AreEqual(100, battle.Gold);
-            Assert.That(ticks / 60f, Is.InRange(50f, 53f));
+            Assert.AreEqual(115, battle.Gold);
+            Assert.AreEqual(0, battle.Board.TowerCount);
         }
 
         [Test]
-        public void S3b_AC9_DesignTarget_The_Reference_Build_Order_Wins_With_All_Lives_And_50_Gold_Left()
+        public void S3c_AC8_DesignTarget_The_Reference_Build_Order_Wins_With_All_Lives_And_45_Gold_Left()
         {
             Battle battle = Build(out Board board, out TowerStats tower);
             int next = 0, ticks = 0, firstKillTick = -1;
@@ -155,11 +156,11 @@ namespace ElementalTD.Core.Tests
             Assert.AreEqual(ReferenceOrder.Length, next, "every action ran");
             Assert.AreEqual(RunOutcome.Won, battle.Outcome);
             Assert.AreEqual(10, battle.Lives);
-            Assert.AreEqual(50, battle.Gold);
-            Assert.AreEqual(9577, ticks, 1, "document: won on the 9577th Tick()");
-            Assert.AreEqual(988, firstKillTick, 1, "document: the first kill pays on tick 988");
+            Assert.AreEqual(45, battle.Gold);
+            Assert.AreEqual(10136, ticks, 1, "document: won on the 10136th Tick()");
+            Assert.AreEqual(1332, firstKillTick, 1, "document: the first kill pays on tick 1332");
             Assert.AreEqual(10, rewardedAt);
-            Assert.AreEqual(15, board.TowerCount, "net towers of the order");
+            Assert.AreEqual(20, board.TowerCount, "net towers of the order");
         }
     }
 }

@@ -128,11 +128,11 @@ namespace ElementalTD.PlayModeTests
         /// </summary>
         protected static readonly (int tick, int x, int y, bool buy)[] ReferenceOrder =
         {
-            (0, 0, 8, true), (0, 0, 8, false), (0, 2, 5, true), (0, 3, 5, true),
-            (1740, 3, 6, true), (2460, 6, 6, true), (3210, 7, 6, true), (3930, 8, 5, true),
-            (4350, 2, 5, false), (4350, 3, 5, false), (4350, 9, 3, true), (4350, 8, 2, true),
-            (5280, 6, 5, true), (5820, 7, 5, true), (6240, 8, 3, true), (6840, 8, 6, true),
-            (7260, 9, 2, true), (7890, 2, 5, true), (8280, 3, 5, true), (8820, 13, 2, true), (9300, 14, 2, true),
+            (0, 0, 8, true), (0, 0, 8, false), (0, 11, 2, true), (0, 11, 3, true),
+            (1350, 14, 2, true), (2100, 13, 2, true), (2760, 12, 0, true), (3690, 10, 1, true), (3690, 4, 7, true),
+            (4350, 3, 7, true), (4620, 4, 6, true), (5190, 1, 6, true), (5400, 11, 2, false), (5400, 6, 8, true),
+            (5730, 0, 6, true), (6270, 2, 5, true), (6540, 1, 3, true), (7200, 3, 4, true), (7590, 1, 2, true),
+            (7890, 3, 2, true), (8550, 6, 5, true), (8790, 7, 7, true), (9180, 7, 5, true), (9810, 3, 3, true),
         };
 
         private int _nextAction;

@@ -286,6 +286,51 @@ namespace ElementalTD.Core.Tests
         }
 
         [Test]
+        public void S3c_AC3_Both_Left_Turns_Come_Before_45_Degrees_Right()
+        {
+            // Walls (2,2) and (3,1), exit (4,2); from (1,1) heading +x: ahead is not shortest, 45 left is a wall,
+            // 45 right (2,0) and 90 left (1,2) both cost 2209. Hand count: (2,0) 1632 + 577; (1,2) 1801 + 408.
+            FlowField field = BoardWith(5, 5, new GridPos(0, 0), new GridPos(4, 2), new GridPos(2, 2), new GridPos(3, 1)).Field;
+            Assert.AreEqual(2209, field.Distance(new GridPos(1, 1)));
+            Assert.AreEqual(1632, field.Distance(new GridPos(2, 0)));
+            Assert.AreEqual(1801, field.Distance(new GridPos(1, 2)));
+            Assert.IsTrue(field.TryGetNext(new GridPos(1, 1), new GridPos(0, 1), out GridPos next));
+            Assert.AreEqual(new GridPos(2, 0), next);
+        }
+
+        [Test]
+        public void S3c_AC3_135_Degrees_Right_Comes_Before_Back()
+        {
+            // Open 5x5, exit (0,0); from (2,1) heading +x: (1,0) is 135 right, (1,1) is back; both cost 985 in total.
+            FlowField field = OpenBoard(5, 5, new GridPos(0, 0), new GridPos(0, 0)).Field;
+            Assert.AreEqual(985, field.Distance(new GridPos(2, 1)));
+            Assert.IsTrue(field.TryGetNext(new GridPos(2, 1), new GridPos(1, 1), out GridPos next));
+            Assert.AreEqual(new GridPos(1, 0), next);
+        }
+
+        [Test]
+        public void S3c_AC3_135_Degrees_Left_Comes_Before_135_Degrees_Right()
+        {
+            // Wall (1,1), exit (0,1); from (3,1) heading +x: (2,2) is 135 left, (2,0) is 135 right; both lead round the wall for 1801.
+            FlowField field = BoardWith(5, 5, new GridPos(4, 4), new GridPos(0, 1), new GridPos(1, 1)).Field;
+            Assert.AreEqual(1801, field.Distance(new GridPos(3, 1)));
+            Assert.IsTrue(field.TryGetNext(new GridPos(3, 1), new GridPos(2, 1), out GridPos next));
+            Assert.AreEqual(new GridPos(2, 2), next);
+        }
+
+        [Test]
+        public void S3c_AC2_TryGetNext_Never_Takes_The_Diagonal_Past_A_Wall_Even_When_It_Ties_With_The_Legal_Step()
+        {
+            // 3x5, walls (2,0) and (1,2), exit (1,4); from (1,0) heading +x. The diagonal to (2,1) would cost 577 + 1393 = 1970,
+            // the same as the legal diagonal to (0,1), but it cuts the corner of the wall (2,0).
+            FlowField field = BoardWith(3, 5, new GridPos(0, 0), new GridPos(1, 4), new GridPos(2, 0), new GridPos(1, 2)).Field;
+            Assert.AreEqual(1970, field.Distance(new GridPos(1, 0)));
+            Assert.AreEqual(1393, field.Distance(new GridPos(2, 1)), "the cell the illegal step would reach");
+            Assert.IsTrue(field.TryGetNext(new GridPos(1, 0), new GridPos(0, 0), out GridPos next));
+            Assert.AreEqual(new GridPos(0, 1), next);
+        }
+
+        [Test]
         public void S3c_AC3_The_Left_Before_Right_Row_Is_Not_Symmetric_Heading_Plus_X_Goes_To_Larger_Y_And_Minus_X_To_Smaller_Y()
         {
             // The two rows that a mirrored table would swap: tower on (2,2), exit straight behind it.

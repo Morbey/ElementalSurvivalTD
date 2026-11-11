@@ -168,8 +168,8 @@ namespace ElementalTD.PlayModeTests
 
             Assert.AreEqual(RunOutcome.Won, Battle.Outcome);
             Assert.AreEqual(10, Battle.Lives);
-            Assert.AreEqual(50, Battle.Gold);
-            Assert.AreEqual("Gold 50", GoldLabel.text);
+            Assert.AreEqual(45, Battle.Gold);
+            Assert.AreEqual("Gold 45", GoldLabel.text);
             Assert.AreEqual("Wave 10/10", Text("wave-label").text);
             Assert.IsFalse(Shown(Text("next-wave-label")), "hidden from wave 10 on");
             Assert.AreEqual("Victory", Text("end-title").text);
@@ -192,8 +192,8 @@ namespace ElementalTD.PlayModeTests
             Assert.IsTrue(Board.HasTower(new GridPos(14, 2)));
             Assert.AreEqual(towers, Board.TowerCount);
             Assert.AreEqual(towers, FindByName("Towers").childCount);
-            Assert.AreEqual(50, Battle.Gold);
-            Assert.AreEqual("Gold 50", GoldLabel.text);
+            Assert.AreEqual(45, Battle.Gold);
+            Assert.AreEqual("Gold 45", GoldLabel.text);
             Assert.IsFalse(_input.HasHoverCell);
             Assert.IsFalse(FindByName("Hover").gameObject.activeSelf);
         }
@@ -250,10 +250,11 @@ namespace ElementalTD.PlayModeTests
         {
             ClickCell(0, 0); // far from the route: the run is lost
             ClickCell(1, 0);
-            Assert.AreEqual(0, Battle.Gold);
+            int gold = StartingGold() - 2 * _input.Tower.ToStats().Cost; // two purchases leave gold; no tower reaches the route
+            Assert.AreEqual(gold, Battle.Gold);
             yield return TickUntil(() => Battle.Outcome == RunOutcome.Lost, 6000, 50);
             yield return null;
-            Assert.AreEqual(0, Battle.Gold);
+            Assert.AreEqual(gold, Battle.Gold);
 
             ClickCell(0, 0); // a tower
             ClickCell(4, 0); // a free cell
@@ -263,8 +264,8 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(2, Board.TowerCount);
             Assert.AreEqual(2, FindByName("Towers").childCount);
             Assert.IsTrue(Board.HasTower(new GridPos(0, 0)));
-            Assert.AreEqual(0, Battle.Gold);
-            Assert.AreEqual("Gold 0", GoldLabel.text);
+            Assert.AreEqual(gold, Battle.Gold);
+            Assert.AreEqual($"Gold {gold}", GoldLabel.text);
             Assert.IsFalse(MessageShown());
         }
 

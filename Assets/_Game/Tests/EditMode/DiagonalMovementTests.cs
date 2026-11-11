@@ -71,6 +71,48 @@ namespace ElementalTD.Core.Tests
         }
 
         [Test]
+        public void S3c_AC4_On_Arrival_The_Step_Length_Is_1_And_The_Progress_0()
+        {
+            FlowField field = TestMaps.OpenField(5, 5, new GridPos(4, 4), out _);
+            var f = new PathFollower(field, new GridPos(0, 0));
+            Assert.AreEqual(577f / 408f, f.StepLength);
+            while (!f.Step(0.1f, 2f)) { }
+            Assert.IsTrue(f.HasArrived);
+            Assert.AreEqual(1f, f.StepLength);
+            Assert.AreEqual(0f, f.Progress);
+            Assert.AreEqual(0f, f.DistanceToExit);
+        }
+
+        [Test]
+        public void S3c_AC4_DistanceToExit_Depends_On_The_Cell_Heading_For_And_The_Progress_Not_On_The_Cell_It_Left()
+        {
+            // Random buys and sales while an enemy is mid-step. Whenever the distance of its To cell is unchanged by an action,
+            // its DistanceToExit must be unchanged, even if the distance of From changed.
+            int fromChangedOnly = 0, actions = 0;
+            for (int seed = 0; seed < 40; seed++)
+            {
+                var rnd = new System.Random(seed);
+                Board board = PrototypeBoard();
+                PathFollower f = board.SpawnEnemy(new EnemyStats(2f, 100f)).Follower;
+                for (int i = 0; i < 400; i++)
+                {
+                    f.Step((float)(0.05 + rnd.NextDouble() * 0.5), 2f);
+                    if (f.HasArrived) f.Restart(board.Spawn);
+                    GridPos cell = new GridPos(rnd.Next(16), rnd.Next(9));
+                    int fromBefore = board.Field.Distance(f.From), toBefore = board.Field.Distance(f.To);
+                    float before = f.DistanceToExit;
+                    if (board.HasTower(cell)) board.TryRemoveTower(cell); else board.TryPlaceTower(cell, Stats);
+                    actions++;
+                    if (board.Field.Distance(f.To) != toBefore) continue;
+                    Assert.AreEqual(before, f.DistanceToExit, $"seed {seed} i {i}: {cell} changed nothing for To {f.To}");
+                    if (board.Field.Distance(f.From) != fromBefore) fromChangedOnly++;
+                }
+            }
+            Assert.Greater(actions, 10000);
+            Assert.Greater(fromChangedOnly, 0, "the fuzz must reach a case where only the distance of From changed");
+        }
+
+        [Test]
         public void S3c_AC4_On_An_Open_5x5_After_60_Ticks_At_Speed_2_The_Enemy_Is_On_x_y_1_414_And_Arrives_After_2_83_Seconds()
         {
             Board board = new Board(new GridMap(5, 5, null), new GridPos(0, 0), new GridPos(4, 4));

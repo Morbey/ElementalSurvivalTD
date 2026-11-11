@@ -90,13 +90,13 @@ namespace ElementalTD.PlayModeTests
         {
             ClickCell(5, 7); // the gap of wall A: the route must go through (5,8)
             Assert.IsTrue(Board.HasTower(new GridPos(5, 7)));
-            Assert.AreEqual(29, Board.Field.Distance(_map.Spawn), "route recalculated in the same frame");
+            Assert.AreEqual(9442, Board.Field.Distance(_map.Spawn), "route recalculated in the same frame");
 
             // The tower now kills a wave-1 enemy (45 health) before it gets far, so the walker is a test enemy that cannot die.
             Enemy enemy = Board.SpawnEnemy(new EnemyStats(2f, 1_000_000f));
             yield return null;
             var visited = new HashSet<GridPos>();
-            for (int tick = 0; tick < 1500 && !visited.Contains(new GridPos(9, 7)) && enemy.IsOnBoard; tick++)
+            for (int tick = 0; tick < 1500 && !visited.Contains(new GridPos(9, 1)) && enemy.IsOnBoard; tick++)
             {
                 Battle.Tick();
                 GridPos cell = enemy.Follower.From;
@@ -105,7 +105,7 @@ namespace ElementalTD.PlayModeTests
                 if (tick % 20 == 0) yield return null;
             }
 
-            Assert.IsTrue(visited.Contains(new GridPos(9, 7)), "enemy never got past the tower");
+            Assert.IsTrue(visited.Contains(new GridPos(9, 1)), "enemy never got past the tower");
             Assert.IsFalse(visited.Contains(new GridPos(5, 7)));
             Assert.IsTrue(visited.Contains(new GridPos(5, 8)), "enemy did not detour");
         }
@@ -285,10 +285,19 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(enemy.Health / enemy.MaxHealth, FillOf(EnemyViewAt(0)).localScale.x, 1e-4f);
         }
 
+        private IEnumerator TickUntilOnStep(GridPos from, GridPos to)
+        {
+            yield return TickUntil(() => Board.EnemyCount > 0 && Board.EnemyAt(0).Follower.From == from && Board.EnemyAt(0).Follower.To == to, 1500, 50);
+        }
+
+        private static bool OnDiagonal(Enemy enemy) =>
+            enemy.Follower.From.X != enemy.Follower.To.X && enemy.Follower.From.Y != enemy.Follower.To.Y;
+
         [UnityTest]
         public IEnumerator S2c_AC11_On_A_Straight_Stretch_The_Enemy_View_Moves_On_Every_Frame_By_Speed_Times_Frame_Time()
         {
-            yield return TickUntilFirstEnemy();
+            // The stretch from (9,4) to (9,1) lasts 1.5 s at speed 2.
+            yield return TickUntilOnStep(new GridPos(9, 4), new GridPos(9, 3));
             Enemy enemy = Board.EnemyAt(0);
             for (int i = 0; i < 5; i++) Battle.Tick(); // two tick positions to interpolate between
             Transform view = EnemyViewAt(0);
@@ -296,6 +305,7 @@ namespace ElementalTD.PlayModeTests
             for (int i = 0; i < 3; i++) yield return null; // let the new time scale take effect
             Vector3 last = view.position;
             float lastDt = Time.deltaTime;
+            float sumExpected = 0f, sumMoved = 0f;
             for (int frame = 0; frame < 40; frame++)
             {
                 yield return null;
@@ -303,12 +313,104 @@ namespace ElementalTD.PlayModeTests
                 // The view shown now was drawn by the previous frame's LateUpdate, from that frame's delta time.
                 float expected = enemy.Speed * lastDt * _map.CellSize;
                 float moved = Vector3.Distance(last, now);
+                sumExpected += expected;
+                sumMoved += moved;
                 Assert.Greater(moved, 0f, $"frame {frame}: the enemy did not move");
                 Assert.AreEqual(expected, moved, 0.15f * expected + 0.002f, $"frame {frame}");
                 last = now;
                 lastDt = Time.deltaTime;
             }
-            Assert.IsTrue(enemy.Follower.To.X <= 4, "still on the first straight stretch");
+            Assert.AreEqual(sumExpected, sumMoved, 0.02f * sumExpected + 0.0001f, "over 40 frames");
+            Assert.AreEqual(9, enemy.Follower.To.X, "still on the straight stretch");
+            Assert.AreEqual(9, enemy.Follower.From.X);
+            Assert.GreaterOrEqual(enemy.Follower.To.Y, 1);
+        }
+
+        [UnityTest]
+        public IEnumerator S3c_AC6_On_A_Diagonal_Stretch_The_Enemy_View_Moves_On_Every_Frame_By_Speed_Times_Frame_Time_Equally_On_X_And_Z()
+        {
+            // From the tick the first enemy is on (1,4) heading for (2,5): the diagonal stretch (1,4) to (4,7) lasts 2.1 s.
+            yield return TickUntilOnStep(new GridPos(1, 4), new GridPos(2, 5));
+            Enemy enemy = Board.EnemyAt(0);
+            for (int i = 0; i < 5; i++) Battle.Tick();
+            Transform view = EnemyViewAt(0);
+            Time.timeScale = 1f;
+            for (int i = 0; i < 3; i++) yield return null;
+            Vector3 last = view.position;
+            float lastDt = Time.deltaTime;
+            float sumExpected = 0f, sumMoved = 0f, sumX = 0f, sumZ = 0f;
+            for (int frame = 0; frame < 40; frame++)
+            {
+                yield return null;
+                Vector3 now = view.position;
+                float expected = enemy.Speed * lastDt * _map.CellSize;
+                float moved = Vector3.Distance(last, now);
+                sumExpected += expected;
+                sumMoved += moved;
+                sumX += now.x - last.x;
+                sumZ += now.z - last.z;
+                float tolerance = 0.15f * expected + 0.002f;
+                Assert.Greater(moved, 0f, $"frame {frame}: the enemy did not move");
+                Assert.AreEqual(expected, moved, tolerance, $"frame {frame}: speed along the diagonal");
+                Assert.AreEqual(now.x - last.x, now.z - last.z, tolerance, $"frame {frame}: equal movement on x and z");
+                Assert.Greater(now.x - last.x, 0f, $"frame {frame}: moving up and to the right");
+                last = now;
+                lastDt = Time.deltaTime;
+            }
+            Assert.AreEqual(sumExpected, sumMoved, 0.02f * sumExpected + 0.0001f, "over 40 frames");
+            Assert.AreEqual(sumX, sumZ, 0.02f * sumX + 0.0001f, "equal on x and z over 40 frames");
+            Assert.IsTrue(OnDiagonal(enemy), "still on the diagonal stretch");
+            Assert.LessOrEqual(enemy.Follower.To.X, 4);
+        }
+
+        [UnityTest]
+        public IEnumerator S3c_AC6_A_Projectile_View_And_The_Health_Bar_Stay_With_An_Enemy_On_A_Diagonal_Step()
+        {
+            var towerCell = new GridPos(2, 3);
+            ClickCell(2, 3);
+            Assert.IsTrue(Board.HasTower(towerCell));
+            yield return TickUntilOnStep(new GridPos(1, 4), new GridPos(2, 5));
+            Enemy enemy = Board.EnemyAt(0);
+            yield return TickUntil(() => Battle.ProjectileCount > 0, 100, 1);
+            Assert.IsTrue(OnDiagonal(enemy), "the shot is aimed at an enemy on a diagonal step");
+
+            Transform shown = null;
+            foreach (Transform child in FindByName("Projectiles"))
+                if (child.gameObject.activeSelf) shown = child;
+            Assert.IsNotNull(shown, "an active projectile view");
+            Transform view = EnemyViewAt(0);
+            Vector3 tower = _map.CellToWorld(towerCell);
+            Vector3 target = view.position;
+            float detour = Vector3.Distance(tower, shown.position) + Vector3.Distance(shown.position, target) - Vector3.Distance(tower, target);
+            Assert.Less(detour, 0.3f * _map.CellSize, "on the way from the tower to the enemy");
+
+            float before = enemy.Health;
+            yield return TickUntil(() => enemy.Health < before, 100, 1);
+            Assert.AreEqual(enemy.Health / enemy.MaxHealth, FillOf(EnemyViewAt(0)).localScale.x, 1e-4f);
+            Vector3 bar = FillOf(EnemyViewAt(0)).position;
+            Vector3 body = EnemyViewAt(0).position;
+            Assert.Less(Vector3.Distance(new Vector3(bar.x, 0f, bar.z), new Vector3(body.x, 0f, body.z)), 1f * _map.CellSize, "the bar stays with the enemy");
+        }
+
+        [UnityTest]
+        public IEnumerator S3c_AC5_A_Click_On_A_Side_Cell_Of_An_Enemys_Diagonal_Step_Shows_The_Message_And_Places_No_Tower()
+        {
+            yield return TickUntilOnStep(new GridPos(1, 4), new GridPos(2, 5));
+            int gold = Battle.Gold;
+            Assert.IsFalse(MessageShown());
+
+            foreach (var side in new[] { new GridPos(2, 4), new GridPos(1, 5) })
+            {
+                ClickCell(side.X, side.Y);
+                yield return null;
+                Assert.IsTrue(MessageShown(), $"{side}");
+                Assert.AreEqual(EnemyText, _label.text, $"{side}");
+                Assert.IsFalse(Board.HasTower(side), $"{side}");
+                Assert.IsNull(GameObject.Find($"Tower {side.X},{side.Y}"));
+                Assert.AreEqual(0, Board.TowerCount);
+                Assert.AreEqual(gold, Battle.Gold);
+            }
+            Assert.AreEqual(0, FindByName("Towers").childCount);
         }
 
         [UnityTest]
