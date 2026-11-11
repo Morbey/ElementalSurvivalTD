@@ -143,4 +143,4 @@ The reference order is a fixed timetable, not a player: it loses under −20% go
 
 **Risks.** With the cliff gone, the proposal is easy: a sloppy human loses 0 or 1 life. A run that costs a few lives and still survives +20% late health cannot be had on this map, because leaks start only when the build is short of damage: late health +10% leaves the median at 10, and +20% puts it at 5 but leaves no margin above it. Tune first in play: the late health (waves 7 to 10), then the bonus.
 
-Simulation: `/private/tmp/claude-501/-Users-morbey-Projetos-ElementalTD/c8be6820-3fc0-435a-a9af-5180aea801b2/scratchpad/sim4/` (`verify3c.py` checks the port pins and the 3c runs, `report4a.py` prints every table of this step, `core.py` is the port).
+Simulation: `tools/balance/` (`verify3c.py` checks the port pins and the 3c runs, `report4a.py` prints every table of this step, `core.py` is the port).
