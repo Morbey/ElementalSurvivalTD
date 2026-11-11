@@ -8,20 +8,31 @@ The single home of how the game looks and reads. Rules and numbers live in `docs
 
 ## 1. Slice 4
 
-### 1.1 Board
-Elements are saturated and sit at the value extremes; the board is desaturated and mid-value, so both a very light and a very dark element stand out on it.
+### 1.1 Board and scenarios
+Each scenario has its own look; element colours (1.2) are the same in all of them. Elements are saturated and sit at the value extremes; a board is desaturated and mid-value, so both a very light and a very dark element stand out on it.
 
-| Surface | Now | Slice 4 |
-|---|---|---|
-| Free cell (`Cell_Free`) | `#BFBFBF` | `#968F7F` warm stone |
-| Wall (`Cell_Blocked`) | `#333340` | `#5E5850` |
-| Camera background (grid lines and the area around the board) | taupe from the clear | solid colour `#2E2C29` |
-| Spawn, exit | `#33BF4D`, `#D94033` | keep (see section 3) |
+**Scenario palette test.** Every scenario palette passes it before it is built. L is relative luminance, ratios are WCAG contrast, S is HSV saturation; all are targets on base colours, checked again on build screenshots.
 
-Target contrast, computed from base colours (the lit screen differs; the art director checks it on build screenshots): Light body 2.5 against the free cell and 5.5 against the wall; Shadow body 4.3 and 1.9. Shadow never stands on a wall; only its projectile crosses one.
+| Surface | Must pass |
+|---|---|
+| Floor | L between 0.10 and 0.36 (contrast at least 2.0 with both the Light and the Shadow body); S at most 0.20, so Fire and Water, which share the floor's value, read by saturation; not green, red, orange or blue in hue |
+| Wall | contrast at least 1.8 with the floor; S at most 0.25 |
+| Spawn, exit | achromatic; contrast at least 2.5 with the floor and with each other |
+| Background | contrast at least 3.0 with the floor; at least 7.0 with `#FFFFFF` (HUD text) |
+
+**Tightest element colours**: Light caps how bright a floor may be (L 0.36) and Shadow how dark (L 0.10); Fire limits its hue, so no warm saturated floor such as lava or desert orange.
+
+**Scenario 1, stone** (accepted for testing in 4b; Eduardo judges it in the build):
+
+| Surface | Before | Stone | Test |
+|---|---|---|---|
+| Free cell (`Cell_Free`) | `#BFBFBF` | `#968F7F` | L 0.28, S 0.15: passes |
+| Wall (`Cell_Blocked`) | `#333340` | `#5E5850` | 2.2: passes |
+| Camera background (grid lines and the area around the board) | taupe from the clear | solid `#2E2C29` | 4.3 and 13.9: passes |
+| Spawn, exit | `#33BF4D`, `#D94033` | the rings of section 3 | green and red fail (1.3 and 1.4 with the floor, read by hue only); the rings pass (2.9 and 5.7) |
 
 ### 1.2 Element colours
-One row per base element, fixed now so later elements need no repaint. **Body** colours the tower and the enemy (URP Lit). **Projectile** is the Unlit sphere. **UI** is the element's name and accents on the dark HUD background. **Value** is the non-hue cue: elements that share a value tier differ on the blue–yellow axis, which colour-blind players keep.
+Accepted for testing; Eduardo judges them in the build. One row per base element, fixed now so later elements need no repaint. **Body** colours the tower and the enemy (URP Lit). **Projectile** is the Unlit sphere. **UI** is the element's name and accents on the dark HUD background. **Value** is the non-hue cue: elements that share a value tier differ on the blue–yellow axis, which colour-blind players keep.
 
 | Element | Body | Projectile | UI | Value | Extra |
 |---|---|---|---|---|---|
@@ -32,7 +43,7 @@ One row per base element, fixed now so later elements need no repaint. **Body** 
 | Water | `#1F5FC0` | `#7CC4FF` | `#6DB4FF` | mid-dark, cool | |
 | Earth | `#7A5230` | `#4A2E14` | `#C9925A` | dark, warm | |
 
-Hybrids get their own row when they are built (Nature green, Lightning, Hellfire, Poison); green and red then force the spawn and exit change in section 3.
+Hybrids get their own row when they are built (Nature green, Lightning, Hellfire, Poison); each must pass the scenario test of 1.1 like the base elements.
 
 - Tower and enemy of the same element share the body colour; shape tells them apart (cube 0.7 cells against a flattened sphere 0.5 cells).
 - Projectile: sphere **0.25 cells** (was 0.2), Unlit, no shadow, at the height it has now.
@@ -77,11 +88,39 @@ The hover is a flat quad on the cell, **under** the tower, so it never washes a 
 |---|---|---|
 | Placing the selected tower would succeed | `#FFFFFF` α 0.30 | selected element's |
 | Placing would be refused for a reason that ignores enemies: spawn or exit, wall, gold, or cutting the spawn from the exit (parked; until then, like a free cell) | `#E5483B` α 0.45 | hidden |
-| A tower stands there (a click sells it) | `#FFC23D` α 0.60, read as a gold rim: money comes back | that tower's |
+| A tower stands there | the same `#FFFFFF` α 0.30, read as a rim around the tower: it is clickable | that tower's |
+
+No sale look on towers in 4b: a click still sells there, but 4c replaces it a step later, so a look built for it would be thrown away.
 
 - Range disc: flat at height 0.01, radius = range. Fill is the element's UI colour at α 0.18 (`RangeDisc_Light` `#FFE27A`, `RangeDisc_Shadow` `#B48CFF`), so the disc also says which tower is about to be built.
 - The hover state is recomputed only when the hovered cell, the selection, the gold or the board changes, not every frame. Refusals caused by enemies (an enemy on the cell, or a living enemy cut off) are not shown on the hover: they change every tick and would flicker; the click refuses them with its message.
 - When the pointer leaves the canvas, the hover and disc should hide (parked). Acceptable until then: leaving through the top or the bottom passes over a bar, where they already hide; only a side exit leaves them on an edge column.
+
+### 1.5 Tower selection (4c)
+**Selection frame**: a square frame of four bars around the selected tower's cell, outer 1.1 cells, bar width 0.08 cells, at height 0.03, Unlit, opaque `#FFFFFF` (contrast 3.2 with the stone floor). It lies outside the tile, over the grid lines, with a ring of floor between it and the tower, so it never touches or tints the tower: Light and Shadow keep their contrast with the floor. It differs from the hover by being opaque, larger than the cell and a frame, not a fill. One pooled frame; no pulse.
+
+**Options in the bottom bar** (recommended). While a tower is selected, the tower panel replaces the buy buttons in the same place, right-aligned. Nothing clickable comes over the board, so the input rule of 4b holds, and no cell or enemy is covered. The cost is eye travel from the tower to the bar; the frame on the board and the element tile and name in the panel tie the two together. A panel beside the tower would remove that travel, but it brings back the rule that a click on it must not reach the cell, it covers up to two cells and the enemies on them, and it needs placing and clamping at the board edges.
+
+**Tower panel** (`#tower-panel`), one row, centred vertically, children 12 apart:
+- Element tile 28 x 28 (1.3) and, 8 to its right, the name `Light tower`, 18, bold, `#FFFFFF`.
+- **Upgrade**, not available yet: 120 x 56, background `#3A3733`, border 2 `#4F4A43`, radius 6; `Upgrade` 18 bold over `Soon` 14 regular, both `#8A8478`. Takes no clicks and has no hover or pressed look, so it reads as planned, not broken.
+- **Sell**: 120 x 56, background `#45413B`, radius 6; hover and pressed `#57524A`. `Sell` 18 bold `#FFFFFF` over the value line. A click sells at once and ends the selection.
+- Width: 28 + 8 + about 100 + 12 + 120 + 12 + 120 = about 400, inside the 424 of six compact buy buttons, so the panel fits the bar at every stage.
+
+**Sell value**, always what a click pays now. The value line is live while the panel is open, hovered or not: it follows the tower's state, never a pointer event.
+
+| Tower | Value line | Sell border |
+|---|---|---|
+| Has never fired: full cost | `+40`, 16 bold `#FFC23D` | 2 `#FFC23D` |
+| Has fired: refund | `+20`, 16 bold `#C9A04A`, then ` of 40`, 14 regular `#B5AFA3` | 2 `#6B655A` |
+
+The two looks differ by colour, by the gold border and by the ` of 40` tail, not only by the number.
+
+**The drop**, when the tower fires its first shot while the panel is open: on the frame after, the line switches to the refund, the number turns `#FF6B5E` and pops (scale 1.4 to 1.0 over 0.25 s, ease-out), the Sell border turns 2 `#FF6B5E`; after 0.25 s both ease to the refund look over 0.5 s (USS transition). 0.75 s in all, so a resting pointer still sees it happen. The two texts are built when the tower is selected; the drop only swaps them.
+
+**Ending the selection**: a click on empty ground ends it and does not buy (the next click buys); Escape ends it; a click on another tower selects that one; a key 1 or 2 ends it and selects that tower to buy; selling ends it. Waves do not end it.
+
+**While a tower is selected**: the range disc shows the selected tower's range and stays there wherever the pointer is; the hover still shows on other cells, without a disc of its own. Ending the selection brings back the buy buttons, with the selected tower to buy unchanged.
 
 ## 2. Damage numbers
 The closed look, in values. Numbers are pooled; nothing allocates per hit.
@@ -113,7 +152,7 @@ The closed look, in values. Numbers are pooled; nothing allocates per hit.
 |---|---|---|
 | Free cell, wall, background | change in slice 4 (1.1) | Light disappears on light grey; walls and grid lines share one dark |
 | Tile 0.95 cells with gaps | keep | the gaps draw a 2 px grid for free |
-| Spawn and exit | keep until the first green or red element; then spawn a ring `#F4F1EA` and exit a ring `#151413`, each 0.95 cells with a 0.55-cell inset in the free-cell colour | green and red will mean Nature and Fire; achromatic rings tell in from out by value, and the inset keeps every enemy readable on them |
+| Spawn and exit | change (parked): spawn a ring `#F4F1EA` and exit a ring `#151413`, each 0.95 cells with a 0.55-cell inset in the free-cell colour | green and red fail the scenario test on stone and will mean Nature and Fire; achromatic rings tell in from out by value, and the inset keeps every enemy readable on them |
 | Wall height | change, low priority: blocks 0.5 cells high on a full 1.0-cell footprint | walls cast shadows and join into one wall, the Bad North read of terrain |
 | Tower cube 0.7, Lit, casts shadows | keep shape; colour per element (1.2) | |
 | Enemy flattened sphere 0.5 x 0.25 | keep shape; colour per element (1.2) | |
@@ -127,5 +166,4 @@ The closed look, in values. Numbers are pooled; nothing allocates per hit.
 | End screen and default Restart button | change (1.3) | the title said nothing by colour; the button looked like an editor control |
 
 ## 4. Open choices for Eduardo
-1. **Board in warm mid stone (`#968F7F`) instead of light grey.** Recommended: it is what lets Light and Shadow both read. The alternative, a grass green ground in the Bad North way, collides with Nature and Poison.
-2. **Spawn and exit as white and black rings once green or red elements exist** (section 3). Recommended; until then the green and red cells stay.
+1. **Spawn and exit as white and black rings in 4b, with the stone board,** instead of when green or red elements arrive (section 3). Recommended: green and red fail the scenario test on stone and Eduardo judges the stone board in that build; the cost is two materials and an inset quad on two cells. The alternative keeps green and red, read by hue only, until then.
