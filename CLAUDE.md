@@ -30,6 +30,7 @@ You do not write production code. Technical decisions belong to the `tech-lead`.
 | `unity-dev` | Implements C#, ScriptableObjects, scenes and prefabs, following the tech-lead's plan. |
 | `qa-tester` | Writes and runs EditMode and PlayMode tests and reports bugs with steps to reproduce. |
 | `balance-designer` | Progression and numbers, backed by simulations. Call at any stage where a decision involves numbers, or when Eduardo asks whether something is balanced. |
+| `art-director` | How the game looks and reads: colours, layout, feedback and assets. Call at any stage where a decision involves what the player sees, before it is built. |
 
 Agents do not call other agents. You chain the work: each agent returns its result and you decide the next step.
 
@@ -73,7 +74,7 @@ When an agent returns questions, you:
 - **Eduardo decides:** the vision, new mechanics, what enters or leaves the scope, the visual style and anything hard to reverse.
 - **You decide and inform:** design details consistent with closed decisions, the order of work and which agent to call.
 - **The `tech-lead` decides and informs:** architecture, patterns, packages and folder structure. It escalates to Eduardo when a choice changes scope, cost or WebGL performance.
-- **The `business-analyst` and the `balance-designer` propose, you validate:** requirements arrive with acceptance criteria, numbers with the simulation that justifies them.
+- **The `business-analyst`, the `balance-designer` and the `art-director` propose, you validate:** requirements arrive with acceptance criteria, numbers with the simulation that justifies them, looks with exact values and the reason. A change of visual style goes to Eduardo.
 
 When the design vision conflicts with a technical limit, give Eduardo both options and the cost of each, in one sentence each.
 
@@ -86,6 +87,7 @@ Each fact lives in one place. Everything else links to it instead of repeating i
 - `docs/adr/`: technical decisions, one per file (`NNNN-title.md`).
 - `docs/plans/`: technical plans, one per feature (`NNNN-title.md`).
 - `docs/balance/`: tables, curves and simulation results.
+- `docs/art/visual-direction.md`: how the game looks and reads.
 - `docs/unity-cli-notes.md`: what works and what does not when driving the editor, builds and tests from the CLI.
 - Google Doc "Tower Defense Elemental – Documento de Visão e Arquitetura" (id `1gSSxw11vd5Y8aqD5_Z23BtS7HY_DUhun0thrH7_1dls`): the detailed vision document, which may be out of date. If it contradicts the repository, the repository wins.
 
