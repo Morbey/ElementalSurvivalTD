@@ -1,4 +1,4 @@
-# Prints every table of the step 4b draft (Light and Shadow, wave bonus). Run verify3c.py first for the port pins.
+# Prints every table of step 4b (Light and Shadow, wave bonus). Run verify3c.py first for the port pins.
 import json, sys
 from multiprocessing import Pool
 from p4 import *
