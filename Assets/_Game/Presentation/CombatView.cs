@@ -13,6 +13,7 @@ namespace ElementalTD.Presentation
     public sealed class CombatView : MonoBehaviour
     {
         [SerializeField] private PrototypeBootstrap bootstrap;
+        [SerializeField] private ElementPalette palette;
         [Tooltip("Authored for a cell size of 1; its root is scaled by the map's cell size.")]
         [SerializeField] private EnemyView enemyPrefab;
         [Tooltip("Enemy views created at start-up; the pool grows only when more enemies are on the board.")]
@@ -32,13 +33,21 @@ namespace ElementalTD.Presentation
         private Transform _projectileRoot;
         private readonly List<GameObject> _projectileObjects = new List<GameObject>();
         private readonly List<Transform> _projectileTransforms = new List<Transform>();
+        private readonly List<Renderer> _projectileRenderers = new List<Renderer>();
+        private readonly List<int> _projectileShownIds = new List<int>();
         private int _shownProjectiles;
+
+        // By element id; index 0 and an id with no look hold the prefab's own material.
+        private Material[] _enemyMaterials;
+        private Material[] _projectileMaterials;
 
         private void Start()
         {
-            if (bootstrap == null || bootstrap.Battle == null || enemyPrefab == null || projectilePrefab == null)
+            Renderer projectileRenderer = projectilePrefab != null ? projectilePrefab.GetComponentInChildren<Renderer>() : null;
+            if (bootstrap == null || bootstrap.Battle == null || palette == null || enemyPrefab == null
+                || enemyPrefab.BodyMaterial == null || projectileRenderer == null)
             {
-                Debug.LogError("CombatView: assign the bootstrap and both prefabs; the battle must exist.", this);
+                Debug.LogError("CombatView: assign the bootstrap, the palette and both prefabs, each with its body renderer; the battle must exist.", this);
                 enabled = false;
                 return;
             }
@@ -46,6 +55,8 @@ namespace ElementalTD.Presentation
             _battle = bootstrap.Battle;
             _map = bootstrap.Map;
             _viewScale = Vector3.one * _map.CellSize;
+            _enemyMaterials = palette.MaterialsById(look => look.Enemy, enemyPrefab.BodyMaterial);
+            _projectileMaterials = palette.MaterialsById(look => look.Projectile, projectileRenderer.sharedMaterial);
 
             _enemyRoot = new GameObject("Enemies").transform;
             for (int i = 0; i < prewarmEnemies; i++) AddEnemyView();
@@ -65,7 +76,7 @@ namespace ElementalTD.Presentation
             {
                 Enemy enemy = board.EnemyAt(i);
                 _enemyViews[i].Show(Interpolate(enemy.PreviousX, enemy.PreviousY, enemy.X, enemy.Y, alpha),
-                    enemy.Health / enemy.MaxHealth);
+                    enemy.Health / enemy.MaxHealth, ElementPalette.ById(_enemyMaterials, enemy.Element.Id));
                 if (i >= _shownEnemies) _enemyObjects[i].SetActive(true);
             }
             for (int i = enemies; i < _shownEnemies; i++) _enemyObjects[i].SetActive(false);
@@ -78,6 +89,12 @@ namespace ElementalTD.Presentation
                 Projectile projectile = _battle.ProjectileAt(i);
                 _projectileTransforms[i].position =
                     Interpolate(projectile.PreviousX, projectile.PreviousY, projectile.X, projectile.Y, alpha);
+                int id = projectile.Element.Id;
+                if (id != _projectileShownIds[i])
+                {
+                    _projectileShownIds[i] = id;
+                    _projectileRenderers[i].sharedMaterial = ElementPalette.ById(_projectileMaterials, id);
+                }
                 if (i >= _shownProjectiles) _projectileObjects[i].SetActive(true);
             }
             for (int i = count; i < _shownProjectiles; i++) _projectileObjects[i].SetActive(false);
@@ -106,6 +123,8 @@ namespace ElementalTD.Presentation
             view.SetActive(false);
             _projectileObjects.Add(view);
             _projectileTransforms.Add(view.transform);
+            _projectileRenderers.Add(view.GetComponentInChildren<Renderer>());
+            _projectileShownIds.Add(-1); // no id yet: the first shot writes its material
         }
     }
 }

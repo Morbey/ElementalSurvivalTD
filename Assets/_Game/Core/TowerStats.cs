@@ -12,8 +12,10 @@ namespace ElementalTD.Core
         public readonly float ProjectileSpeed;
         /// <summary>In gold.</summary>
         public readonly int Cost;
+        /// <summary>Dealt by its shots; none deals x1.</summary>
+        public readonly Element Element;
 
-        public TowerStats(float range, float damage, float shotsPerSecond, float projectileSpeed, int cost = 0)
+        public TowerStats(float range, float damage, float shotsPerSecond, float projectileSpeed, int cost = 0, Element element = default)
         {
             if (range < 0f) throw new ArgumentOutOfRangeException(nameof(range), range, "Range cannot be negative.");
             if (damage < 0f) throw new ArgumentOutOfRangeException(nameof(damage), damage, "Damage cannot be negative.");
@@ -25,6 +27,7 @@ namespace ElementalTD.Core
             ShotsPerSecond = shotsPerSecond;
             ProjectileSpeed = projectileSpeed;
             Cost = cost;
+            Element = element;
         }
     }
 }

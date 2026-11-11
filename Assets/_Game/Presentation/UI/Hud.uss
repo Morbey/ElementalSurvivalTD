@@ -1,31 +1,177 @@
-#message {
-    position: absolute;
-    top: 24px;
-    left: 0;
-    right: 0;
-    -unity-text-align: middle-center;
+/* Values: docs/art/visual-direction.md, section 1.3. The bars are the only place their sizes live (ADR 0002). */
+
+.hud-text {
+    margin: 0;
+    padding: 0;
     -unity-font-style: bold;
-    font-size: 24px;
     color: rgb(255, 255, 255);
-    -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgb(0, 0, 0);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    -unity-text-outline-width: 0;
+    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    white-space: nowrap;
 }
 
-#run-status {
-    position: absolute;
-    top: 16px;
-    left: 16px;
+/* Top bar */
+
+#top-bar {
+    flex-shrink: 0;
+    height: 44px;
+    padding: 0 16px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
 }
 
-#run-status > Label {
-    -unity-font-style: bold;
+#run-labels {
+    flex-direction: row;
+    align-items: center;
+}
+
+#wave-label,
+#lives-label,
+#next-wave-label {
     font-size: 20px;
-    color: rgb(255, 255, 255);
-    -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgb(0, 0, 0);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
+
+#lives-label {
+    margin-left: 24px;
+}
+
+#next-wave-label {
+    -unity-text-align: middle-right;
+}
+
+/* The area the camera frames the board into */
+
+#board-area {
+    flex-grow: 1;
+}
+
+/* Bottom bar */
+
+#bottom-bar {
+    flex-shrink: 0;
+    height: 72px;
+    padding: 0 16px;
+    flex-direction: row;
+    align-items: center;
+}
+
+#gold-label {
+    font-size: 24px;
+    color: rgb(255, 194, 61);
+}
+
+#message {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin-left: 16px;
+    overflow: hidden;
+    font-size: 20px;
+    color: rgb(255, 194, 61);
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 0.3s;
+}
+
+#message.message--shown {
+    opacity: 1;
+    transition-duration: 0s;
+}
+
+#message.message--refusal {
+    color: rgb(255, 255, 255);
+}
+
+#tower-bar {
+    flex-shrink: 0;
+    flex-direction: row;
+    align-items: center;
+}
+
+/* Tower button. Button.tower-button outranks every .unity-button rule of the theme; :focus resets the theme's focus look. */
+
+Button.tower-button,
+Button.tower-button:focus {
+    width: 152px;
+    height: 56px;
+    margin: 0 0 0 12px;
+    padding: 0 10px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    background-color: rgb(69, 65, 59);
+    border-width: 2px;
+    border-color: rgb(107, 101, 90);
+    border-radius: 6px;
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    -unity-text-align: middle-left;
+    white-space: nowrap;
+}
+
+Button.tower-button:hover,
+Button.tower-button:active,
+Button.tower-button:hover:active {
+    background-color: rgb(87, 82, 74);
+    border-color: rgb(107, 101, 90);
+}
+
+Button.tower-button.tower-button--selected,
+Button.tower-button.tower-button--selected:hover,
+Button.tower-button.tower-button--selected:active,
+Button.tower-button.tower-button--selected:hover:active,
+Button.tower-button.tower-button--selected:focus {
+    padding: 0 9px;
+    background-color: rgb(107, 101, 90);
+    border-width: 3px;
+    border-color: rgb(255, 255, 255);
+}
+
+.tower-button__key {
+    width: 14px;
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+    -unity-font-style: normal;
+    color: rgb(181, 175, 163);
+}
+
+.tower-button__swatch {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    margin: 0 8px;
+    border-width: 2px;
+    border-color: rgb(217, 212, 200);
+    border-radius: 3px;
+}
+
+.tower-button__info {
+    flex-direction: column;
+    justify-content: center;
+}
+
+.tower-button__name {
+    margin: 0;
+    padding: 0;
+    font-size: 18px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+}
+
+.tower-button__price {
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+    -unity-font-style: normal;
+    color: rgb(255, 194, 61);
+}
+
+.tower-button--short .tower-button__price {
+    color: rgb(255, 107, 94);
+}
+
+/* End screen */
 
 #end-screen {
     position: absolute;
@@ -36,17 +182,36 @@
     display: none;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(20, 19, 17, 0.8);
 }
 
 #end-title {
     margin-bottom: 24px;
-    -unity-font-style: bold;
     font-size: 48px;
-    color: rgb(255, 255, 255);
+    color: rgb(255, 107, 94);
 }
 
-#restart-button {
-    padding: 8px 24px;
+#end-screen.end-screen--won #end-title {
+    color: rgb(255, 194, 61);
+}
+
+Button#restart-button,
+Button#restart-button:focus {
+    margin: 0;
+    padding: 10px 32px;
+    background-color: rgb(69, 65, 59);
+    border-width: 2px;
+    border-color: rgb(255, 255, 255);
+    border-radius: 6px;
     font-size: 24px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+    -unity-text-align: middle-center;
+}
+
+Button#restart-button:hover,
+Button#restart-button:active,
+Button#restart-button:hover:active {
+    background-color: rgb(87, 82, 74);
+    border-color: rgb(255, 255, 255);
 }

@@ -1,14 +1,20 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
     <Style src="Hud.uss" />
-    <ui:VisualElement name="run-status" picking-mode="Ignore">
-        <ui:Label name="wave-label" picking-mode="Ignore" />
-        <ui:Label name="lives-label" picking-mode="Ignore" />
-        <ui:Label name="gold-label" picking-mode="Ignore" />
-        <ui:Label name="next-wave-label" picking-mode="Ignore" />
+    <ui:VisualElement name="top-bar" picking-mode="Ignore">
+        <ui:VisualElement name="run-labels" picking-mode="Ignore">
+            <ui:Label name="wave-label" class="hud-text" picking-mode="Ignore" />
+            <ui:Label name="lives-label" class="hud-text" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:Label name="next-wave-label" class="hud-text" picking-mode="Ignore" />
     </ui:VisualElement>
-    <ui:Label name="message" picking-mode="Ignore" />
+    <ui:VisualElement name="board-area" picking-mode="Ignore" />
+    <ui:VisualElement name="bottom-bar" picking-mode="Ignore">
+        <ui:Label name="gold-label" class="hud-text" picking-mode="Ignore" />
+        <ui:Label name="message" class="hud-text" picking-mode="Ignore" />
+        <ui:VisualElement name="tower-bar" picking-mode="Ignore" />
+    </ui:VisualElement>
     <ui:VisualElement name="end-screen">
-        <ui:Label name="end-title" picking-mode="Ignore" />
+        <ui:Label name="end-title" class="hud-text" picking-mode="Ignore" />
         <ui:Button name="restart-button" text="Restart" />
     </ui:VisualElement>
 </ui:UXML>

@@ -5,11 +5,15 @@ using UnityEngine;
 
 namespace ElementalTD.Presentation
 {
-    /// <summary>Shows the board: the cell tiles, one visual per tower, the hover highlight and the range disc.</summary>
+    /// <summary>
+    /// Shows the board: the cell tiles, one visual per tower in its element's material, the hover and the range disc,
+    /// which stands for the tower on the hovered cell, or else for the selected one.
+    /// </summary>
     public sealed class BoardView : MonoBehaviour
     {
         [SerializeField] private PrototypeBootstrap bootstrap;
         [SerializeField] private TowerPlacementInput placementInput;
+        [SerializeField] private ElementPalette palette;
 
         [Header("Cells")]
         [Tooltip("Authored for a cell size of 1; its root is scaled by the map's cell size. Its tile starts with the free material.")]
@@ -23,7 +27,7 @@ namespace ElementalTD.Presentation
         [SerializeField] private GameObject towerPrefab;
         [Tooltip("Authored for a cell size of 1; its root is scaled by the map's cell size.")]
         [SerializeField] private GameObject hoverPrefab;
-        [Tooltip("A disc of radius 1 at a cell size of 1; scaled on x and z by the tower's range.")]
+        [Tooltip("A disc of radius 1 at a cell size of 1; scaled on x and z by the tower's range. Its material is the one for no element.")]
         [SerializeField] private GameObject rangeDiscPrefab;
 
         private Board _board;
@@ -35,14 +39,18 @@ namespace ElementalTD.Presentation
         private Transform _hoverTransform;
         private GameObject _rangeDisc;
         private Transform _rangeDiscTransform;
+        private Renderer _rangeDiscRenderer;
+        private Material[] _rangeDiscMaterials; // by element id
+        private Material _shownDiscMaterial;
+        private float _shownDiscRange = -1f; // forces the first write
 
         private void Start()
         {
-            if (bootstrap == null || bootstrap.Board == null || placementInput == null || cellPrefab == null
+            if (bootstrap == null || bootstrap.Board == null || placementInput == null || palette == null || cellPrefab == null
                 || blockedMaterial == null || spawnMaterial == null || exitMaterial == null
-                || towerPrefab == null || hoverPrefab == null || rangeDiscPrefab == null || placementInput.Tower == null)
+                || towerPrefab == null || hoverPrefab == null || rangeDiscPrefab == null || placementInput.TowerCount == 0)
             {
-                Debug.LogError("BoardView: assign every reference, and a tower on the placement input; the board must exist.", this);
+                Debug.LogError("BoardView: assign every reference, and towers on the placement input; the board must exist.", this);
                 enabled = false;
                 return;
             }
@@ -64,8 +72,9 @@ namespace ElementalTD.Presentation
             _rangeDisc = Instantiate(rangeDiscPrefab);
             _rangeDisc.name = "RangeDisc";
             _rangeDiscTransform = _rangeDisc.transform;
-            float radius = placementInput.Tower.RangeCells * _map.CellSize;
-            _rangeDiscTransform.localScale = new Vector3(radius, _map.CellSize, radius);
+            _rangeDiscRenderer = _rangeDisc.GetComponentInChildren<Renderer>();
+            _shownDiscMaterial = _rangeDiscRenderer.sharedMaterial;
+            _rangeDiscMaterials = palette.MaterialsById(look => look.RangeDisc, _shownDiscMaterial);
             _rangeDisc.SetActive(false);
 
             _board.TowerPlaced += OnTowerPlaced;
@@ -84,14 +93,49 @@ namespace ElementalTD.Presentation
             bool show = placementInput.HasHoverCell;
             if (show)
             {
-                Vector3 centre = _map.CellToWorld(placementInput.HoverCell);
+                GridPos cell = placementInput.HoverCell;
+                Vector3 centre = _map.CellToWorld(cell);
                 _hoverTransform.position = centre;
                 _rangeDiscTransform.position = centre;
+                ShowDiscFor(cell);
             }
             if (_hover.activeSelf != show)
             {
                 _hover.SetActive(show);
                 _rangeDisc.SetActive(show);
+            }
+        }
+
+        private void ShowDiscFor(GridPos cell)
+        {
+            float range;
+            Element element;
+            Tower tower = _board.TowerOn(cell);
+            if (tower != null)
+            {
+                range = tower.Stats.Range;
+                element = tower.Stats.Element;
+            }
+            else
+            {
+                TowerDefinition selected = placementInput.Tower;
+                if (selected == null) return;
+                range = selected.RangeCells;
+                element = selected.Element != null ? selected.Element.ToElement() : default;
+            }
+
+            if (range != _shownDiscRange)
+            {
+                _shownDiscRange = range;
+                float radius = range * _map.CellSize;
+                _rangeDiscTransform.localScale = new Vector3(radius, _map.CellSize, radius);
+            }
+
+            Material material = ElementPalette.ById(_rangeDiscMaterials, element.Id);
+            if (!ReferenceEquals(material, _shownDiscMaterial))
+            {
+                _shownDiscMaterial = material;
+                _rangeDiscRenderer.sharedMaterial = material;
             }
         }
 
@@ -124,6 +168,8 @@ namespace ElementalTD.Presentation
             GameObject tower = Instantiate(towerPrefab, _map.CellToWorld(cell), Quaternion.identity, _towerRoot);
             tower.name = $"Tower {cell.X},{cell.Y}";
             tower.transform.localScale = Vector3.one * _map.CellSize;
+            if (palette.TryGetLook(_board.TowerOn(cell).Stats.Element, out ElementPalette.Look look) && look.Tower != null)
+                tower.GetComponentInChildren<Renderer>().sharedMaterial = look.Tower;
             _towers[_grid.Index(cell)] = tower;
         }
 

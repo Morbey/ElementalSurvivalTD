@@ -14,6 +14,7 @@ namespace ElementalTD.Gameplay
         [Header("Data")]
         [SerializeField] private MapDefinition map;
         [SerializeField] private RunDefinition run;
+        [SerializeField] private ElementChartDefinition elementChart;
 
         private float _accumulator;
 
@@ -27,9 +28,9 @@ namespace ElementalTD.Gameplay
 
         private void Awake()
         {
-            if (map == null || run == null)
+            if (map == null || run == null || elementChart == null)
             {
-                Debug.LogError("PrototypeBootstrap: assign the map and the run.", this);
+                Debug.LogError("PrototypeBootstrap: assign the map, the run and the element chart.", this);
                 return;
             }
 
@@ -40,7 +41,7 @@ namespace ElementalTD.Gameplay
                 return;
             }
 
-            Battle = new Battle(Board, run.ToWaves(), run.Lives, run.StartingGold, run.SellRefundPercent);
+            Battle = new Battle(Board, run.ToWaves(), run.Lives, run.StartingGold, run.SellRefundPercent, elementChart.ToChart());
         }
 
         private void Update()

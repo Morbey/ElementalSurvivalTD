@@ -6,6 +6,7 @@ namespace ElementalTD.Core
     /// <summary>
     /// Plays one run in fixed ticks: waves, enemies, towers, projectiles, wave bonuses, then the outcome, in that order.
     /// Enemies enter by the wave schedule, cost a life at the exit and pay their gold reward when killed;
+    /// a shot that lands deals its damage times the chart's multiplier, 0 against the own element;
     /// a wave pays its survival bonus once its last enemy has entered and none of its enemies is on the board.
     /// Towers are bought and sold here: the battle checks the gold, the board keeps the placement rule.
     /// </summary>
@@ -17,6 +18,7 @@ namespace ElementalTD.Core
         private readonly Stack<Projectile> _freeProjectiles = new Stack<Projectile>();
         private readonly int _sellRefundPercent;
         private readonly bool[] _paidWaves;
+        private readonly ElementChart _elements;
 
         public Board Board { get; }
         public WaveSchedule Waves { get; }
@@ -31,7 +33,8 @@ namespace ElementalTD.Core
         public int ProjectileCount => _projectiles.Count;
         public Projectile ProjectileAt(int index) => _projectiles[index];
 
-        public Battle(Board board, Wave[] waves, int lives, int startingGold = 0, int sellRefundPercent = 100)
+        /// <summary>Without a chart every pair of elements deals x1; immunity to the own element still holds.</summary>
+        public Battle(Board board, Wave[] waves, int lives, int startingGold = 0, int sellRefundPercent = 100, ElementChart elements = null)
         {
             Board = board ?? throw new ArgumentNullException(nameof(board));
             if (lives < 1) throw new ArgumentOutOfRangeException(nameof(lives), lives, "A run needs at least one life.");
@@ -44,6 +47,7 @@ namespace ElementalTD.Core
             Lives = lives;
             Gold = startingGold;
             _sellRefundPercent = sellRefundPercent;
+            _elements = elements ?? new ElementChart(0);
             Outcome = RunOutcome.Running;
         }
 
@@ -147,8 +151,10 @@ namespace ElementalTD.Core
                     continue;
                 }
 
+                // The only place an element counts: read on landing, so a state on the target can change it later (ADR 0005).
                 Enemy target = projectile.Target;
-                target.TakeDamage(projectile.Damage);
+                float multiplier = _elements.Multiplier(projectile.Element, target.Element);
+                target.TakeDamage(projectile.Damage * multiplier);
                 Release(i);
                 if (target.Health <= 0f)
                 {

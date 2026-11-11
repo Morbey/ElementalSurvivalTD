@@ -15,9 +15,13 @@ namespace ElementalTD.Data
         [SerializeField, Min(0f)] private float projectileSpeedCellsPerSecond;
         [Tooltip("Gold to buy it.")]
         [SerializeField, Min(0)] private int cost;
+        [Tooltip("While unassigned, no element: it deals x1.")]
+        [SerializeField] private ElementDefinition element;
 
         public float RangeCells => rangeCells;
+        public ElementDefinition Element => element;
 
-        public TowerStats ToStats() => new TowerStats(rangeCells, damage, shotsPerSecond, projectileSpeedCellsPerSecond, cost);
+        public TowerStats ToStats() =>
+            new TowerStats(rangeCells, damage, shotsPerSecond, projectileSpeedCellsPerSecond, cost, element != null ? element.ToElement() : default);
     }
 }

@@ -14,6 +14,8 @@ namespace ElementalTD.Core
         // Copied at launch, so a shot keeps flying after its tower is removed.
         internal Enemy Target { get; private set; }
         internal float Damage { get; private set; }
+        /// <summary>Its tower's at launch.</summary>
+        public Element Element { get; private set; }
         private float _speed;
         private int _targetEntry;
 
@@ -29,6 +31,7 @@ namespace ElementalTD.Core
             Target = target;
             _targetEntry = target.Entry;
             Damage = stats.Damage;
+            Element = stats.Element;
             _speed = stats.ProjectileSpeed;
         }
 

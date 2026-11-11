@@ -8,8 +8,10 @@ namespace ElementalTD.Core
         public readonly float MaxHealth;
         /// <summary>Gold paid when it is killed.</summary>
         public readonly int GoldReward;
+        /// <summary>None takes x1 and is never immune.</summary>
+        public readonly Element Element;
 
-        public EnemyStats(float speed, float maxHealth, int goldReward = 0)
+        public EnemyStats(float speed, float maxHealth, int goldReward = 0, Element element = default)
         {
             if (speed < 0f) throw new ArgumentOutOfRangeException(nameof(speed), speed, "Speed cannot be negative.");
             if (maxHealth <= 0f) throw new ArgumentOutOfRangeException(nameof(maxHealth), maxHealth, "Maximum health must be above 0.");
@@ -17,6 +19,7 @@ namespace ElementalTD.Core
             Speed = speed;
             MaxHealth = maxHealth;
             GoldReward = goldReward;
+            Element = element;
         }
     }
 }
