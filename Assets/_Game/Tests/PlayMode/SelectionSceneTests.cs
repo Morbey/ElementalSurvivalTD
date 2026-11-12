@@ -496,7 +496,7 @@ namespace ElementalTD.PlayModeTests
             foreach (Renderer bar in bars)
             {
                 all.Encapsulate(bar.bounds);
-                Assert.AreEqual(0.08f * size, Mathf.Min(bar.bounds.size.x, bar.bounds.size.z), 0.005f * size, when + ": a bar is 0.08 cells wide");
+                Assert.AreEqual(0.07f * size, Mathf.Min(bar.bounds.size.x, bar.bounds.size.z), 0.005f * size, when + ": a bar is 0.07 cells wide");
                 Assert.AreEqual(0.03f, bar.bounds.center.y, 0.005f, when + ": at height 0.03");
                 Assert.AreEqual(ShadowCastingMode.Off, bar.shadowCastingMode, "no shadow");
             }
@@ -739,7 +739,7 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(FontStyle.Bold, L("synergies-heading").resolvedStyle.unityFontStyleAndWeight);
             AssertColor(Hex("B5AFA3"), L("synergies-heading").resolvedStyle.color, "heading");
             Assert.AreEqual(18f, L("synergies-heading").resolvedStyle.height, Snap);
-            Assert.AreEqual("Found by playing the scenarios", L("synergies-empty").text);
+            Assert.AreEqual("None found yet", L("synergies-empty").text);
             Assert.AreEqual(14f, L("synergies-empty").resolvedStyle.fontSize);
             Assert.AreEqual(FontStyle.Normal, L("synergies-empty").resolvedStyle.unityFontStyleAndWeight);
             AssertColor(Hex("8A8478"), L("synergies-empty").resolvedStyle.color, "empty line");
@@ -754,7 +754,7 @@ namespace ElementalTD.PlayModeTests
             Button close = Btn("panel-close");
             Assert.AreEqual("×", close.text);
             AssertSize(close, 28f, 28f);
-            Assert.AreEqual(20f, close.resolvedStyle.fontSize);
+            Assert.AreEqual(24f, close.resolvedStyle.fontSize);
             Assert.AreEqual(FontStyle.Bold, close.resolvedStyle.unityFontStyleAndWeight);
             AssertColor(Hex("B5AFA3"), close.resolvedStyle.color, "close colour");
             Assert.AreEqual(0f, close.resolvedStyle.backgroundColor.a, "no background");
@@ -770,7 +770,7 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(6f, upgrade.resolvedStyle.borderTopLeftRadius, Snap);
             Label caption1 = upgrade.Q<Label>(className: "upgrade-button__caption"), note = upgrade.Q<Label>(className: "upgrade-button__note");
             Assert.AreEqual(("Upgrade", "Soon"), (caption1.text, note.text));
-            Assert.AreEqual((18f, 14f), (caption1.resolvedStyle.fontSize, note.resolvedStyle.fontSize));
+            Assert.AreEqual((16f, 14f), (caption1.resolvedStyle.fontSize, note.resolvedStyle.fontSize));
             Assert.AreEqual(FontStyle.Bold, caption1.resolvedStyle.unityFontStyleAndWeight);
             Assert.AreEqual(FontStyle.Normal, note.resolvedStyle.unityFontStyleAndWeight);
             AssertColor(Hex("8A8478"), caption1.resolvedStyle.color, "upgrade caption");
@@ -1020,6 +1020,32 @@ namespace ElementalTD.PlayModeTests
             }
             yield return new WaitForSecondsRealtime(0.9f);
             AssertLook(RefundGold, RefundBorder, 1f, "after the drop");
+        }
+
+        [UnityTest]
+        public IEnumerator S4c_AC9_The_Enlarged_Number_On_The_Pop_Frame_Grows_Leftwards_And_Does_Not_Overlap_The_Tail_And_Is_Back_At_Scale_1_After_The_Settle()
+        {
+            Buy(A);
+            ClickCell(A.X, A.Y);
+            _input.Hover(OffGrid);
+            yield return Frames(3);
+            AssertFullLook(40, "before");
+
+            Wake();
+            Battle.Tick();
+            yield return null;
+            Assert.IsTrue(SellHas("sell-button--pop"), SellClasses());
+            Label number = L("sell-value"), tail = L("sell-value-tail");
+            Assert.AreEqual(1.4f, number.resolvedStyle.scale.value.x, 0.005f, "the pop frame is at scale 1.4");
+            float numberRight = number.worldBound.xMax, tailLeft = tail.worldBound.xMin;
+            Debug.Log($"4c pop frame: number [{number.worldBound.xMin:F2}, {numberRight:F2}], tail left {tailLeft:F2}, scale {number.resolvedStyle.scale.value.x:F2}");
+            Assert.LessOrEqual(numberRight, tailLeft + Snap, $"the enlarged number's right edge ({numberRight:F2}) is at or left of the tail's left edge ({tailLeft:F2})");
+
+            yield return new WaitForSecondsRealtime(1.0f);
+            Battle.Tick();
+            yield return Frames(2);
+            Assert.AreEqual(1f, number.resolvedStyle.scale.value.x, 0.005f, "back at scale 1 after the settle");
+            Assert.LessOrEqual(number.worldBound.xMax, tail.worldBound.xMin + Snap, "and still not over the tail");
         }
 
         [UnityTest]
