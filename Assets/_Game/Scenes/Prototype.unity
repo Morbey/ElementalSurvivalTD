@@ -751,19 +751,17 @@ MonoBehaviour:
   document: {fileID: 1997445110}
   bootstrap: {fileID: 1930703238}
   viewCamera: {fileID: 362350127}
-  weakLifeSeconds: 0.5
-  normalLifeSeconds: 0.7
-  strongLifeSeconds: 0.8
+  weakLifeSeconds: 0.35
+  normalLifeSeconds: 0.45
+  strongLifeSeconds: 0.5
   heightCells: 0.7
   risePixels: 20
-  opaqueShare: 0.6
+  opaqueShare: 0.5
   topLimitPixels: 78
   spawnOffsets:
   - {x: 0, y: 0}
-  - {x: -12, y: -6}
-  - {x: 12, y: -6}
-  - {x: -6, y: -12}
-  - {x: 6, y: -12}
+  - {x: -36, y: -8}
+  - {x: 36, y: -8}
   maxNumbers: 40
   weakCutoff: 30
   immuneText: immune
