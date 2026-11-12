@@ -1,6 +1,6 @@
 # ADR 0003 – Simulation tick, pooling and combat views
 
-Status: Accepted (prototype slice 2c). Amends ADR 0001 (deferred rules) and ADR 0002 (boundary, tower events, health bars). Amended by ADR 0004 (tick order, enemy pooling).
+Status: Accepted (prototype slice 2c). Amends ADR 0001 (deferred rules) and ADR 0002 (boundary, tower events, health bars). Amended by ADR 0004 (tick order, enemy pooling) and ADR 0006 (moments, text over the board).
 
 ## Context
 Slice 2c adds damage, fire rates and projectiles. With a variable time step the number of shots in a pass depends on the frame rate, so the same maze could kill in the editor and leak in the browser. 2c also has the first objects that spawn repeatedly (projectiles) and the first world-space UI (a health bar), and the 2b review found that each enemy stepped itself and that tower changes were announced by the input component.
@@ -18,8 +18,8 @@ Slice 2c adds damage, fire rates and projectiles. With a variable time step the 
 - **Variable step, as in slices 1 and 2b.** Less code, but shot counts change with the frame rate and tests could not promise what the player sees. Rejected.
 - **`FixedUpdate` as the driver.** No accumulator to write, but it ties the game tick to the physics step and keeps the tick length in project settings instead of Core. Rejected.
 - **No interpolation.** A 60 Hz tick against a 60 Hz display runs zero or two ticks on some frames, which shows as stutter. Rejected.
-- **Core events for every spawn, hit and death.** Views would need a map from Core objects to views and the tick would call into Presentation. Polling needs neither while views are anonymous. Revisit when a view needs the moment itself (death effects, sound, gold pop-ups).
-- **A UI Toolkit element per health bar.** It moves an element per enemy per frame through layout, which does not scale on WebGL. Rejected.
+- **Core events for every spawn, hit and death.** Views would need a map from Core objects to views and the tick would call into Presentation. Polling needs neither while views are anonymous. A view that needs the moment itself reads a polled log (ADR 0006).
+- **A UI Toolkit element per health bar.** It moves an element per enemy per frame through layout, which does not scale on WebGL. Rejected. Text over the board moves by transform instead (ADR 0006).
 - **One bar material tinted through a `MaterialPropertyBlock`.** Rejected for the reason given in ADR 0002.
 
 ## Consequences

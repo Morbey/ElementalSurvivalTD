@@ -1,6 +1,6 @@
 # ADR 0005 – Elements: identity, the chart and the damage rule
 
-Status: Accepted (prototype slice 4, step 4b). Amends ADR 0001 (the modifier system stays deferred) and ADR 0004 (a look per element).
+Status: Accepted (prototype slice 4, step 4b). Amends ADR 0001 (the modifier system stays deferred) and ADR 0004 (a look per element). Amended by ADR 0006 (the kind of a hit is recorded).
 
 ## Context
 Slice 4 brings the first two of the six base elements: Light and Shadow deal x2 to each other and nothing to their own. The other four bring x0.25 and x0.75, and hybrids follow. CLAUDE.md asks for elements as data and no balance number in code, and Core may not see a ScriptableObject. Three closed decisions shape the rule: a tower shoots the closest enemy even when it is immune (a talent changes that later), every hit will show its damage and what kind of hit it was (the step after this one), and a wave may mix elements.
@@ -30,5 +30,5 @@ Slice 4 brings the first two of the six base elements: Light and Shadow deal x2 
 - A new base element is one `ElementDefinition`, its rows in the chart and one look in the palette, with no code.
 - Hybrids and enemies that resist elements other than their own are not designed yet. If a hybrid is immune to its parts, rule 4 needs code.
 - `Battle` takes the chart as an optional parameter; without one every pair deals x1 and immunity still holds.
-- The damage-numbers step records a hit where rule 5 computes it and needs no change to the rule.
+- The hit log and the enemy's immunity mark are written where rule 5 computes the hit, and the chart names the kind (ADR 0006); the rule itself did not change.
 - When towers and enemies get real models, the palette keeps the UI colours and the material swap gives way to a look per definition (ADR 0004).
