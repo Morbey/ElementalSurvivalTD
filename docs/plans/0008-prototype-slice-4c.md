@@ -176,3 +176,6 @@ On the worktree with its editor closed. A test not listed under "Tests that chan
 - **Escape in the browser.** In full screen the browser uses it to leave full screen and may not pass it on; a click on the ground still ends the selection.
 - **WebGL performance and GC.** Per frame with a tower selected: one array read for the selection in each of two views, one integer query, two comparisons. Texts and classes change when the selection or the value changes: a few strings per selection and one on the drop.
 - **Coupling.** The panel view reads the input, the battle and the palette, as the tower bar does. The board view and the panel view both poll `SelectedTower`; neither knows the other.
+
+## Follow-up after acceptance
+- Rename the buying side of `TowerPlacementInput` (`Select`, `SelectedIndex`, `Tower`) to `ChooseTowerToBuy`, `TowerToBuyIndex` and `TowerToBuy`: "selected" now means both the tower to buy and the tower on the board. About 35 mechanical edits in tests.
