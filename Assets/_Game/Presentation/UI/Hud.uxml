@@ -37,7 +37,7 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="synergies" picking-mode="Ignore">
                     <ui:Label name="synergies-heading" class="hud-text" text="Synergies" picking-mode="Ignore" />
-                    <ui:Label name="synergies-empty" class="hud-text" text="Found by playing the scenarios" picking-mode="Ignore" />
+                    <ui:Label name="synergies-empty" class="hud-text" text="None found yet" picking-mode="Ignore" />
                 </ui:VisualElement>
                 <ui:VisualElement name="tower-actions" picking-mode="Ignore">
                     <ui:VisualElement name="upgrade-button" picking-mode="Ignore">

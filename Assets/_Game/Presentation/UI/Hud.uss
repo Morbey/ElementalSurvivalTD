@@ -269,7 +269,7 @@ Button#panel-close:focus {
     border-width: 0;
     border-color: rgba(0, 0, 0, 0);
     border-radius: 0;
-    font-size: 20px;
+    font-size: 24px;
     -unity-font-style: bold;
     color: rgb(181, 175, 163);
     -unity-text-align: middle-center;
@@ -347,7 +347,7 @@ Button#panel-close:hover:active {
 }
 
 .upgrade-button__caption {
-    font-size: 18px;
+    font-size: 16px;
     color: rgb(138, 132, 120);
 }
 
@@ -397,6 +397,7 @@ Button#sell-button:hover:active {
 #sell-value {
     font-size: 16px;
     color: rgb(255, 194, 61);
+    transform-origin: right center;
 }
 
 #sell-value-tail {
