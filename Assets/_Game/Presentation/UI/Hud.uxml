@@ -7,11 +7,57 @@
         </ui:VisualElement>
         <ui:Label name="next-wave-label" class="hud-text" picking-mode="Ignore" />
     </ui:VisualElement>
-    <ui:VisualElement name="board-area" picking-mode="Ignore" />
+    <ui:VisualElement name="board-row" picking-mode="Ignore">
+        <ui:VisualElement name="board-area" picking-mode="Ignore" />
+        <ui:VisualElement name="side-column" picking-mode="Ignore">
+            <ui:VisualElement name="tower-bar" picking-mode="Ignore" />
+            <ui:VisualElement name="tower-panel" picking-mode="Ignore">
+                <ui:VisualElement name="tower-panel-header" picking-mode="Ignore">
+                    <ui:VisualElement name="tower-panel-tile" picking-mode="Ignore" />
+                    <ui:Label name="tower-panel-title" class="hud-text" picking-mode="Ignore" />
+                    <ui:Button name="panel-close" text="&#215;" focusable="false" />
+                </ui:VisualElement>
+                <ui:VisualElement name="tower-stats" picking-mode="Ignore">
+                    <ui:VisualElement class="stat-row" picking-mode="Ignore">
+                        <ui:Label class="hud-text stat-row__caption" text="Element" picking-mode="Ignore" />
+                        <ui:Label name="stat-element" class="hud-text stat-row__value" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="stat-row" picking-mode="Ignore">
+                        <ui:Label class="hud-text stat-row__caption" text="Damage" picking-mode="Ignore" />
+                        <ui:Label name="stat-damage" class="hud-text stat-row__value" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="stat-row" picking-mode="Ignore">
+                        <ui:Label class="hud-text stat-row__caption" text="Shots/s" picking-mode="Ignore" />
+                        <ui:Label name="stat-shots" class="hud-text stat-row__value" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="stat-row" picking-mode="Ignore">
+                        <ui:Label class="hud-text stat-row__caption" text="Range" picking-mode="Ignore" />
+                        <ui:Label name="stat-range" class="hud-text stat-row__value" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="synergies" picking-mode="Ignore">
+                    <ui:Label name="synergies-heading" class="hud-text" text="Synergies" picking-mode="Ignore" />
+                    <ui:Label name="synergies-empty" class="hud-text" text="Found by playing the scenarios" picking-mode="Ignore" />
+                </ui:VisualElement>
+                <ui:VisualElement name="tower-actions" picking-mode="Ignore">
+                    <ui:VisualElement name="upgrade-button" picking-mode="Ignore">
+                        <ui:Label class="hud-text upgrade-button__caption" text="Upgrade" picking-mode="Ignore" />
+                        <ui:Label class="hud-text upgrade-button__note" text="Soon" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                    <ui:Button name="sell-button" focusable="false">
+                        <ui:Label class="hud-text sell-button__caption" text="Sell" picking-mode="Ignore" />
+                        <ui:VisualElement class="sell-button__value-line" picking-mode="Ignore">
+                            <ui:Label name="sell-value" class="hud-text" picking-mode="Ignore" />
+                            <ui:Label name="sell-value-tail" class="hud-text" picking-mode="Ignore" />
+                        </ui:VisualElement>
+                    </ui:Button>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
     <ui:VisualElement name="bottom-bar" picking-mode="Ignore">
         <ui:Label name="gold-label" class="hud-text" picking-mode="Ignore" />
         <ui:Label name="message" class="hud-text" picking-mode="Ignore" />
-        <ui:VisualElement name="tower-bar" picking-mode="Ignore" />
     </ui:VisualElement>
     <ui:VisualElement name="end-screen">
         <ui:Label name="end-title" class="hud-text" picking-mode="Ignore" />

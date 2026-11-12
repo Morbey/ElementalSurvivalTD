@@ -40,10 +40,77 @@
     -unity-text-align: middle-right;
 }
 
-/* The area the camera frames the board into */
+/* The row between the bars: the area the camera frames the board into, and the side column */
+
+#board-row {
+    flex-grow: 1;
+    flex-direction: row;
+}
 
 #board-area {
     flex-grow: 1;
+}
+
+#side-column {
+    flex-shrink: 0;
+}
+
+/* The column shows the buy buttons, or the tower panel while side-column--tower is on (TowerPanelView). */
+
+#tower-panel {
+    display: none;
+    flex-grow: 1;
+}
+
+#side-column.side-column--tower #tower-bar {
+    display: none;
+}
+
+#side-column.side-column--tower #tower-panel {
+    display: flex;
+}
+
+/* Tower panel: placement only. Header, stats and actions keep their size; the synergies take what is left. */
+
+#tower-panel-header,
+.stat-row,
+#tower-actions,
+.sell-button__value-line {
+    flex-direction: row;
+}
+
+#tower-panel-header {
+    align-items: center;
+}
+
+#tower-panel-tile,
+#panel-close,
+#tower-stats,
+#tower-actions {
+    flex-shrink: 0;
+}
+
+#tower-panel-title {
+    flex-grow: 1;
+}
+
+.stat-row {
+    justify-content: space-between;
+}
+
+#synergies {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+#sell-value-tail {
+    display: none;
+}
+
+#sell-button.sell-button--refund #sell-value-tail {
+    display: flex;
 }
 
 /* Bottom bar */

@@ -7,10 +7,10 @@ using UnityEngine.InputSystem;
 namespace ElementalTD.Gameplay
 {
     /// <summary>
-    /// Turns the pointer into board cells: hover, and a click that sells a tower or tries to buy the selected one.
-    /// Holds the buyable towers and which one is selected: number key N selects the N-th.
+    /// Turns the pointer into board cells: hover, and a click that selects a tower on the board, ends that selection,
+    /// or tries to buy the tower to buy. Holds the buyable towers and which one is the tower to buy: number key N chooses the N-th.
     /// Picks nothing without a running battle, so a click on the end screen never reaches the board.
-    /// The rules live in the Core Battle and Board.
+    /// The selection is input state only; the rules live in the Core Battle and Board (ADR 0004).
     /// </summary>
     public sealed class TowerPlacementInput : MonoBehaviour
     {
@@ -21,6 +21,8 @@ namespace ElementalTD.Gameplay
 
         private static readonly Plane Ground = new Plane(Vector3.up, Vector3.zero);
 
+        private Tower _selectedTower;
+
         /// <summary>Never raised for OutOfBounds.</summary>
         public event Action<PlacementResult> PlacementRefused;
 
@@ -28,20 +30,48 @@ namespace ElementalTD.Gameplay
         public GridPos HoverCell { get; private set; }
         public int TowerCount => towers == null ? 0 : towers.Length;
         public TowerDefinition TowerAt(int index) => towers[index];
-        /// <summary>0 at the start of every run.</summary>
+        /// <summary>The index of the tower to buy; 0 at the start of every run.</summary>
         public int SelectedIndex { get; private set; }
-        /// <summary>The selected tower: the one a click buys. Null while the list is empty.</summary>
+        /// <summary>The tower to buy: the one a click on a free cell buys. Null while the list is empty.</summary>
         public TowerDefinition Tower => TowerCount > 0 ? towers[SelectedIndex] : null;
 
-        /// <summary>Ignores an index outside the list.</summary>
+        /// <summary>The tower selected on the board. Null when none is, once it was sold, and while the run is not running.</summary>
+        public Tower SelectedTower
+        {
+            get
+            {
+                if (_selectedTower == null || bootstrap == null) return null;
+                Battle battle = bootstrap.Battle;
+                if (battle == null || battle.Outcome != RunOutcome.Running) return null;
+                return battle.Board.TowerOn(_selectedTower.Cell) == _selectedTower ? _selectedTower : null;
+            }
+        }
+
+        /// <summary>Chooses the tower to buy and ends the selection on the board. Ignores an index outside the list.</summary>
         public void Select(int index)
         {
-            if (index >= 0 && index < TowerCount) SelectedIndex = index;
+            if (index < 0 || index >= TowerCount) return;
+            SelectedIndex = index;
+            Deselect();
+        }
+
+        /// <summary>Ends the selection on the board; nothing else changes.</summary>
+        public void Deselect() => _selectedTower = null;
+
+        /// <summary>Sells the selected tower through the battle and ends the selection. False with none selected.</summary>
+        public bool SellSelected()
+        {
+            Tower tower = SelectedTower;
+            if (tower == null) return false;
+
+            bool sold = bootstrap.Battle.TrySellTower(tower.Cell);
+            Deselect();
+            return sold;
         }
 
         private void Update()
         {
-            SelectByKey();
+            ReadKeys();
 
             Mouse mouse = Mouse.current;
             if (mouse == null) return;
@@ -57,22 +87,37 @@ namespace ElementalTD.Gameplay
             if (HasHoverCell) HoverCell = cell;
         }
 
+        /// <summary>
+        /// Off the grid nothing happens: the press of a click on a UI button reaches here too, before the button's own click.
+        /// </summary>
         public void Click(Vector2 screenPosition)
         {
             if (!TryPick(screenPosition, out GridPos cell)) return;
 
             Battle battle = bootstrap.Battle;
-            if (battle.TrySellTower(cell)) return;
+            Tower tower = battle.Board.TowerOn(cell);
+            if (tower != null)
+            {
+                _selectedTower = tower;
+                return;
+            }
+
+            if (SelectedTower != null)
+            {
+                Deselect();
+                return;
+            }
 
             PlacementResult result = battle.TryBuyTower(cell, Tower.ToStats());
             if (result != PlacementResult.Placed) PlacementRefused?.Invoke(result);
         }
 
-        private void SelectByKey()
+        private void ReadKeys()
         {
             Keyboard keyboard = Keyboard.current;
             if (keyboard == null) return;
 
+            if (keyboard.escapeKey.wasPressedThisFrame) Deselect();
             for (int i = 0; i < TowerCount && Key.Digit1 + i <= Key.Digit0; i++)
                 if (keyboard[Key.Digit1 + i].wasPressedThisFrame) Select(i);
         }

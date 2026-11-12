@@ -62,18 +62,31 @@ namespace ElementalTD.Core
         }
 
         /// <summary>
-        /// Refunds the full cost while the tower has never launched a shot, then the refund percent of it, rounded down.
-        /// Returns false when the cell has no tower.
+        /// What TrySellTower would pay for the tower on the cell now: the full cost while the tower has never launched a shot,
+        /// then the refund percent of it, rounded down. False, with 0, when the cell has no tower. Changes nothing.
         /// </summary>
-        public bool TrySellTower(GridPos cell)
+        public bool TryGetSellValue(GridPos cell, out int gold)
         {
             Tower tower = Board.TowerOn(cell);
-            if (tower == null) return false;
+            if (tower == null)
+            {
+                gold = 0;
+                return false;
+            }
 
-            Board.TryRemoveTower(cell);
             int cost = tower.Stats.Cost;
             // Integer arithmetic, so the refund is the same under Mono and IL2CPP.
-            Gold += tower.HasFired ? cost * _sellRefundPercent / 100 : cost;
+            gold = tower.HasFired ? cost * _sellRefundPercent / 100 : cost;
+            return true;
+        }
+
+        /// <summary>Removes the tower and pays what TryGetSellValue answers. Returns false when the cell has no tower.</summary>
+        public bool TrySellTower(GridPos cell)
+        {
+            if (!TryGetSellValue(cell, out int gold)) return false;
+
+            Board.TryRemoveTower(cell);
+            Gold += gold;
             return true;
         }
 

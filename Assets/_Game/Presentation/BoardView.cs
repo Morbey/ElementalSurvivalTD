@@ -6,8 +6,9 @@ using UnityEngine;
 namespace ElementalTD.Presentation
 {
     /// <summary>
-    /// Shows the board: the cell tiles, one visual per tower in its element's material, the hover and the range disc,
-    /// which stands for the tower on the hovered cell, or else for the selected one.
+    /// Shows the board: the cell tiles, one visual per tower in its element's material, the hover, the frame around the
+    /// tower selected on the board and the range disc. The disc stands for the selected tower while there is one; otherwise
+    /// for the tower on the hovered cell, or else for the tower to buy.
     /// </summary>
     public sealed class BoardView : MonoBehaviour
     {
@@ -29,6 +30,8 @@ namespace ElementalTD.Presentation
         [SerializeField] private GameObject hoverPrefab;
         [Tooltip("A disc of radius 1 at a cell size of 1; scaled on x and z by the tower's range. Its material is the one for no element.")]
         [SerializeField] private GameObject rangeDiscPrefab;
+        [Tooltip("Authored for a cell size of 1, centred on the cell; its root is scaled by the map's cell size.")]
+        [SerializeField] private GameObject selectionFramePrefab;
 
         private Board _board;
         private MapDefinition _map;
@@ -43,12 +46,19 @@ namespace ElementalTD.Presentation
         private Material[] _rangeDiscMaterials; // by element id
         private Material _shownDiscMaterial;
         private float _shownDiscRange = -1f; // forces the first write
+        private GameObject _selectionFrame;
+        private Transform _selectionFrameTransform;
+        private Tower _framedTower;
+        // Off the grid, so the first shown cell is always written.
+        private GridPos _shownHoverCell = new GridPos(-1, -1);
+        private GridPos _shownDiscCell = new GridPos(-1, -1);
 
         private void Start()
         {
             if (bootstrap == null || bootstrap.Board == null || placementInput == null || palette == null || cellPrefab == null
                 || blockedMaterial == null || spawnMaterial == null || exitMaterial == null
-                || towerPrefab == null || hoverPrefab == null || rangeDiscPrefab == null || placementInput.TowerCount == 0)
+                || towerPrefab == null || hoverPrefab == null || rangeDiscPrefab == null || selectionFramePrefab == null
+                || placementInput.TowerCount == 0)
             {
                 Debug.LogError("BoardView: assign every reference, and towers on the placement input; the board must exist.", this);
                 enabled = false;
@@ -77,6 +87,12 @@ namespace ElementalTD.Presentation
             _rangeDiscMaterials = palette.MaterialsById(look => look.RangeDisc, _shownDiscMaterial);
             _rangeDisc.SetActive(false);
 
+            _selectionFrame = Instantiate(selectionFramePrefab);
+            _selectionFrame.name = "SelectionFrame";
+            _selectionFrameTransform = _selectionFrame.transform;
+            _selectionFrameTransform.localScale = Vector3.one * _map.CellSize;
+            _selectionFrame.SetActive(false);
+
             _board.TowerPlaced += OnTowerPlaced;
             _board.TowerRemoved += OnTowerRemoved;
         }
@@ -90,39 +106,40 @@ namespace ElementalTD.Presentation
 
         private void LateUpdate()
         {
-            bool show = placementInput.HasHoverCell;
-            if (show)
+            Tower selected = placementInput.SelectedTower;
+            bool hasHover = placementInput.HasHoverCell;
+
+            if (hasHover) MoveTo(_hoverTransform, placementInput.HoverCell, ref _shownHoverCell);
+            SetActive(_hover, hasHover);
+
+            if (selected != null && !ReferenceEquals(selected, _framedTower))
             {
-                GridPos cell = placementInput.HoverCell;
-                Vector3 centre = _map.CellToWorld(cell);
-                _hoverTransform.position = centre;
-                _rangeDiscTransform.position = centre;
-                ShowDiscFor(cell);
+                _framedTower = selected;
+                _selectionFrameTransform.position = _map.CellToWorld(selected.Cell);
             }
-            if (_hover.activeSelf != show)
-            {
-                _hover.SetActive(show);
-                _rangeDisc.SetActive(show);
-            }
+            SetActive(_selectionFrame, selected != null);
+
+            if (selected != null) ShowDisc(selected.Cell, selected.Stats.Range, selected.Stats.Element);
+            else if (hasHover) ShowDiscForHover(placementInput.HoverCell);
+            SetActive(_rangeDisc, selected != null || hasHover);
         }
 
-        private void ShowDiscFor(GridPos cell)
+        private void ShowDiscForHover(GridPos cell)
         {
-            float range;
-            Element element;
             Tower tower = _board.TowerOn(cell);
             if (tower != null)
             {
-                range = tower.Stats.Range;
-                element = tower.Stats.Element;
+                ShowDisc(cell, tower.Stats.Range, tower.Stats.Element);
+                return;
             }
-            else
-            {
-                TowerDefinition selected = placementInput.Tower;
-                if (selected == null) return;
-                range = selected.RangeCells;
-                element = selected.Element != null ? selected.Element.ToElement() : default;
-            }
+
+            TowerDefinition toBuy = placementInput.Tower; // never null while a cell is hovered
+            ShowDisc(cell, toBuy.RangeCells, toBuy.Element != null ? toBuy.Element.ToElement() : default);
+        }
+
+        private void ShowDisc(GridPos cell, float range, Element element)
+        {
+            MoveTo(_rangeDiscTransform, cell, ref _shownDiscCell);
 
             if (range != _shownDiscRange)
             {
@@ -137,6 +154,18 @@ namespace ElementalTD.Presentation
                 _shownDiscMaterial = material;
                 _rangeDiscRenderer.sharedMaterial = material;
             }
+        }
+
+        private void MoveTo(Transform target, GridPos cell, ref GridPos shownCell)
+        {
+            if (cell == shownCell) return;
+            shownCell = cell;
+            target.position = _map.CellToWorld(cell);
+        }
+
+        private static void SetActive(GameObject target, bool active)
+        {
+            if (target.activeSelf != active) target.SetActive(active);
         }
 
         private void BuildTiles()

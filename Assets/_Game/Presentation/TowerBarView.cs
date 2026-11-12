@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 namespace ElementalTD.Presentation
 {
     /// <summary>
-    /// Builds one button per buyable tower in the bottom bar; a click selects that tower. Polls the selection and the gold,
+    /// Builds one button per buyable tower in the side column; a click chooses that tower to buy. Polls that choice and the gold,
     /// and switches the selected and short-of-gold classes only when they change. Holds no rule: the input selects.
     /// </summary>
     public sealed class TowerBarView : MonoBehaviour
