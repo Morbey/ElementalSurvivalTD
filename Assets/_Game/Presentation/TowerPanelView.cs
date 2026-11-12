@@ -137,16 +137,20 @@ namespace ElementalTD.Presentation
             if (tower == null) return;
 
             TowerStats stats = tower.Stats;
-            if (palette.TryGetLook(stats.Element, out ElementPalette.Look look) && look.Element != null)
+            if (palette.TryGetLook(stats.Element, out ElementPalette.Look look) && look.Element != null && look.Tower != null)
             {
                 _title.text = string.Format(titleText, look.Element.DisplayName);
                 _elementValue.text = look.Element.DisplayName;
                 _elementValue.style.color = look.UiColor;
-                if (look.Tower != null) _tile.style.backgroundColor = look.Tower.color;
+                _tile.style.backgroundColor = look.Tower.color;
             }
             else
             {
-                Debug.LogError("TowerPanelView: the palette has no look for the selected tower's element.", this);
+                Debug.LogError("TowerPanelView: the palette has no look with a tower material for the selected tower's element.", this);
+                _title.text = string.Empty;
+                _elementValue.text = string.Empty;
+                _elementValue.style.color = StyleKeyword.Null;
+                _tile.style.backgroundColor = StyleKeyword.Null;
             }
 
             _damageValue.text = stats.Damage.ToString(statNumberFormat, CultureInfo.InvariantCulture);

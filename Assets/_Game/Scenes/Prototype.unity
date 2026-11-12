@@ -490,6 +490,7 @@ MonoBehaviour:
   towerPrefab: {fileID: 5695598947140489440, guid: 55c445d61b3fb43f69320f3a25c09c06, type: 3}
   hoverPrefab: {fileID: 1718156874206481013, guid: b2ac3ccce47f3437a99b2dc5a6382254, type: 3}
   rangeDiscPrefab: {fileID: 81150081843694252, guid: f6b126b2d59d74cd8a6631d08c1349b7, type: 3}
+  selectionFramePrefab: {fileID: 7848145886517550741, guid: 3a78eac8643624a63afa530bc9c225d0, type: 3}
 --- !u!4 &1210909749
 Transform:
   m_ObjectHideFlags: 0
@@ -581,9 +582,9 @@ GameObject:
   - component: {fileID: 1997445111}
   - component: {fileID: 1997445110}
   - component: {fileID: 1997445109}
-  - component: {fileID: 1997445112}
   - component: {fileID: 1997445113}
   - component: {fileID: 1997445114}
+  - component: {fileID: 1997445115}
   m_Layer: 0
   m_Name: Hud
   m_TagString: Untagged
@@ -652,64 +653,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1931382934 &1997445112
-PanelRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1997445108}
-  m_Enabled: 1
-  m_CastShadows: 0
-  m_ReceiveShadows: 0
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 0
-  m_ReflectionProbeUsage: 0
-  m_RayTracingMode: 0
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 0}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  serializedVersion: 1
-  m_PanelSettings: {fileID: 11400000, guid: a5150d1ad9b7a47f8b1e30bbc51cc477, type: 2}
-  sourceAsset: {fileID: 9197481963319205126, guid: 4b69cbdd0a6b748d699a000cc692ec16, type: 3}
-  m_ParentUI: {fileID: 0}
-  m_WorldSpaceSizeMode: 1
-  m_WorldSpaceWidth: 1920
-  m_WorldSpaceHeight: 1080
-  m_PivotReferenceSize: 0
-  m_Pivot: 0
-  m_Position: 0
 --- !u!114 &1997445113
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -751,6 +694,27 @@ MonoBehaviour:
   palette: {fileID: 11400000, guid: 649ce049bf3794c4686081e291820c4d, type: 2}
   bootstrap: {fileID: 1930703238}
   priceText: '{0} gold'
+--- !u!114 &1997445115
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1997445108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 144ca186445e04d6dad60fae497c69c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.TowerPanelView
+  document: {fileID: 1997445110}
+  placementInput: {fileID: 1930703239}
+  palette: {fileID: 11400000, guid: 649ce049bf3794c4686081e291820c4d, type: 2}
+  bootstrap: {fileID: 1930703238}
+  titleText: '{0} tower'
+  statNumberFormat: 0.##
+  fullValueText: +{0}
+  refundValueText: +{0}
+  refundTailText: "\_of {0}"
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

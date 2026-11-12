@@ -28,6 +28,10 @@ What the team has learned about driving this project with the `unity` CLI. Add a
 - Another agent saving a script in the worktree during Play reloads the domain, and every view then throws a `NullReferenceException` each frame. Call `AssetDatabase.DisallowAutoRefresh()` before Play and `AllowAutoRefresh()` after Stop.
 - `capture game_view --output-path <png>` works in Play and includes the UI Toolkit HUD. Queued `KeyboardState` and `MouseState` events, each sent from its own `script eval` (press, then release), reach both the game and UI Toolkit.
 - A malformed `unity command` writes "No command named …" errors to the editor console. Clear it (`unity command console clear`) before a clean-compile check.
+- Set the Game view to the canvas size with `PlayModeWindow.SetCustomRenderingResolution(960, 540, "<name>")` in a `script eval`. `capture game_view` then still returns 1280 x 720; `ScreenCapture.CaptureScreenshot(<absolute png>)` from a `script eval` in Play saves the real size with the HUD.
+- The turn between two CLI calls is longer than a wave countdown. Freeze the battle with `Time.timeScale = 0` while setting up (frames, input and UI still run), then set it back to 1.
+- To observe every drawn frame, add a callback to `RenderPipelineManager.endCameraRendering` filtered on `Camera.main` and `Time.frameCount`; it runs after `LateUpdate` and the UI update, so resolved styles are the frame's. Write the log to a file and remove the callback when done.
+- The `Hud` object carries only a `UIDocument`. A `PanelRenderer` on it with the same UXML draws a second, unwired copy of the HUD over the real one (found in 4c; it was invisible while the bars had no background). Dump `panel.visualTree` when the HUD draws but shows nothing.
 
 ## Builds
 - WebGL is not a zero-code target for `unity build --target`. It builds through the profile `Assets/Settings/Build Profiles/WebGL.asset`: `tools/webgl.sh build`, then `tools/webgl.sh serve` for `http://localhost:8765`. Set `WEBGL_PORT` to serve on another port; `serve` refuses a port that answers from a server this project did not start, and `stop` ends only the server it started on that port.

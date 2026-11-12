@@ -1,4 +1,4 @@
-/* Values: docs/art/visual-direction.md, section 1.3. The bars are the only place their sizes live (ADR 0002). */
+/* Values: docs/art/visual-direction.md, sections 1.3 and 1.5. The bars and the column are the only place their sizes live (ADR 0002). */
 
 .hud-text {
     margin: 0;
@@ -19,6 +19,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    background-color: rgb(46, 44, 41);
 }
 
 #run-labels {
@@ -53,9 +54,17 @@
 
 #side-column {
     flex-shrink: 0;
+    width: 216px;
+    padding: 12px;
+    background-color: rgb(46, 44, 41);
 }
 
 /* The column shows the buy buttons, or the tower panel while side-column--tower is on (TowerPanelView). */
+
+#tower-bar {
+    flex-direction: column;
+    align-items: flex-start;
+}
 
 #tower-panel {
     display: none;
@@ -121,6 +130,7 @@
     padding: 0 16px;
     flex-direction: row;
     align-items: center;
+    background-color: rgb(46, 44, 41);
 }
 
 #gold-label {
@@ -149,19 +159,13 @@
     color: rgb(255, 255, 255);
 }
 
-#tower-bar {
-    flex-shrink: 0;
-    flex-direction: row;
-    align-items: center;
-}
-
 /* Tower button. Button.tower-button outranks every .unity-button rule of the theme; :focus resets the theme's focus look. */
 
 Button.tower-button,
 Button.tower-button:focus {
-    width: 152px;
+    width: 192px;
     height: 56px;
-    margin: 0 0 0 12px;
+    margin: 0 0 8px 0;
     padding: 0 10px;
     flex-direction: row;
     align-items: center;
@@ -236,6 +240,205 @@ Button.tower-button.tower-button--selected:focus {
 
 .tower-button--short .tower-button__price {
     color: rgb(255, 107, 94);
+}
+
+/* Tower panel: header */
+
+#tower-panel-tile {
+    width: 28px;
+    height: 28px;
+    margin-right: 8px;
+    border-width: 2px;
+    border-color: rgb(217, 212, 200);
+    border-radius: 3px;
+}
+
+#tower-panel-title {
+    font-size: 18px;
+}
+
+/* Button#panel-close outranks every .unity-button rule of the theme; :focus resets the theme's focus look. */
+
+Button#panel-close,
+Button#panel-close:focus {
+    width: 28px;
+    height: 28px;
+    margin: 0;
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-color: rgba(0, 0, 0, 0);
+    border-radius: 0;
+    font-size: 20px;
+    -unity-font-style: bold;
+    color: rgb(181, 175, 163);
+    -unity-text-align: middle-center;
+    -unity-text-outline-width: 0;
+    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+Button#panel-close:hover,
+Button#panel-close:active,
+Button#panel-close:hover:active {
+    background-color: rgba(0, 0, 0, 0);
+    border-color: rgba(0, 0, 0, 0);
+    color: rgb(255, 255, 255);
+}
+
+/* Tower panel: stats */
+
+#tower-stats {
+    margin-top: 12px;
+}
+
+.stat-row {
+    height: 22px;
+    align-items: center;
+}
+
+.stat-row__caption {
+    font-size: 16px;
+    -unity-font-style: normal;
+    color: rgb(181, 175, 163);
+}
+
+.stat-row__value {
+    font-size: 16px;
+    -unity-text-align: middle-right;
+}
+
+/* Tower panel: synergies */
+
+#synergies {
+    margin-top: 16px;
+}
+
+#synergies-heading {
+    height: 18px;
+    font-size: 14px;
+    color: rgb(181, 175, 163);
+    -unity-text-align: middle-left;
+}
+
+#synergies-empty {
+    height: 28px;
+    font-size: 14px;
+    -unity-font-style: normal;
+    color: rgb(138, 132, 120);
+    -unity-text-align: middle-left;
+}
+
+/* Tower panel: actions. Upgrade is not a button, so it has no hover or pressed look. */
+
+#tower-actions {
+    margin-top: 16px;
+}
+
+#upgrade-button {
+    width: 80px;
+    height: 56px;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(58, 55, 51);
+    border-width: 2px;
+    border-color: rgb(79, 74, 67);
+    border-radius: 6px;
+}
+
+.upgrade-button__caption {
+    font-size: 18px;
+    color: rgb(138, 132, 120);
+}
+
+.upgrade-button__note {
+    font-size: 14px;
+    -unity-font-style: normal;
+    color: rgb(138, 132, 120);
+}
+
+/* Sell. Button#sell-button outranks every .unity-button rule of the theme; :focus resets the theme's focus look. */
+
+Button#sell-button,
+Button#sell-button:focus {
+    width: 100px;
+    height: 56px;
+    margin: 0 0 0 12px;
+    padding: 0 6px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(69, 65, 59);
+    border-width: 2px;
+    border-color: rgb(255, 194, 61);
+    border-radius: 6px;
+    color: rgb(255, 255, 255);
+    -unity-text-align: middle-center;
+    -unity-text-outline-width: 0;
+    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+Button#sell-button:hover,
+Button#sell-button:active,
+Button#sell-button:hover:active {
+    background-color: rgb(87, 82, 74);
+}
+
+.sell-button__caption {
+    font-size: 18px;
+}
+
+.sell-button__value-line {
+    align-items: flex-end;
+    justify-content: center;
+}
+
+#sell-value {
+    font-size: 16px;
+    color: rgb(255, 194, 61);
+}
+
+#sell-value-tail {
+    font-size: 14px;
+    -unity-font-style: normal;
+    color: rgb(181, 175, 163);
+}
+
+/* The refund look: a number in a darker gold, the tail with the cost, a grey border. */
+
+Button#sell-button.sell-button--refund {
+    border-color: rgb(107, 101, 90);
+}
+
+#sell-button.sell-button--refund #sell-value {
+    color: rgb(201, 160, 74);
+}
+
+/* The drop. Pop: the first look, held one frame, with no transition. Settle: eases from it to the refund look. */
+
+Button#sell-button.sell-button--pop {
+    border-color: rgb(255, 107, 94);
+    transition-duration: 0s;
+}
+
+#sell-button.sell-button--pop #sell-value {
+    color: rgb(255, 107, 94);
+    scale: 1.4 1.4;
+    transition-duration: 0s;
+}
+
+Button#sell-button.sell-button--settle {
+    transition-property: border-top-color, border-right-color, border-bottom-color, border-left-color;
+    transition-duration: 0.5s;
+    transition-delay: 0.25s;
+}
+
+#sell-button.sell-button--settle #sell-value {
+    transition-property: scale, color;
+    transition-duration: 0.25s, 0.5s;
+    transition-delay: 0s, 0.25s;
+    transition-timing-function: ease-out, ease;
 }
 
 /* End screen */
