@@ -5,7 +5,7 @@ namespace ElementalTD.Presentation
 {
     /// <summary>
     /// One text over the board: a zero-size anchor moved by translate, faded by opacity and hidden by visibility, holding
-    /// a label that the style sheet hangs by its bottom centre. Each value is written only when it differs from the one
+    /// a label that the style sheet hangs from it by a centre point (bottom, or top for the word). Each value is written only when it differs from the one
     /// written last, so a still label costs nothing and none goes through layout (ADR 0006).
     /// </summary>
     internal sealed class FloatingLabel
@@ -59,7 +59,7 @@ namespace ElementalTD.Presentation
             if (className != null) Label.AddToClassList(className);
         }
 
-        /// <summary>Panel coordinates of the label's bottom centre.</summary>
+        /// <summary>Panel coordinates of the anchor: the label's bottom centre, or its top centre for the word.</summary>
         public void MoveTo(Vector2 position)
         {
             if (position == _position) return;

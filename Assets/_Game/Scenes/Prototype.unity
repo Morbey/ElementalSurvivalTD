@@ -585,6 +585,8 @@ GameObject:
   - component: {fileID: 1997445113}
   - component: {fileID: 1997445114}
   - component: {fileID: 1997445115}
+  - component: {fileID: 1997445117}
+  - component: {fileID: 1997445116}
   m_Layer: 0
   m_Name: Hud
   m_TagString: Untagged
@@ -605,15 +607,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.MessageView
   document: {fileID: 1997445110}
-  placementInput: {fileID: 1930703239}
   bootstrap: {fileID: 1930703238}
-  spawnOrExitText: Cannot build on the spawn or the exit.
-  cellBlockedText: Cannot build on a wall.
-  enemyInTheWayText: An enemy is in the way.
-  wouldBlockPathText: That would block the path.
-  notEnoughGoldText: Not enough gold.
   waveSurvivedText: Wave {0} survived +{1}
-  refusalDuration: 2
   waveSurvivedDuration: 3
 --- !u!114 &1997445110
 MonoBehaviour:
@@ -715,6 +710,67 @@ MonoBehaviour:
   fullValueText: +{0}
   refundValueText: +{0}
   refundTailText: "\_of {0}"
+--- !u!114 &1997445116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1997445108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d6d1d20abd6c432aa424224911a27e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.RefusalView
+  document: {fileID: 1997445110}
+  placementInput: {fileID: 1930703239}
+  bootstrap: {fileID: 1930703238}
+  viewCamera: {fileID: 362350127}
+  spawnOrExitText: Cannot build on the spawn or the exit.
+  cellBlockedText: Cannot build on a wall.
+  enemyInTheWayText: An enemy is in the way.
+  wouldBlockPathText: That would block the path.
+  notEnoughGoldText: Not enough gold.
+  heightCells: 0.6
+  risePixels: 16
+  lifeSeconds: 1.5
+  fadeSeconds: 0.4
+  marginPixels: 8
+--- !u!114 &1997445117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1997445108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b4e4b8dd7dd142c4bc8f723dbe51ec8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.DamageNumberView
+  document: {fileID: 1997445110}
+  bootstrap: {fileID: 1930703238}
+  viewCamera: {fileID: 362350127}
+  weakLifeSeconds: 0.5
+  normalLifeSeconds: 0.7
+  strongLifeSeconds: 0.8
+  heightCells: 0.7
+  risePixels: 20
+  opaqueShare: 0.6
+  topLimitPixels: 36
+  spawnOffsets:
+  - {x: 0, y: 0}
+  - {x: -12, y: -6}
+  - {x: 12, y: -6}
+  - {x: -6, y: -12}
+  - {x: 6, y: -12}
+  maxNumbers: 40
+  weakCutoff: 30
+  immuneText: immune
+  wordDepthCells: 0.35
+  immuneHoldSeconds: 1
+  immuneFadeSeconds: 0.2
+  prewarmWords: 32
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

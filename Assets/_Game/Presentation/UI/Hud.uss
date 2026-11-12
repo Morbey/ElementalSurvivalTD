@@ -1,4 +1,4 @@
-/* Values: docs/art/visual-direction.md, sections 1.3 and 1.5. The bars and the column are the only place their sizes live (ADR 0002). */
+/* Values: docs/art/visual-direction.md, sections 1.3, 1.5 and 2. The bars and the column are the only place their sizes live (ADR 0002). */
 
 .hud-text {
     margin: 0;
@@ -153,10 +153,6 @@
 #message.message--shown {
     opacity: 1;
     transition-duration: 0s;
-}
-
-#message.message--refusal {
-    color: rgb(255, 255, 255);
 }
 
 /* Tower button. Button.tower-button outranks every .unity-button rule of the theme; :focus resets the theme's focus look. */
@@ -443,8 +439,8 @@ Button#sell-button.sell-button--settle {
 }
 
 /* Text over the board (ADR 0006): the place only. Code moves each zero-size anchor to a panel point by translate;
-   the label hangs from it by its bottom centre, or by its top centre with floating-text--hang-top, so no code reads
-   a text's size. The looks are the kind classes. */
+   the label hangs from it by its bottom centre, or by its top centre with floating-text--hang-top, so placing a label
+   needs no text size (only the refusal's clamp measures its text). The looks are the kind classes. */
 
 #floating-texts,
 .floating-layer {
@@ -476,6 +472,44 @@ Button#sell-button.sell-button--settle {
 .floating-text.floating-text--hang-top {
     top: 0;
     bottom: auto;
+}
+
+/* Looks of text over the board: visual direction, sections 2 and 1.3. Every one has a black outline of 1 and no shadow. */
+
+.floating-text {
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgb(0, 0, 0);
+    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.damage-number--weak {
+    font-size: 16px;
+    -unity-font-style: normal;
+    color: rgb(179, 172, 160);
+}
+
+.damage-number--normal {
+    font-size: 20px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+}
+
+.damage-number--strong {
+    font-size: 26px;
+    -unity-font-style: bold;
+    color: rgb(255, 194, 61);
+}
+
+.immune-word {
+    font-size: 16px;
+    -unity-font-style: normal;
+    color: rgb(189, 189, 189);
+}
+
+#refusal {
+    font-size: 18px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
 }
 
 /* End screen */

@@ -115,6 +115,10 @@ namespace ElementalTD.Presentation
                 return;
             }
 
+            float alpha = bootstrap.TickAlpha;
+            // Before the poll, so this frame's hits see the alive count and the free labels as they are now.
+            ExpireNumbers(alpha);
+
             int count = _battle.HitCount;
             for (int i = Mathf.Max(_readHits, count - Battle.HitLogCapacity); i < count; i++)
             {
@@ -126,18 +130,15 @@ namespace ElementalTD.Presentation
             IPanel panel = _root.panel;
             if (panel == null) return;
             var toPanel = new BoardToPanel(viewCamera, panel, _map);
-            float alpha = bootstrap.TickAlpha;
-            float now = _battle.TickCount + alpha;
-            DrawNumbers(toPanel, now);
-            DrawWords(toPanel, now, alpha);
+            DrawNumbers(toPanel, alpha);
+            DrawWords(toPanel, alpha);
         }
 
         /// <summary>What the poll calls for each new record; public for tests.</summary>
         public void Show(in Hit hit)
         {
             float life = LifeOf(hit.Kind);
-            float age = (_battle.TickCount - hit.Tick + bootstrap.TickAlpha) * Battle.TickSeconds;
-            if (!(age < life) || _numbers.Length == 0) return;
+            if (!(AgeOf(hit.Tick, bootstrap.TickAlpha) < life) || _numbers.Length == 0) return;
             if (hit.Kind == HitKind.Weak && _alive >= weakCutoff) return;
 
             int slot = TakeSlot();
@@ -157,7 +158,22 @@ namespace ElementalTD.Presentation
             label.SetClass(KindClasses[(int)hit.Kind]);
         }
 
-        private void DrawNumbers(in BoardToPanel toPanel, float now)
+        /// <summary>Battle seconds since the tick, with the fraction of a tick left over.</summary>
+        private float AgeOf(int tick, float alpha) => (_battle.TickCount - tick + alpha) * Battle.TickSeconds;
+
+        private void ExpireNumbers(float alpha)
+        {
+            for (int i = 0; i < _numbers.Length; i++)
+            {
+                ref Number number = ref _numbers[i];
+                if (!number.Alive || AgeOf(number.Tick, alpha) < number.Life) continue;
+                number.Alive = false;
+                _alive--;
+                _numberLabels[i].Hide();
+            }
+        }
+
+        private void DrawNumbers(in BoardToPanel toPanel, float alpha)
         {
             for (int i = 0; i < _numbers.Length; i++)
             {
@@ -165,15 +181,7 @@ namespace ElementalTD.Presentation
                 if (!number.Alive) continue;
 
                 FloatingLabel label = _numberLabels[i];
-                float t = (now - number.Tick) * Battle.TickSeconds / number.Life;
-                if (!(t < 1f))
-                {
-                    number.Alive = false;
-                    _alive--;
-                    label.Hide();
-                    continue;
-                }
-
+                float t = AgeOf(number.Tick, alpha) / number.Life;
                 float eased = 1f - (1f - t) * (1f - t);
                 Vector2 position = toPanel.Point(number.X, number.Y) + number.Offset;
                 position.y = Mathf.Max(position.y - risePixels * eased, topLimitPixels);
@@ -183,7 +191,7 @@ namespace ElementalTD.Presentation
             }
         }
 
-        private void DrawWords(in BoardToPanel toPanel, float now, float alpha)
+        private void DrawWords(in BoardToPanel toPanel, float alpha)
         {
             Board board = _battle.Board;
             int enemies = board.EnemyCount;
@@ -194,7 +202,7 @@ namespace ElementalTD.Presentation
                 Enemy enemy = board.EnemyAt(i);
                 FloatingLabel word = _words[i];
                 int mark = enemy.ImmuneHitTick;
-                float age = (now - mark) * Battle.TickSeconds;
+                float age = AgeOf(mark, alpha);
                 if (mark == 0 || !(age < immuneHoldSeconds))
                 {
                     word.Hide();

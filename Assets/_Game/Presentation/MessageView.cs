@@ -8,7 +8,7 @@ namespace ElementalTD.Presentation
     /// <summary>
     /// Shows one line of text, for a time in unscaled seconds, when a wave is survived; a newer line replaces the one shown.
     /// Showing and hiding are a USS class, so the style sheet holds the look and the fade. Survived waves are polled from
-    /// the battle (ADR 0004). A placement refusal shows at its cell (RefusalView), not here.
+    /// the battle (ADR 0004).
     /// </summary>
     public sealed class MessageView : MonoBehaviour
     {

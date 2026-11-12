@@ -82,7 +82,7 @@ namespace ElementalTD.Presentation
             string text = TextFor(reason);
             _label.SetText(text);
             // Measured once per refusal, so the clamp of every frame needs no layout read.
-            _size = _label.Label.MeasureTextSize(text, 0f, VisualElement.MeasureMode.Undefined, 0f, VisualElement.MeasureMode.Undefined);
+            _size = _label.Label.MeasureTextSize(text, float.NaN, VisualElement.MeasureMode.Undefined, float.NaN, VisualElement.MeasureMode.Undefined);
             _cell = cell;
             _shownAt = Time.unscaledTime;
             _active = true;
@@ -108,9 +108,10 @@ namespace ElementalTD.Presentation
             Rect area = _boardArea.worldBound;
             if (area.width > 0f && area.height > 0f)
             {
+                // Max of the Min: in an area narrower or shorter than the label, its left and top edges win.
                 float halfWidth = _size.x * 0.5f;
-                position.x = Mathf.Clamp(position.x, area.xMin + marginPixels + halfWidth, area.xMax - marginPixels - halfWidth);
-                position.y = Mathf.Clamp(position.y, area.yMin + marginPixels + _size.y, area.yMax - marginPixels);
+                position.x = Mathf.Max(area.xMin + marginPixels + halfWidth, Mathf.Min(position.x, area.xMax - marginPixels - halfWidth));
+                position.y = Mathf.Max(area.yMin + marginPixels + _size.y, Mathf.Min(position.y, area.yMax - marginPixels));
             }
 
             _label.MoveTo(position);
