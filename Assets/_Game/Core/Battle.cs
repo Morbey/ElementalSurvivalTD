@@ -6,15 +6,18 @@ namespace ElementalTD.Core
     /// <summary>
     /// Plays one run in fixed ticks: waves, enemies, towers, projectiles, wave bonuses, then the outcome, in that order.
     /// Enemies enter by the wave schedule, cost a life at the exit and pay their gold reward when killed;
-    /// a shot that lands deals its damage times the chart's multiplier, 0 against the own element;
+    /// a shot that lands deals its damage times the chart's multiplier, 0 against the own element, and is recorded in
+    /// the hit log, or as a mark on an enemy it cannot hurt (ADR 0006);
     /// a wave pays its survival bonus once its last enemy has entered and none of its enemies is on the board.
     /// Towers are bought and sold here: the battle checks the gold, the board keeps the placement rule.
     /// </summary>
     public sealed class Battle
     {
         public const float TickSeconds = 1f / 60f;
+        public const int HitLogCapacity = 64;
 
         private readonly List<Projectile> _projectiles = new List<Projectile>();
+        private readonly Hit[] _hits = new Hit[HitLogCapacity];
         private readonly Stack<Projectile> _freeProjectiles = new Stack<Projectile>();
         private readonly int _sellRefundPercent;
         private readonly bool[] _paidWaves;
@@ -32,6 +35,18 @@ namespace ElementalTD.Core
         public int LastSurvivedWave { get; private set; }
         public int ProjectileCount => _projectiles.Count;
         public Projectile ProjectileAt(int index) => _projectiles[index];
+        /// <summary>Ticks run: 0 before the first; a finished battle counts no more.</summary>
+        public int TickCount { get; private set; }
+        /// <summary>Hits recorded since the run began; only the last HitLogCapacity are kept (ADR 0006).</summary>
+        public int HitCount { get; private set; }
+
+        /// <summary>The record of hit number index, counted from 0; answers only for the last HitLogCapacity.</summary>
+        public Hit HitAt(int index)
+        {
+            if (index < 0 || index >= HitCount || index < HitCount - HitLogCapacity)
+                throw new ArgumentOutOfRangeException(nameof(index), index, "The log holds only the last hits.");
+            return _hits[index % HitLogCapacity];
+        }
 
         /// <summary>Without a chart every pair of elements deals x1; immunity to the own element still holds.</summary>
         public Battle(Board board, Wave[] waves, int lives, int startingGold = 0, int sellRefundPercent = 100, ElementChart elements = null)
@@ -95,6 +110,8 @@ namespace ElementalTD.Core
         {
             if (Outcome != RunOutcome.Running) return;
 
+            // First, so everything stamped during this tick carries the count it has once the tick has run.
+            TickCount++;
             StepWaves();
             StepEnemies();
             StepTowers();
@@ -167,7 +184,16 @@ namespace ElementalTD.Core
                 // The only place an element counts: read on landing, so a state on the target can change it later (ADR 0005).
                 Enemy target = projectile.Target;
                 float multiplier = _elements.Multiplier(projectile.Element, target.Element);
-                target.TakeDamage(projectile.Damage * multiplier);
+                float damage = projectile.Damage * multiplier;
+                // Recorded before the target can be removed, so a killing hit is logged too.
+                HitKind kind = ElementChart.KindOf(multiplier);
+                if (kind == HitKind.Immune) target.MarkImmuneHit(TickCount);
+                else
+                {
+                    _hits[HitCount % HitLogCapacity] = new Hit(target.X, target.Y, damage, kind, TickCount);
+                    HitCount++;
+                }
+                target.TakeDamage(damage);
                 Release(i);
                 if (target.Health <= 0f)
                 {

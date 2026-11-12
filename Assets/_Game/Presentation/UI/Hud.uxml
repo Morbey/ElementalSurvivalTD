@@ -59,6 +59,13 @@
         <ui:Label name="gold-label" class="hud-text" picking-mode="Ignore" />
         <ui:Label name="message" class="hud-text" picking-mode="Ignore" />
     </ui:VisualElement>
+    <ui:VisualElement name="floating-texts" picking-mode="Ignore">
+        <ui:VisualElement name="immune-words" class="floating-layer" picking-mode="Ignore" />
+        <ui:VisualElement name="damage-numbers" class="floating-layer" picking-mode="Ignore" />
+        <ui:VisualElement name="refusal-anchor" class="floating-anchor" picking-mode="Ignore">
+            <ui:Label name="refusal" class="floating-text" picking-mode="Ignore" />
+        </ui:VisualElement>
+    </ui:VisualElement>
     <ui:VisualElement name="end-screen">
         <ui:Label name="end-title" class="hud-text" picking-mode="Ignore" />
         <ui:Button name="restart-button" text="Restart" />

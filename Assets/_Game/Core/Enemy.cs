@@ -22,6 +22,8 @@ namespace ElementalTD.Core
         /// <summary>Position at the previous tick.</summary>
         public float PreviousX { get; private set; }
         public float PreviousY { get; private set; }
+        /// <summary>The battle tick of the last shot that landed on it and could not hurt it; 0: none since it entered.</summary>
+        public int ImmuneHitTick { get; private set; }
         /// <summary>Counts entries, so a shot can tell the enemy it was fired at from a later one that reuses this object.</summary>
         internal int Entry { get; private set; }
 
@@ -43,6 +45,7 @@ namespace ElementalTD.Core
             Health = MaxHealth;
             GoldReward = stats.GoldReward;
             Element = stats.Element;
+            ImmuneHitTick = 0;
             Follower.Restart(spawn);
             SyncPosition();
             KeepPosition();
@@ -60,6 +63,8 @@ namespace ElementalTD.Core
         }
 
         internal void TakeDamage(float damage) => Health -= damage;
+
+        internal void MarkImmuneHit(int tick) => ImmuneHitTick = tick;
 
         private void KeepPosition()
         {

@@ -136,7 +136,7 @@ namespace ElementalTD.PlayModeTests
             Assert.IsNull(_input.SelectedTower, "a purchase selects nothing");
             int gold = Battle.Gold, towers = Board.TowerCount;
             int refusals = 0;
-            _input.PlacementRefused += _ => refusals++;
+            _input.PlacementRefused += (_, _) => refusals++;
 
             ClickCell(A.X, A.Y);
             Assert.AreSame(a, _input.SelectedTower);
@@ -163,7 +163,7 @@ namespace ElementalTD.PlayModeTests
             Tower tower = Buy(A, 1);                       // index 1 chosen: 0 equals 0 would hide a reset
             Assert.AreEqual(1, _input.SelectedIndex);
             int refusals = 0;
-            _input.PlacementRefused += _ => refusals++;
+            _input.PlacementRefused += (_, _) => refusals++;
             ClickCell(A.X, A.Y);
             Assert.AreSame(tower, _input.SelectedTower, "selected before the ending");
             yield return Frames(2);

@@ -45,6 +45,14 @@ namespace ElementalTD.Core
             return _multipliers[IndexOf(attacker, defender)];
         }
 
+        /// <summary>Immune at 0, weak below 1, normal at 1, strong above 1.</summary>
+        public static HitKind KindOf(float multiplier)
+        {
+            if (multiplier == Immune) return HitKind.Immune;
+            if (multiplier < NotListed) return HitKind.Weak;
+            return multiplier == NotListed ? HitKind.Normal : HitKind.Strong;
+        }
+
         private void CheckInChart(Element element, string name)
         {
             if (element.IsNone) throw new ArgumentException("No element has no relations.", name);

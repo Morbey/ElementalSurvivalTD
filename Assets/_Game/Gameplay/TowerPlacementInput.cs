@@ -23,8 +23,8 @@ namespace ElementalTD.Gameplay
 
         private Tower _selectedTower;
 
-        /// <summary>Never raised for OutOfBounds.</summary>
-        public event Action<PlacementResult> PlacementRefused;
+        /// <summary>The reason and the clicked cell. Never raised for OutOfBounds: a click off the grid raises nothing.</summary>
+        public event Action<PlacementResult, GridPos> PlacementRefused;
 
         public bool HasHoverCell { get; private set; }
         public GridPos HoverCell { get; private set; }
@@ -109,7 +109,7 @@ namespace ElementalTD.Gameplay
             }
 
             PlacementResult result = battle.TryBuyTower(cell, Tower.ToStats());
-            if (result != PlacementResult.Placed) PlacementRefused?.Invoke(result);
+            if (result != PlacementResult.Placed) PlacementRefused?.Invoke(result, cell);
         }
 
         private void ReadKeys()
