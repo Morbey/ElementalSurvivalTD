@@ -155,8 +155,8 @@ Camera:
   m_GameObject: {fileID: 362350125}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.18039216, g: 0.17254902, b: 0.16078432, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -286,6 +286,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.CombatView
   bootstrap: {fileID: 1930703238}
+  palette: {fileID: 11400000, guid: 649ce049bf3794c4686081e291820c4d, type: 2}
   enemyPrefab: {fileID: 3349037151500947416, guid: 2f22a8e21e83c4b29b38fe7efec2e4de, type: 3}
   prewarmEnemies: 32
   projectilePrefab: {fileID: 1798104514909842710, guid: bb53354b8551442d1b5071c47b2555b0, type: 3}
@@ -464,7 +465,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.BoardCameraFramer
   bootstrap: {fileID: 1930703238}
   viewCamera: {fileID: 362350127}
-  framePaddingCells: 0.5
+  document: {fileID: 1997445110}
+  framePaddingCells: 0.3
   cameraHeight: 20
 --- !u!114 &1210909748
 MonoBehaviour:
@@ -480,6 +482,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.BoardView
   bootstrap: {fileID: 1930703238}
   placementInput: {fileID: 1930703239}
+  palette: {fileID: 11400000, guid: 649ce049bf3794c4686081e291820c4d, type: 2}
   cellPrefab: {fileID: 3528757962447879619, guid: 4c92ad963b2b34014aa3d07a5a8a7af8, type: 3}
   blockedMaterial: {fileID: 2100000, guid: 401e9a91767da4f9483d7aa231f89767, type: 2}
   spawnMaterial: {fileID: 2100000, guid: f10d0fd97e498410b89d74085278b79f, type: 2}
@@ -549,6 +552,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ElementalTD.Gameplay::ElementalTD.Gameplay.PrototypeBootstrap
   map: {fileID: 11400000, guid: 9a2f4aaf9b0ff453ca125385fd2f9dd9, type: 2}
   run: {fileID: 11400000, guid: 0fa7f4495a5764a9aa23363fc0ec42b2, type: 2}
+  elementChart: {fileID: 11400000, guid: 7c4c85e5d5cc2487fa9f57f9edab9e39, type: 2}
 --- !u!114 &1930703239
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -563,7 +567,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: ElementalTD.Gameplay::ElementalTD.Gameplay.TowerPlacementInput
   bootstrap: {fileID: 1930703238}
   viewCamera: {fileID: 362350127}
-  tower: {fileID: 11400000, guid: ed4c0d06502ce4fe48465f4c81bf38f8, type: 2}
+  towers:
+  - {fileID: 11400000, guid: ed4c0d06502ce4fe48465f4c81bf38f8, type: 2}
+  - {fileID: 11400000, guid: 038f2a2e69ee74690b3966161b5a8329, type: 2}
 --- !u!1 &1997445108
 GameObject:
   m_ObjectHideFlags: 0
@@ -577,6 +583,7 @@ GameObject:
   - component: {fileID: 1997445109}
   - component: {fileID: 1997445112}
   - component: {fileID: 1997445113}
+  - component: {fileID: 1997445114}
   m_Layer: 0
   m_Name: Hud
   m_TagString: Untagged
@@ -605,7 +612,8 @@ MonoBehaviour:
   wouldBlockPathText: That would block the path.
   notEnoughGoldText: Not enough gold.
   waveSurvivedText: Wave {0} survived +{1}
-  duration: 2
+  refusalDuration: 2
+  waveSurvivedDuration: 3
 --- !u!114 &1997445110
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -716,12 +724,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.RunHudView
   document: {fileID: 1997445110}
   bootstrap: {fileID: 1930703238}
+  palette: {fileID: 11400000, guid: 649ce049bf3794c4686081e291820c4d, type: 2}
   waveText: Wave {0}/{1}
+  waveElementsText: 'Wave {0}/{1}: {2}'
   livesText: Lives {0}
   goldText: Gold {0}
-  nextWaveText: Next wave in {0} s
+  nextWaveText: 'Next wave in {0} s: {1}'
+  elementNameText: <color=#{1}>{0}</color>
+  elementSeparator: ' + '
   victoryText: Victory
   defeatText: Defeat
+--- !u!114 &1997445114
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1997445108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b780fdbe4e604931ab8b7ef6942cbc8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.TowerBarView
+  document: {fileID: 1997445110}
+  placementInput: {fileID: 1930703239}
+  palette: {fileID: 11400000, guid: 649ce049bf3794c4686081e291820c4d, type: 2}
+  bootstrap: {fileID: 1930703238}
+  priceText: '{0} gold'
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

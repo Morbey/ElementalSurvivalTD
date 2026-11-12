@@ -10,10 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41fe1b01dd8f245db80d7c7c5665b6f1, type: 3}
-  m_Name: Tower_Prototype
+  m_Name: Tower_Shadow
   m_EditorClassIdentifier: ElementalTD.Data::ElementalTD.Data.TowerDefinition
   rangeCells: 2.5
   damage: 10
   shotsPerSecond: 1.5
   projectileSpeedCellsPerSecond: 10
   cost: 40
+  element: {fileID: 11400000, guid: 470fdc55befeb43398959be568366ba3, type: 2}

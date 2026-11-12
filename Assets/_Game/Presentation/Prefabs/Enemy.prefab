@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d22b0fbfa66a64f15a2584cdc7e33469, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ElementalTD.Gameplay::ElementalTD.Gameplay.EnemyAgent
+  body: {fileID: 1691392702002250914}
   healthFill: {fileID: 2712608448208642011}
 --- !u!1 &2559772553046562244
 GameObject:

@@ -10,8 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 341ba5933824a49529a52ba402c4fe8f, type: 3}
-  m_Name: Enemy_Health230
+  m_Name: Enemy_Light70
   m_EditorClassIdentifier: ElementalTD.Data::ElementalTD.Data.EnemyDefinition
   speedCellsPerSecond: 2
-  maxHealth: 230
+  maxHealth: 70
   goldReward: 10
+  element: {fileID: 11400000, guid: 661ebecfd67a94bb5b1f925347167393, type: 2}

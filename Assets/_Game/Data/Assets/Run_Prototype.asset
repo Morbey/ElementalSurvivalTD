@@ -17,62 +17,62 @@ MonoBehaviour:
   sellRefundPercent: 50
   waves:
   - delayBeforeSeconds: 15
-    survivalBonus: 10
+    survivalBonus: 40
     groups:
     - enemy: {fileID: 11400000, guid: 1b2931de768704ba38f477125d5a08f8, type: 2}
       count: 3
       spawnIntervalSeconds: 1
   - delayBeforeSeconds: 8
-    survivalBonus: 10
+    survivalBonus: 20
     groups:
     - enemy: {fileID: 11400000, guid: e3a283ddee4954ed5a5eff44c38519d2, type: 2}
       count: 4
       spawnIntervalSeconds: 1
   - delayBeforeSeconds: 8
-    survivalBonus: 10
+    survivalBonus: 25
     groups:
-    - enemy: {fileID: 11400000, guid: edb7bd9d7c50246a1b5156901c7c0760, type: 2}
+    - enemy: {fileID: 11400000, guid: 282964c08f5464c80a18450848875904, type: 2}
       count: 5
       spawnIntervalSeconds: 1
   - delayBeforeSeconds: 8
-    survivalBonus: 10
+    survivalBonus: 30
     groups:
-    - enemy: {fileID: 11400000, guid: 454534eb44ddf4dc4aff7056a51bf918, type: 2}
+    - enemy: {fileID: 11400000, guid: 74272c0f37dea4af78ec724d846afd9c, type: 2}
       count: 6
       spawnIntervalSeconds: 1
   - delayBeforeSeconds: 8
-    survivalBonus: 10
+    survivalBonus: 35
     groups:
-    - enemy: {fileID: 11400000, guid: 7b7ce5431194c4604a330fff383ea604, type: 2}
+    - enemy: {fileID: 11400000, guid: bee9aec014c4e40e596c1654532c19ec, type: 2}
       count: 7
       spawnIntervalSeconds: 1
   - delayBeforeSeconds: 8
-    survivalBonus: 10
+    survivalBonus: 40
     groups:
-    - enemy: {fileID: 11400000, guid: 1fa08f7a9bf1841548026b203ab65fdf, type: 2}
+    - enemy: {fileID: 11400000, guid: 496a1dd3282f84bcdbc12c513dcf5490, type: 2}
       count: 8
       spawnIntervalSeconds: 1
   - delayBeforeSeconds: 8
-    survivalBonus: 10
+    survivalBonus: 45
     groups:
-    - enemy: {fileID: 11400000, guid: 4b7a516877c604bfe89b7805dc3ab1fd, type: 2}
+    - enemy: {fileID: 11400000, guid: 69a7f374b910048ee9124cba81f6458e, type: 2}
       count: 9
       spawnIntervalSeconds: 1
   - delayBeforeSeconds: 8
-    survivalBonus: 10
+    survivalBonus: 50
     groups:
-    - enemy: {fileID: 11400000, guid: 99d26eb22ca8f4694a8baf671f7437f8, type: 2}
+    - enemy: {fileID: 11400000, guid: 31a16cb2b67a54ca687ae79b125932f2, type: 2}
       count: 10
       spawnIntervalSeconds: 1
   - delayBeforeSeconds: 8
-    survivalBonus: 10
+    survivalBonus: 55
     groups:
-    - enemy: {fileID: 11400000, guid: 821903399b0c546a4a94cecbe2f84c0b, type: 2}
+    - enemy: {fileID: 11400000, guid: 05885fc9e70ee4774881c86907e32706, type: 2}
       count: 11
       spawnIntervalSeconds: 1
   - delayBeforeSeconds: 8
-    survivalBonus: 10
+    survivalBonus: 60
     groups:
-    - enemy: {fileID: 11400000, guid: 0c20d6e4dc1c9485f81e0df8b445bdaa, type: 2}
+    - enemy: {fileID: 11400000, guid: 2eb1f6a7d8a5d44d496e187f1ff34c49, type: 2}
       count: 12
       spawnIntervalSeconds: 1

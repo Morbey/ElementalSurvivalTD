@@ -24,6 +24,9 @@ What the team has learned about driving this project with the `unity` CLI. Add a
 - Saving a scene after a script rename keeps the old `m_EditorClassIdentifier`. Set it through `SerializedObject.FindProperty("m_EditorClassIdentifier")`, then save.
 - In Play mode, send a real click with `InputSystem.QueueStateEvent(Mouse.current, …)` over a few frames from `EditorApplication.update`; UI Toolkit receives it with no `EventSystem`. `Mouse.current` read from that callback does not show the queued state.
 - Opening the editor on a worktree rewrites `.vscode/settings.json`. Revert it before the commit.
+- On a URP material, `renderQueue` set from a script is reset to the shader's queue plus `_QueueOffset`. Set `_QueueOffset` (for example 1 for 3001), then the queue.
+- Another agent saving a script in the worktree during Play reloads the domain, and every view then throws a `NullReferenceException` each frame. Call `AssetDatabase.DisallowAutoRefresh()` before Play and `AllowAutoRefresh()` after Stop.
+- `capture game_view --output-path <png>` works in Play and includes the UI Toolkit HUD. Queued `KeyboardState` and `MouseState` events, each sent from its own `script eval` (press, then release), reach both the game and UI Toolkit.
 - A malformed `unity command` writes "No command named …" errors to the editor console. Clear it (`unity command console clear`) before a clean-compile check.
 
 ## Builds
