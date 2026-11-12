@@ -133,9 +133,9 @@ The closed look, in values. Numbers are pooled; nothing allocates per hit.
 
 | Kind | Text | Size | Colour | Life |
 |---|---|---|---|---|
-| Weak | `2` | 16 regular | `#B3ACA0` | 0.5 s |
-| Normal | `8` | 20 bold | `#FFFFFF` | 0.7 s |
-| Strong | `16` | 26 bold | `#FFC23D` | 0.8 s |
+| Weak | `2` | 16 regular | `#B3ACA0` | 0.35 s |
+| Normal | `8` | 20 bold | `#FFFFFF` | 0.45 s |
+| Strong | `16` | 26 bold | `#FFC23D` | 0.5 s |
 | Critical | the kind's number + `!` | its kind's size x 1.3 (21, 26, 34) | its kind's colour | its kind's + 0.2 s |
 | Immune | `immune` | 14 bold | `#D9D4C8` on a plate | see below |
 
@@ -144,13 +144,13 @@ The closed look, in values. Numbers are pooled; nothing allocates per hit.
 - Whole numbers, rounded to nearest with a half up (2.5 shows 3), at least 1.
 - Offsets, the rise and the clamp are panel pixels, negative y up. "Ease-out" is `1 − (1 − t)²`, t the elapsed share.
 - **Position**: a number hangs by its bottom centre, 0.7 cells above the enemy centre (screen up, just above the health bar), at that point of the board; it does not follow the enemy.
-- **Motion**: rises 20 with ease-out over its life; full opacity for the first 60 %, then linear to 0.
+- **Motion**: rises 20 with ease-out over its life; full opacity for the first 50 %, then linear to 0. Lives are short on purpose: few numbers alive at once, and a number still sits by its enemy, which walks 1 cell in 0.5 s.
 - **Top of the board**: a number's bottom centre never goes higher than 78 from the panel's top (top bar 44, the strong number about 31, 3 to spare), so no number enters the top bar: a number over "Lives 10" read as a new figure. A number held there stops rising and fades as usual. Cost: on the top row it covers the enemy's health bar while hits land. Recheck the 78 when the critical (34) is built.
 - **Pop (critical)**: scale 1.6 to 1.0 over 0.12 s, ease-out, then the normal motion.
-- **No stacking**: each new number takes the next spawn offset (x, y) from the cycle (0, 0), (-12, -6), (12, -6), (-6, -12), (6, -12), one global counter.
+- **No stacking**: each new number takes the next spawn offset (x, y) from the cycle (0, 0), (-36, -8), (36, -8), one global counter. The x steps are wider than a strong `20` (about 33), so numbers in different slots never overlap, also at the top limit, where the y offsets are lost. A tower fires every 0.67 s, longer than any life, so one tower never stacks on itself; two or three towers on one enemy (hits 0.2 to 0.35 s apart) keep two or three numbers alive, in three slots when their hits are consecutive. Recheck the 36 when three-digit numbers appear (step = the widest common number + 3).
 - **Cap**: 40 numbers alive; at the cap the oldest is recycled. From 30 alive, weak numbers are not spawned.
 - **Immune**: at most one per enemy. It hangs by its **top** centre 0.35 cells **below** the enemy centre (screen down) and follows the enemy as drawn; it appears without a pop, and hides 1.0 s after the last immune hit on that enemy (fade over the last 0.2 s). Towers fire every 0.67 s, so a steady stream keeps it alive. It does not count towards the cap. On the bottom row it stays inside the board area.
-- **Numbers above, the word below**, with the body and the health bar between them: an enemy hit by towers of both elements shows each apart. Its own numbers start 1.05 cells (about 50) above its word; an enemy walking screen up at 2 cells/s reaches a number only in the last 8 % of its life, below 20 % opacity. Enemies of a wave are 2 cells apart, so a word never reaches the next enemy's bar.
+- **Numbers above, the word below**, with the body and the health bar between them: an enemy hit by towers of both elements shows each apart. Its own numbers start 1.05 cells (about 50) above its word; an enemy walking screen up at 2 cells/s cannot reach a strong number within its 0.5 s life. Enemies of a wave are 2 cells apart, so a word never reaches the next enemy's bar.
 
 **Changes to the closed look**, each a clarification it left open:
 1. A critical keeps the colour and the relative size of its kind (a strong critical is a large gold `32!`), so the "!" never hides whether the hit was strong or weak.
