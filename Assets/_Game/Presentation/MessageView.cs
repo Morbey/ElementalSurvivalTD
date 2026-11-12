@@ -1,7 +1,6 @@
 using ElementalTD.Core;
 using ElementalTD.Gameplay;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UIElements;
 
 namespace ElementalTD.Presentation
@@ -31,7 +30,6 @@ namespace ElementalTD.Presentation
         [SerializeField] private string waveSurvivedText;
 
         [Tooltip("Seconds of unscaled time a refusal stays on screen.")]
-        [FormerlySerializedAs("duration")]
         [SerializeField, Min(0f)] private float refusalDuration = 2f;
         [Tooltip("Seconds of unscaled time the survived line stays on screen.")]
         [SerializeField, Min(0f)] private float waveSurvivedDuration = 2f;

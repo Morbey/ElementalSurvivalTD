@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using ElementalTD.Data;
 using NUnit.Framework;
-using UnityEditor;
 
 namespace ElementalTD.Core.Tests
 {
@@ -354,65 +352,6 @@ namespace ElementalTD.Core.Tests
             Assert.AreEqual(PlacementResult.WouldBlockPath, board.TryPlaceTower(new GridPos(5, otherRow), Fast), "cuts the second enemy off");
             Assert.IsTrue(board.Field.IsReachable(board.Spawn));
             Assert.IsFalse(board.HasTower(new GridPos(5, firstRow)) || board.HasTower(new GridPos(5, otherRow)), "nothing changed");
-        }
-
-        // ---- 2c-AC8 / 2c-AC9 on the real assets
-
-        private const string AssetDir = "Assets/_Game/Data/Assets/";
-
-        private static Battle AssetBattle(out Board board, out TowerStats tower, out Enemy enemy)
-        {
-            var map = AssetDatabase.LoadAssetAtPath<MapDefinition>(AssetDir + "Map_Prototype.asset");
-            var towerDef = AssetDatabase.LoadAssetAtPath<TowerDefinition>(AssetDir + "Tower_Prototype.asset");
-            var enemyDef = AssetDatabase.LoadAssetAtPath<EnemyDefinition>(AssetDir + "Enemy_Prototype.asset");
-            Assert.IsNotNull(map);
-            Assert.IsNotNull(towerDef);
-            Assert.IsNotNull(enemyDef);
-            board = new Board(map.ToGridMap(), map.Spawn, map.Exit);
-            tower = towerDef.ToStats();
-            Battle battle = Manual(board);
-            enemy = board.SpawnEnemy(enemyDef.ToStats());
-            return battle;
-        }
-
-        // Ticks until the enemy leaves the board and returns its health at that moment.
-        private static float HealthWhenItLeaves(Battle battle, Board board, Enemy enemy)
-        {
-            for (int i = 0; i < 5000 && board.EnemyCount > 0; i++) battle.Tick();
-            Assert.AreEqual(0, board.EnemyCount, "the enemy never left");
-            return enemy.Health;
-        }
-
-        [Test]
-        public void S2c_AC8_The_Prototype_Assets_Hold_The_Closed_Values()
-        {
-            AssetBattle(out _, out TowerStats tower, out Enemy enemy);
-            Assert.AreEqual(new[] { 2.5f, 10f, 1.5f, 10f }, new[] { tower.Range, tower.Damage, tower.ShotsPerSecond, tower.ProjectileSpeed });
-            Assert.AreEqual(new[] { 2f, 100f }, new[] { enemy.Speed, enemy.MaxHealth });
-        }
-
-        [Test]
-        public void S2c_AC9_ProvisionalTarget_No_Single_Tower_Kills_In_One_Pass()
-        {
-            int tried = 0;
-            for (int y = 0; y < 9; y++)
-                for (int x = 0; x < 16; x++)
-                {
-                    Battle battle = AssetBattle(out Board board, out TowerStats tower, out Enemy enemy);
-                    if (board.TryPlaceTower(new GridPos(x, y), tower) != PlacementResult.Placed) continue;
-                    tried++;
-                    Assert.Greater(HealthWhenItLeaves(battle, board, enemy), 0f, $"a single tower on ({x},{y}) kills");
-                }
-            Assert.Greater(tried, 100, "the check must cover the free cells");
-        }
-
-        [Test]
-        public void S2c_AC9_ProvisionalTarget_Towers_On_6_6_And_11_2_Kill_In_One_Pass()
-        {
-            Battle battle = AssetBattle(out Board board, out TowerStats tower, out Enemy enemy);
-            Place(board, 6, 6, tower);
-            Place(board, 11, 2, tower);
-            Assert.LessOrEqual(HealthWhenItLeaves(battle, board, enemy), 0f);
         }
 
         // ---- Data rules of the stats

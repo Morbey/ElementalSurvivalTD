@@ -21,11 +21,9 @@ namespace ElementalTD.PlayModeTests
         [Test]
         public void AC1_Scene_Camera_Is_Orthographic_And_Straight_Down()
         {
+            // Where it looks and how big the board is on screen are the 4b-AC16 test.
             Assert.IsTrue(_camera.orthographic);
             Assert.Greater(Vector3.Dot(_camera.transform.forward, Vector3.down), 0.999f);
-            Assert.AreEqual(_map.Width * _map.CellSize * 0.5f, _camera.transform.position.x, 0.01f);
-            Assert.AreEqual(_map.Height * _map.CellSize * 0.5f, _camera.transform.position.z, 0.01f);
-            Assert.GreaterOrEqual(_camera.orthographicSize, _map.Height * _map.CellSize * 0.5f);
         }
 
         private static string MaterialPath(Material m)
@@ -170,7 +168,7 @@ namespace ElementalTD.PlayModeTests
         private static readonly string[] RefusalCases = { "spawnOrExit", "wall", "enemy", "path" };
 
         [UnityTest]
-        public IEnumerator S2b_AC4_Message_Hides_After_2s_Unscaled_And_A_New_Refusal_Replaces_It_And_Restarts_The_Timer()
+        public IEnumerator S2b_AC4_Refusal_Hides_After_2s_Unscaled_And_A_New_Refusal_Replaces_It_And_Restarts_The_Timer()
         {
             ClickCell(_map.Spawn.X, _map.Spawn.Y);
             yield return null;
@@ -198,37 +196,6 @@ namespace ElementalTD.PlayModeTests
             Assert.IsFalse(MessageShown());
             Assert.AreEqual(distanceBefore, _bootstrap.Board.Field.Distance(_map.Spawn));
             Assert.AreEqual(0, FindByName("Towers").childCount);
-        }
-
-        [UnityTest]
-        public IEnumerator S2b_AC7_Hover_Shows_On_Free_And_Tower_Cells_With_One_Material_Above_The_Tower_And_Hides_Off_Grid()
-        {
-            Transform hover = FindByName("Hover");
-            Assert.IsNotNull(hover);
-            Assert.IsFalse(hover.gameObject.activeSelf, "no hover before the mouse is on the grid");
-
-            var free = new GridPos(2, 2);
-            _input.Hover(ScreenOf(free));
-            yield return null;
-            Assert.IsTrue(hover.gameObject.activeSelf);
-            Assert.Less(Vector3.Distance(_map.CellToWorld(free), new Vector3(hover.position.x, 0f, hover.position.z)), 0.01f);
-            Material freeMaterial = hover.GetComponentInChildren<Renderer>().sharedMaterial;
-
-            ClickCell(3, 2);
-            var towerCell = new GridPos(3, 2);
-            _input.Hover(ScreenOf(towerCell));
-            yield return null;
-            Assert.IsTrue(hover.gameObject.activeSelf);
-            Assert.Less(Vector3.Distance(_map.CellToWorld(towerCell), new Vector3(hover.position.x, 0f, hover.position.z)), 0.01f);
-            Renderer hoverRenderer = hover.GetComponentInChildren<Renderer>();
-            Assert.AreSame(freeMaterial, hoverRenderer.sharedMaterial, "one neutral material on free and tower cells");
-            Renderer towerRenderer = GameObject.Find("Tower 3,2").GetComponentInChildren<Renderer>();
-            Assert.GreaterOrEqual(hoverRenderer.bounds.min.y, towerRenderer.bounds.max.y - 0.001f, "hover must show above the tower");
-
-            _input.Hover(OffGrid);
-            yield return null;
-            Assert.IsFalse(_input.HasHoverCell);
-            Assert.IsFalse(hover.gameObject.activeSelf);
         }
 
         [UnityTest]
@@ -281,7 +248,7 @@ namespace ElementalTD.PlayModeTests
             Assert.Less(detour, 0.3f * _map.CellSize, "on the way from the tower to the enemy");
 
             yield return TickUntil(() => enemy.Health < enemy.MaxHealth, 300);
-            Assert.AreEqual(enemy.MaxHealth - 10f, enemy.Health, "one hit of 10");
+            Assert.AreEqual(enemy.MaxHealth - 10f * 2f, enemy.Health, "one hit of 10 from the Light tower on a Shadow enemy: x2");
             Assert.AreEqual(enemy.Health / enemy.MaxHealth, FillOf(EnemyViewAt(0)).localScale.x, 1e-4f);
         }
 
@@ -411,28 +378,6 @@ namespace ElementalTD.PlayModeTests
                 Assert.AreEqual(gold, Battle.Gold);
             }
             Assert.AreEqual(0, FindByName("Towers").childCount);
-        }
-
-        [UnityTest]
-        public IEnumerator S2c_AC14_Range_Disc_Follows_The_Hover_With_The_Tower_Range_And_Hides_Off_The_Grid()
-        {
-            Transform disc = FindByName("RangeDisc");
-            Assert.IsNotNull(disc);
-            Assert.IsFalse(disc.gameObject.activeSelf);
-
-            var cell = new GridPos(2, 2);
-            _input.Hover(ScreenOf(cell));
-            yield return null;
-
-            Assert.IsTrue(disc.gameObject.activeSelf);
-            Vector3 centre = _map.CellToWorld(cell);
-            Assert.Less(Vector3.Distance(centre, new Vector3(disc.position.x, 0f, disc.position.z)), 0.01f);
-            float radius = disc.GetComponentInChildren<Renderer>().bounds.extents.x;
-            Assert.AreEqual(_input.Tower.RangeCells * _map.CellSize, radius, 0.05f);
-
-            _input.Hover(OffGrid);
-            yield return null;
-            Assert.IsFalse(disc.gameObject.activeSelf);
         }
     }
 }

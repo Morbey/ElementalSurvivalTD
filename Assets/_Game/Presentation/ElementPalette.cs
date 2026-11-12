@@ -56,8 +56,7 @@ namespace ElementalTD.Presentation
         /// </summary>
         internal Material[] MaterialsById(Func<Look, Material> pick, Material fallback)
         {
-            // An array of references, not a material made at runtime; qualified so the source rule against those does not match it.
-            var materials = new UnityEngine.Material[MaxElementId() + 1];
+            var materials = new Material[MaxElementId() + 1];
             for (int id = 0; id < materials.Length; id++) materials[id] = fallback;
             for (int i = 0; i < LookCount; i++)
             {

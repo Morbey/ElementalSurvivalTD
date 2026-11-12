@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -6,6 +7,19 @@ namespace ElementalTD.Core.Tests
 {
     public class SourceRulesTests
     {
+        // ADR 0002 rule 3 forbids creating a material by constructor; an array of material references is fine.
+        private static readonly Regex NewMaterialCall = new Regex(@"new\s+(UnityEngine\.)?Material\s*\(");
+
+        [Test]
+        public void S2a_AC4_The_New_Material_Rule_Matches_The_Constructor_And_Not_An_Array()
+        {
+            Assert.IsTrue(NewMaterialCall.IsMatch("var m = new Material(shader);"));
+            Assert.IsTrue(NewMaterialCall.IsMatch("var m = new UnityEngine.Material(shader);"));
+            Assert.IsTrue(NewMaterialCall.IsMatch("var m = new  Material (shader);"));
+            Assert.IsFalse(NewMaterialCall.IsMatch("Material[] all = new Material[looks.Length];"));
+            Assert.IsFalse(NewMaterialCall.IsMatch("Material[] all = new UnityEngine.Material[2];"));
+        }
+
         [Test]
         public void S2a_AC4_No_CreatePrimitive_Or_New_Material_Outside_Tests()
         {
@@ -18,7 +32,7 @@ namespace ElementalTD.Core.Tests
                 scanned++;
                 string text = File.ReadAllText(file);
                 StringAssert.DoesNotContain("CreatePrimitive", text, file);
-                StringAssert.DoesNotContain("new Material", text, file);
+                Assert.IsFalse(NewMaterialCall.IsMatch(text), file);
             }
             Assert.Greater(scanned, 0);
         }

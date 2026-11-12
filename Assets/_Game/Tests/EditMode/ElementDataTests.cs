@@ -197,7 +197,7 @@ namespace ElementalTD.Core.Tests
         }
 
         [Test]
-        public void S4b_AC1_A_Later_Relation_For_A_Pair_Replaces_An_Earlier_One()
+        public void A_Later_Relation_For_A_Pair_Replaces_An_Earlier_One_As_Tolerated_Behaviour()
         {
             ElementDefinition light = Element("Light", 1), shadow = Element("Shadow", 2);
             ElementChart chart = Chart(new[] { light, shadow }, Relation(light, shadow, 2f), Relation(light, shadow, 0.5f)).ToChart();

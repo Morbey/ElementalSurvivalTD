@@ -41,14 +41,16 @@ namespace ElementalTD.PlayModeTests
         private void AssertFrame()
         {
             WaveSchedule waves = Battle.Waves;
-            Assert.AreEqual($"Wave {waves.StartedWaves}/{Waves}", Text("wave-label").text);
+            Assert.AreEqual(waves.StartedWaves > 0 ? $"Wave {waves.StartedWaves}/{Waves}: {WaveElements(waves.WaveAt(waves.StartedWaves - 1))}" : $"Wave 0/{Waves}",
+                Text("wave-label").text, "4b-AC10: the wave line names the elements of the wave that started last");
             Assert.AreEqual($"Lives {Battle.Lives}", Text("lives-label").text);
             Assert.AreEqual($"Gold {Battle.Gold}", GoldLabel.text);
             Label countdown = Text("next-wave-label");
             if (waves.SecondsToNextWave > 0f)
             {
                 Assert.IsTrue(Shown(countdown), "countdown shows while a delay runs");
-                Assert.AreEqual($"Next wave in {Mathf.CeilToInt(waves.SecondsToNextWave)} s", countdown.text);
+                Assert.AreEqual($"Next wave in {Mathf.CeilToInt(waves.SecondsToNextWave)} s: {WaveElements(waves.WaveAt(waves.StartedWaves))}", countdown.text,
+                    "4b-AC10: the countdown names the elements of the wave to come");
                 _seenCountdowns.Add(countdown.text);
             }
             else
@@ -75,11 +77,14 @@ namespace ElementalTD.PlayModeTests
                     Mathf.Lerp(enemy.PreviousY, enemy.Y, _bootstrap.TickAlpha));
                 Assert.Less(Vector3.Distance(expected, view.position), 0.01f, $"enemy view {i} position");
                 Assert.AreEqual(enemy.Health / enemy.MaxHealth, FillOf(view).localScale.x, 1e-4f, $"enemy view {i} fill");
+                Assert.AreSame(LookOf(enemy.Element).Enemy, SharedMaterialOf(view), $"4b-AC9: enemy view {i} has the material of its enemy's element");
             }
             foreach (Enemy enemy in _currentlyOnBoard)
                 if (!_everOnBoard.Add(enemy) && !_previouslyShown.Contains(enemy)) _reusedObjects++;
             _previouslyShown.Clear();
             foreach (Enemy enemy in _currentlyOnBoard) _previouslyShown.Add(enemy);
+
+            AssertTowerBar();
 
             int shots = Battle.ProjectileCount;
             _maxProjectiles = Mathf.Max(_maxProjectiles, shots);
@@ -88,7 +93,27 @@ namespace ElementalTD.PlayModeTests
             {
                 Assert.IsTrue(_projectileViews[i] != null, "a projectile view was destroyed");
                 Assert.AreEqual(i < shots, _projectileViews[i].gameObject.activeSelf, $"projectile view {i}");
+                if (i < shots) Assert.AreSame(LookOf(Battle.ProjectileAt(i).Element).Projectile, SharedMaterialOf(_projectileViews[i]), $"4b-AC9: projectile view {i} has its tower's element");
             }
+        }
+
+        private int _framesAtCost, _endTicks;
+
+        /// <summary>The tower bar on every frame: one button selected, and a button short exactly when its cost is above the gold (also at a gold equal to the cost).</summary>
+        private void AssertTowerBar()
+        {
+            Button[] buttons = TowerButtons();
+            Assert.AreEqual(_input.TowerCount, buttons.Length);
+            int selected = 0;
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                int cost = _input.TowerAt(i).ToStats().Cost;
+                Assert.AreEqual(cost > Battle.Gold, buttons[i].ClassListContains("tower-button--short"), $"4b-AC7: button {i} with gold {Battle.Gold} and cost {cost}");
+                if (cost == Battle.Gold) _framesAtCost++;
+                if (buttons[i].ClassListContains("tower-button--selected")) selected++;
+            }
+            Assert.AreEqual(1, selected, "4b-AC7: exactly one button is selected");
+            Assert.IsTrue(buttons[_input.SelectedIndex].ClassListContains("tower-button--selected"));
         }
 
         private readonly HashSet<Enemy> _previouslyShown = new HashSet<Enemy>();
@@ -111,6 +136,7 @@ namespace ElementalTD.PlayModeTests
                 AssertFrame();
             }
             Assert.AreNotEqual(RunOutcome.Running, Battle.Outcome, "the run never ended");
+            _endTicks = ticks;
         }
 
         // ---- 3a-AC8, AC9: the start
@@ -125,10 +151,11 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(32, CountNamed("Enemy"), "32 objects named Enemy");
             Assert.AreEqual(16, CountNamed("Projectile"), "16 objects named Projectile");
 
-            Assert.AreEqual("Wave 0/10", Text("wave-label").text);
+            Assert.AreEqual("Wave 0/10", Text("wave-label").text, "before wave 1 the wave line names no element");
             Assert.AreEqual("Lives 10", Text("lives-label").text);
             Assert.AreEqual($"Gold {StartingGold()}", GoldLabel.text, "3b-AC7: the start shows the asset's starting gold");
-            Assert.AreEqual("Next wave in 15 s", Text("next-wave-label").text);
+            Assert.AreEqual($"Next wave in 15 s: {WaveElements(Battle.Waves.WaveAt(0))}", Text("next-wave-label").text);
+            StringAssert.Contains(">Shadow</color>", Text("next-wave-label").text, "document: wave 1 is Shadow");
             Assert.IsTrue(Shown(Text("next-wave-label")));
             Assert.IsFalse(Shown(End), "the end screen starts hidden");
         }
@@ -150,8 +177,8 @@ namespace ElementalTD.PlayModeTests
 
             Assert.AreEqual(RunOutcome.Lost, Battle.Outcome);
             Assert.That(Battle.Waves.StartedWaves, Is.GreaterThanOrEqualTo(3));
-            CollectionAssert.Contains(_seenCountdowns, "Next wave in 15 s");
-            CollectionAssert.Contains(_seenCountdowns, "Next wave in 8 s", "right after the last enemy of a wave");
+            CollectionAssert.Contains(_seenCountdowns, $"Next wave in 15 s: {WaveElements(Battle.Waves.WaveAt(0))}");
+            CollectionAssert.Contains(_seenCountdowns, $"Next wave in 8 s: {WaveElements(Battle.Waves.WaveAt(1))}", "right after the last enemy of wave 1: Light is next, Shadow is current");
             for (int lives = 10; lives >= 0; lives--) CollectionAssert.Contains(_seenLives, $"Lives {lives}", "lives drop one at a time");
             Assert.AreEqual("Defeat", Text("end-title").text);
             Assert.IsTrue(Shown(End));
@@ -168,9 +195,17 @@ namespace ElementalTD.PlayModeTests
 
             Assert.AreEqual(RunOutcome.Won, Battle.Outcome);
             Assert.AreEqual(10, Battle.Lives);
-            Assert.AreEqual(145, Battle.Gold, "45 plus the ten bonuses");
-            Assert.AreEqual("Gold 145", GoldLabel.text);
-            Assert.AreEqual("Wave 10/10", Text("wave-label").text);
+            Assert.AreEqual(105, Battle.Gold, "document: 105 left");
+            Assert.AreEqual(10165, _endTicks, "document: won on the 10165th Tick(), through the scene");
+            int lightTowers = 0, shadowTowers = 0;
+            for (int i = 0; i < Board.TowerCount; i++)
+            {
+                if (Board.TowerAt(i).Stats.Element == ElementOfTower(0)) lightTowers++; else shadowTowers++;
+            }
+            Assert.AreEqual((16, 12), (lightTowers, shadowTowers), "document: 28 towers");
+            Assert.Greater(_framesAtCost, 0, "a frame had a gold equal to a cost, so the short-of-gold boundary was checked");
+            Assert.AreEqual("Gold 105", GoldLabel.text);
+            Assert.AreEqual($"Wave 10/10: {WaveElements(Battle.Waves.WaveAt(9))}", Text("wave-label").text);
             Assert.IsFalse(Shown(Text("next-wave-label")), "hidden from wave 10 on");
             Assert.AreEqual("Victory", Text("end-title").text);
             Assert.IsTrue(Shown(End));
@@ -192,8 +227,8 @@ namespace ElementalTD.PlayModeTests
             Assert.IsTrue(Board.HasTower(new GridPos(14, 2)));
             Assert.AreEqual(towers, Board.TowerCount);
             Assert.AreEqual(towers, FindByName("Towers").childCount);
-            Assert.AreEqual(145, Battle.Gold);
-            Assert.AreEqual("Gold 145", GoldLabel.text);
+            Assert.AreEqual(105, Battle.Gold);
+            Assert.AreEqual("Gold 105", GoldLabel.text);
             Assert.IsFalse(_input.HasHoverCell);
             Assert.IsFalse(FindByName("Hover").gameObject.activeSelf);
         }
@@ -240,7 +275,7 @@ namespace ElementalTD.PlayModeTests
             Assert.IsFalse(_input.HasHoverCell);
             Assert.IsFalse(FindByName("Hover").gameObject.activeSelf);
             Assert.AreEqual(0, Board.TowerCount);
-            yield return new WaitForSecondsRealtime(2.3f); // the survived line of the last wave paid has timed out
+            yield return new WaitForSecondsRealtime(3.3f); // the survived line of the last wave paid (3 s) has timed out
             Assert.IsFalse(MessageShown());
         }
 
@@ -269,7 +304,7 @@ namespace ElementalTD.PlayModeTests
             Assert.IsTrue(Board.HasTower(new GridPos(0, 0)));
             Assert.AreEqual(gold, Battle.Gold);
             Assert.AreEqual($"Gold {gold}", GoldLabel.text);
-            yield return new WaitForSecondsRealtime(2.3f); // the survived line has timed out; the clicks added no message
+            yield return new WaitForSecondsRealtime(3.3f); // the survived line (3 s) has timed out; the clicks added no message
             Assert.IsFalse(MessageShown());
         }
 
@@ -325,7 +360,7 @@ namespace ElementalTD.PlayModeTests
                 Assert.AreEqual("Lives 10", Text("lives-label").text);
                 Assert.AreEqual($"Gold {StartingGold()}", GoldLabel.text, $"round {round}: the starting gold again");
                 Assert.AreEqual(StartingGold(), Battle.Gold);
-                Assert.AreEqual("Next wave in 15 s", Text("next-wave-label").text);
+                Assert.AreEqual($"Next wave in 15 s: {WaveElements(Battle.Waves.WaveAt(0))}", Text("next-wave-label").text);
                 Assert.IsFalse(Shown(End), $"round {round}: end screen hidden");
                 _input.enabled = false;
             }

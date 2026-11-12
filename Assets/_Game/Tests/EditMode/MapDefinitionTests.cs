@@ -8,7 +8,7 @@ namespace ElementalTD.Core.Tests
     public class MapDefinitionTests
     {
         private const string MapPath = "Assets/_Game/Data/Assets/Map_Prototype.asset";
-        private const string EnemyPath = "Assets/_Game/Data/Assets/Enemy_Prototype.asset";
+        private const string EnemyPath = "Assets/_Game/Data/Assets/Enemy_Shadow45.asset";
 
         private static MapDefinition Make(string json)
         {

@@ -197,6 +197,52 @@ namespace ElementalTD.Core.Tests
             }
         }
 
+        [Test]
+        public void S4b_AC2_A_Reused_Shot_Object_Takes_The_Element_Of_Its_New_Launch_Not_Its_Last()
+        {
+            var chart = new ElementChart(2);
+            chart.Set(Light, Shadow, 2f); // only Light against Shadow is x2
+
+            // (a) a Light shot lands, its tower is sold, and a Shadow tower's shot from the reused object does nothing to a Shadow enemy.
+            Board board = OpenBoard();
+            Battle battle = Parked(board, chart);
+            Buy(battle, 3, 3, Flying(Light));
+            Enemy victim = board.SpawnEnemy(Still(Shadow));
+            battle.Tick();
+            Projectile first = battle.ProjectileAt(0);
+            Assert.AreEqual(25f, TickToNextHit(battle, victim), "Light against Shadow: x2");
+            Assert.AreEqual(0, battle.ProjectileCount);
+            Assert.IsTrue(battle.TrySellTower(new GridPos(3, 3)));
+            Buy(battle, 3, 3, Flying(Shadow));
+            battle.Tick();
+            Assert.AreSame(first, battle.ProjectileAt(0), "the shot object is reused");
+            Assert.AreEqual(Shadow, battle.ProjectileAt(0).Element);
+            Ticks(battle, 100);
+            Assert.AreEqual(25f, victim.Health, "a Shadow shot cannot hurt a Shadow enemy, whatever object carried the Light shot");
+
+            // (b) a shot with no element is followed by a Light shot from the same object: x2, and the reverse order: x1.
+            Board board2 = OpenBoard();
+            Battle battle2 = Parked(board2, chart);
+            Buy(battle2, 3, 3, Flying(default));
+            Enemy target = board2.SpawnEnemy(Still(Shadow));
+            battle2.Tick();
+            Projectile plain = battle2.ProjectileAt(0);
+            Assert.IsTrue(plain.Element.IsNone);
+            Assert.AreEqual(35f, TickToNextHit(battle2, target), "no element: x1");
+            Assert.IsTrue(battle2.TrySellTower(new GridPos(3, 3)));
+            Buy(battle2, 3, 3, Flying(Light));
+            battle2.Tick();
+            Assert.AreSame(plain, battle2.ProjectileAt(0));
+            Assert.AreEqual(Light, battle2.ProjectileAt(0).Element);
+            Assert.AreEqual(15f, TickToNextHit(battle2, target), "then a Light shot: 35 - 10 x 2");
+            Assert.IsTrue(battle2.TrySellTower(new GridPos(3, 3)));
+            Buy(battle2, 3, 3, Flying(default));
+            battle2.Tick();
+            Assert.AreSame(plain, battle2.ProjectileAt(0));
+            Assert.IsTrue(battle2.ProjectileAt(0).Element.IsNone, "a Light shot's object carries no element once a no-element tower launches it");
+            Assert.AreEqual(5f, TickToNextHit(battle2, target), "15 - 10 x 1");
+        }
+
         // ---- 4b-AC3 immunity
 
         [Test]

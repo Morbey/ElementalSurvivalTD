@@ -42,7 +42,7 @@ namespace ElementalTD.PlayModeTests
 
             Assert.AreEqual(1672, _ticks, 1, "document: wave 1 pays on tick 1672");
             Assert.AreEqual(start + bonus, Battle.Gold);
-            Assert.AreEqual(125, Battle.Gold);
+            Assert.AreEqual(155, Battle.Gold, "document: 115 + 40");
             Assert.AreEqual(1, Battle.LastSurvivedWave);
             Assert.IsFalse(MessageShown(), "no frame has run since the paying tick");
             Assert.AreEqual($"Gold {start}", GoldLabel.text, "the label still shows the old gold");
@@ -50,7 +50,7 @@ namespace ElementalTD.PlayModeTests
             yield return null;
 
             Assert.IsTrue(MessageShown());
-            Assert.AreEqual("Wave 1 survived +10", _label.text);
+            Assert.AreEqual("Wave 1 survived +40", _label.text);
             Assert.AreEqual(Survived(1), _label.text);
             Assert.AreEqual($"Gold {start + bonus}", GoldLabel.text);
         }
@@ -62,10 +62,10 @@ namespace ElementalTD.PlayModeTests
             yield return null;
             Assert.IsTrue(MessageShown());
 
-            yield return new WaitForSecondsRealtime(1.5f);
-            Assert.IsTrue(MessageShown(), "still shown before 2 s");
+            yield return new WaitForSecondsRealtime(2.5f);
+            Assert.IsTrue(MessageShown(), "still shown before 3 s");
             yield return new WaitForSecondsRealtime(1.0f);
-            Assert.IsFalse(MessageShown(), "hidden after 2 s");
+            Assert.IsFalse(MessageShown(), "hidden after 3 s");
             Assert.AreEqual($"Gold {Battle.Gold}", GoldLabel.text);
         }
 
@@ -100,8 +100,8 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(Survived(1), _label.text);
             Assert.IsTrue(MessageShown());
 
-            // Whatever time the refusal had left, the survived line gets its full 2 s.
-            yield return new WaitForSecondsRealtime(1.5f);
+            // Whatever time the refusal had left, the survived line gets its full 3 s.
+            yield return new WaitForSecondsRealtime(2.5f);
             Assert.IsTrue(MessageShown(), "the line has its own full duration");
             yield return new WaitForSecondsRealtime(1.0f);
             Assert.IsFalse(MessageShown());
@@ -115,13 +115,13 @@ namespace ElementalTD.PlayModeTests
             yield return TickToSurvived(2, ticksPerFrame: int.MaxValue); // no frame between the two payments
 
             Assert.AreEqual(2332, _ticks, 1, "document: wave 2 pays on tick 2332");
-            Assert.AreEqual(135, Battle.Gold);
+            Assert.AreEqual(175, Battle.Gold, "document: 115 + 40 + 20");
             Assert.AreEqual(2, Battle.LastSurvivedWave);
             yield return null;
 
             Assert.IsTrue(MessageShown());
             Assert.AreEqual(Survived(2), _label.text);
-            Assert.AreEqual("Gold 135", GoldLabel.text);
+            Assert.AreEqual("Gold 175", GoldLabel.text);
         }
 
         [UnityTest]
@@ -144,13 +144,15 @@ namespace ElementalTD.PlayModeTests
 
             VisualElement end = Root.Q<VisualElement>("end-screen");
             Assert.AreEqual(DisplayStyle.Flex, end.resolvedStyle.display);
+            Assert.IsTrue(end.ClassListContains("end-screen--won"), "4b-AC19: a win marks the end screen");
+            Assert.AreEqual(new Color32(255, 194, 61, 255), (Color32)Root.Q<Label>("end-title").resolvedStyle.color, "4b-AC19: Victory is gold");
             Assert.AreEqual("Victory", Root.Q<Label>("end-title").text);
             Assert.IsTrue(MessageShown());
-            Assert.AreEqual("Wave 10 survived +10", _label.text);
+            Assert.AreEqual("Wave 10 survived +60", _label.text);
             Assert.AreEqual($"Gold {Battle.Gold}", GoldLabel.text);
-            Assert.AreEqual("Gold 145", GoldLabel.text);
+            Assert.AreEqual("Gold 105", GoldLabel.text);
 
-            yield return new WaitForSecondsRealtime(2.3f);
+            yield return new WaitForSecondsRealtime(3.3f);
             Assert.IsFalse(MessageShown(), "the line times out");
             Assert.AreEqual(DisplayStyle.Flex, end.resolvedStyle.display, "the end screen stays");
             Assert.AreEqual(RunOutcome.Won, Battle.Outcome);
