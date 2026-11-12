@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.TestTools.Constraints;
-using Is = UnityEngine.TestTools.Constraints.Is;
 
 namespace ElementalTD.Core.Tests
 {
@@ -391,18 +389,14 @@ namespace ElementalTD.Core.Tests
             Ticks(battle, 30);
 
             int diagonalTicks = 0, straightTicks = 0;
-            Assert.That(() =>
+            TickAllocation.AssertNoneAcross(battle, 300, _ =>
             {
-                for (int i = 0; i < 300; i++)
+                for (int k = 0; k < board.EnemyCount; k++)
                 {
-                    battle.Tick();
-                    for (int k = 0; k < board.EnemyCount; k++)
-                    {
-                        PathFollower f = board.EnemyAt(k).Follower;
-                        if (f.From.X != f.To.X && f.From.Y != f.To.Y) diagonalTicks++; else straightTicks++;
-                    }
+                    PathFollower f = board.EnemyAt(k).Follower;
+                    if (f.From.X != f.To.X && f.From.Y != f.To.Y) diagonalTicks++; else straightTicks++;
                 }
-            }, Is.Not.AllocatingGCMemory());
+            });
 
             Assert.Greater(diagonalTicks, 100, "enemies were on diagonal steps");
             Assert.Greater(straightTicks, 100, "and on straight ones");

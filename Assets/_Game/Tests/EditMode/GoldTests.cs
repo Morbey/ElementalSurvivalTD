@@ -755,15 +755,11 @@ namespace ElementalTD.Core.Tests
 
             int goldBefore = battle.Gold;
             int lastGold = goldBefore, payments = 0;
-            Assert.That(() =>
+            TickAllocation.AssertNoneAcross(battle, 1500, _ =>
             {
-                for (int i = 0; i < 1500; i++)
-                {
-                    battle.Tick();
-                    if (battle.Gold > lastGold) payments++;
-                    lastGold = battle.Gold;
-                }
-            }, Is.Not.AllocatingGCMemory());
+                if (battle.Gold > lastGold) payments++;
+                lastGold = battle.Gold;
+            });
 
             Assert.Greater(payments, 0, "kills paid during the measured ticks");
             Assert.Greater(battle.Gold, goldBefore);

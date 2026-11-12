@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using UnityEngine.TestTools.Constraints;
-using Is = UnityEngine.TestTools.Constraints.Is;
 
 namespace ElementalTD.Core.Tests
 {
@@ -545,7 +543,7 @@ namespace ElementalTD.Core.Tests
 
             int survivedBefore = battle.SurvivedWaves;
             Assert.Greater(survivedBefore, 0, "the warm-up already paid bonuses");
-            Assert.That(() => Ticks(battle, 1500), Is.Not.AllocatingGCMemory());
+            TickAllocation.AssertNoneAcross(battle, 1500);
 
             Assert.Greater(battle.SurvivedWaves - survivedBefore, 3, "bonuses were paid during the measured ticks");
             Assert.AreEqual(RunOutcome.Running, battle.Outcome);

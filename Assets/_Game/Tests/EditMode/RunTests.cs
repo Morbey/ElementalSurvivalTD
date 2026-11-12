@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using UnityEngine.TestTools.Constraints;
-using Is = UnityEngine.TestTools.Constraints.Is;
 
 namespace ElementalTD.Core.Tests
 {
@@ -325,18 +323,17 @@ namespace ElementalTD.Core.Tests
             Ticks(battle, 3000); // warm-up: the pools reach their peak and the board empties once
 
             int spawns = 0, kills = 0, exits = 0, maxShots = 0;
-            Assert.That(() =>
+            int started = battle.Waves.StartedWaves, before = board.EnemyCount, lives = battle.Lives;
+            TickAllocation.AssertNoneAcross(battle, 1500, _ =>
             {
-                for (int i = 0; i < 1500; i++)
-                {
-                    int started = battle.Waves.StartedWaves, before = board.EnemyCount, lives = battle.Lives;
-                    battle.Tick();
-                    if (battle.Lives < lives) exits += lives - battle.Lives;
-                    else if (board.EnemyCount < before) kills++;
-                    if (board.EnemyCount > before || battle.Waves.StartedWaves > started) spawns++;
-                    if (battle.ProjectileCount > maxShots) maxShots = battle.ProjectileCount;
-                }
-            }, Is.Not.AllocatingGCMemory());
+                if (battle.Lives < lives) exits += lives - battle.Lives;
+                else if (board.EnemyCount < before) kills++;
+                if (board.EnemyCount > before || battle.Waves.StartedWaves > started) spawns++;
+                if (battle.ProjectileCount > maxShots) maxShots = battle.ProjectileCount;
+                started = battle.Waves.StartedWaves;
+                before = board.EnemyCount;
+                lives = battle.Lives;
+            });
 
             Assert.AreEqual(RunOutcome.Running, battle.Outcome);
             Assert.Greater(spawns, 0);
