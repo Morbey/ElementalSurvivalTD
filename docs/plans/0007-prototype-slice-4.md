@@ -17,7 +17,7 @@ A gold bonus for each wave survived (4a), then Light and Shadow towers and waves
 
 The placement input holds the list of buyable towers and which one is selected; number keys and the buttons of a new bar select. Colours come from one palette asset in Presentation; a tower gets its material when placed, and a pooled enemy or shot view changes material only when it shows another element.
 
-The HUD layout places the board. `Hud.uxml` has one element between the two bars for the area the board may use, and the camera framer fits the board into it, so the size of a bar lives only in `Hud.uss` (ADR 0002). No element that takes clicks then lies over a cell during a run, and the general click rule stays deferred (ADR 0004). The hover moves under the tower by prefab values alone; the board view gives it a second material on a cell with a tower, and gives the range disc the material and the range of the tower it stands for. Every state the HUD shows is a USS class that a view switches.
+The HUD layout places the board. `Hud.uxml` has one element between the two bars for the area the board may use, and the camera framer fits the board into it, so the size of a bar lives only in `Hud.uss` (ADR 0002). No element that takes clicks then lies over a cell during a run, and the general click rule stays deferred (ADR 0004). The hover moves under the tower by prefab values alone; the board view gives the range disc the material and the range of the tower it stands for. The message line and the end screen's outcome are USS classes that a view switches.
 
 This plan builds mechanisms and chooses no colour, size, position or wording: those are values of the visual direction, held in materials, prefabs, the palette, `Hud.uss` and the fields of the scene, and applied by the assets task of each step. "What each step takes from the visual direction" says which of its sections each step applies and which wait.
 
@@ -66,7 +66,7 @@ The assets task of each step applies these values; the code tasks build what hol
 | 1.3 text style, both bars, tower button, message line, end screen | 4b | `Hud.uss` |
 | 1.3 padding around the board | 4b | `framePaddingCells` on the camera framer |
 | 1.3 wording | 4b | Text fields in the scene. Tower button: cost. Countdown: seconds, element names. Wave line: waves started, waves in the run, element names. One element name: display name, UI colour as hex. The separator between two names. |
-| 1.4 hover under the tower, range disc per element | 4b | `Hover.prefab`, the hover materials, the range disc materials on the palette |
+| 1.4 hover under the tower, range disc per element | 4b | `Hover.prefab`, the hover material, the range disc materials on the palette |
 
 Not in this plan: the placement refusal at the refused cell (1.3) and section 2 belong to the damage-numbers step. The refused hover state with its hidden disc, the hover that hides when the pointer leaves the canvas (1.4) and the later changes of section 3 (health bars, walls, the disc's edge, spawn and exit rings) are in the Parking lot. A look that needs more than this table comes back to the `tech-lead` for a task before the assets task starts.
 
