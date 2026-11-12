@@ -225,6 +225,7 @@ namespace ElementalTD.PlayModeTests
             yield return null;
             yield return null;
             Assert.IsTrue(Board.HasTower(new GridPos(14, 2)));
+            Assert.IsNull(_input.SelectedTower, "4c-AC5: a click on a tower selects nothing after the run");
             Assert.AreEqual(towers, Board.TowerCount);
             Assert.AreEqual(towers, FindByName("Towers").childCount);
             Assert.AreEqual(105, Battle.Gold);
@@ -302,6 +303,7 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(2, Board.TowerCount);
             Assert.AreEqual(2, FindByName("Towers").childCount);
             Assert.IsTrue(Board.HasTower(new GridPos(0, 0)));
+            Assert.IsNull(_input.SelectedTower, "4c-AC5: a click on a tower selects nothing after the run");
             Assert.AreEqual(gold, Battle.Gold);
             Assert.AreEqual($"Gold {gold}", GoldLabel.text);
             yield return new WaitForSecondsRealtime(3.3f); // the survived line (3 s) has timed out; the clicks added no message

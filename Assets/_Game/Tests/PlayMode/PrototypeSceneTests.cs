@@ -55,7 +55,6 @@ namespace ElementalTD.PlayModeTests
             Assert.Greater(renderers.Length, 144);
             foreach (Renderer r in renderers)
             {
-                if (r is PanelRenderer) continue; // UI Toolkit draws the HUD panel with its own shader; this check is about world visuals
                 Assert.IsNotNull(r.sharedMaterial, r.name);
                 StringAssert.StartsWith("Assets/_Game/Presentation/Materials/", MaterialPath(r.sharedMaterial), r.name);
                 StringAssert.StartsWith("Universal Render Pipeline/", r.sharedMaterial.shader.name, r.name);
@@ -109,7 +108,7 @@ namespace ElementalTD.PlayModeTests
         }
 
         [UnityTest]
-        public IEnumerator S2b_AC1_AC2_Click_Places_Tower_On_Cell_Centre_And_Blocks_It_Second_Click_Removes_It()
+        public IEnumerator S2b_AC1_AC2_Click_Places_Tower_On_Cell_Centre_And_Blocks_It_Second_Click_Selects_It_And_Sell_Removes_It()
         {
             var cell = new GridPos(2, 2);
             int gold = Battle.Gold;
@@ -123,6 +122,10 @@ namespace ElementalTD.PlayModeTests
             Assert.IsTrue(_bootstrap.Board.Map.IsBlocked(cell));
 
             ClickCell(2, 2);
+            Assert.AreEqual(gold - cost, Battle.Gold, "4c-AC2: the second click selects: it neither sells nor buys");
+            Assert.IsTrue(_bootstrap.Board.HasTower(cell));
+            Assert.AreSame(Board.TowerOn(cell), _input.SelectedTower);
+            Assert.IsTrue(_input.SellSelected());
             yield return null;
             Assert.IsNull(GameObject.Find("Tower 2,2"));
             Assert.AreEqual(gold, Battle.Gold, "3b-AC5: a tower that never fired refunds everything");

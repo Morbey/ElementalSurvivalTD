@@ -77,5 +77,80 @@ namespace ElementalTD.Core.Tests
             }
             Assert.Greater(scanned, 0);
         }
+
+        private static string[] SourcesOutsideCoreAndTests(out string root)
+        {
+            root = Path.GetFullPath(Path.Combine(Application.dataPath, "_Game"));
+            string testsDir = Path.Combine(root, "Tests") + Path.DirectorySeparatorChar;
+            string coreDir = Path.Combine(root, "Core") + Path.DirectorySeparatorChar;
+            var files = new System.Collections.Generic.List<string>();
+            foreach (string file in Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories))
+                if (!file.StartsWith(testsDir) && !file.StartsWith(coreDir)) files.Add(file);
+            return files.ToArray();
+        }
+
+        [Test]
+        public void S4c_AC11_Outside_Core_And_Tests_Only_The_Placement_Input_Calls_TrySellTower()
+        {
+            int callers = 0;
+            foreach (string file in SourcesOutsideCoreAndTests(out _))
+            {
+                if (!File.ReadAllText(file).Contains("TrySellTower(")) continue;
+                callers++;
+                Assert.AreEqual("TowerPlacementInput.cs", Path.GetFileName(file), "another file sells");
+            }
+            Assert.AreEqual(1, callers, "the placement input sells");
+        }
+
+        [Test]
+        public void S4c_AC11_No_Presentation_File_Mentions_The_Refund_Percent_Or_Computes_A_Refund()
+        {
+            string root = Path.GetFullPath(Path.Combine(Application.dataPath, "_Game", "Presentation"));
+            int scanned = 0;
+            foreach (string file in Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories))
+            {
+                scanned++;
+                string text = File.ReadAllText(file);
+                StringAssert.DoesNotContain("RefundPercent", text, file);
+                StringAssert.DoesNotContain("TrySellTower", text, file);
+                StringAssert.DoesNotContain("SellRefund", text, file);
+            }
+            Assert.Greater(scanned, 5);
+        }
+
+        [Test]
+        public void S4c_AC11_The_Selection_Lives_In_Gameplay_Knows_No_View_And_Its_Update_Allocates_Nothing_By_Source()
+        {
+            string root = Path.GetFullPath(Path.Combine(Application.dataPath, "_Game"));
+            string text = File.ReadAllText(Path.Combine(root, "Gameplay", "TowerPlacementInput.cs"));
+            StringAssert.Contains("Tower SelectedTower", text);
+            foreach (string forbidden in new[] { "ElementalTD.Presentation", "UIElements", "Material", "Color", "Renderer", "VisualElement" })
+                StringAssert.DoesNotContain(forbidden, text, "Gameplay mentions a view, a material or a colour");
+
+            int start = text.IndexOf("private void Update()");
+            Assert.GreaterOrEqual(start, 0);
+            int open = text.IndexOf('{', start), depth = 0, end = open;
+            for (; end < text.Length; end++)
+            {
+                if (text[end] == '{') depth++;
+                else if (text[end] == '}' && --depth == 0) break;
+            }
+            string update = text.Substring(open, end - open);
+            Assert.IsFalse(System.Text.RegularExpressions.Regex.IsMatch(update, @"\bnew\b"), "Update has a new");
+
+            foreach (string file in Directory.GetFiles(Path.Combine(root, "Core"), "*.cs", SearchOption.AllDirectories))
+                StringAssert.DoesNotContain("UnityEngine", File.ReadAllText(file), file);
+        }
+
+        [Test]
+        public void S4c_AC10_The_Web_Canvas_Is_960_By_540_In_The_Player_Settings_And_On_Disk()
+        {
+            Assert.AreEqual(960, UnityEditor.PlayerSettings.defaultWebScreenWidth);
+            Assert.AreEqual(540, UnityEditor.PlayerSettings.defaultWebScreenHeight);
+            string file = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "ProjectSettings", "ProjectSettings.asset"));
+            string text = File.ReadAllText(file);
+            StringAssert.Contains("defaultScreenWidthWeb: 960", text);
+            StringAssert.Contains("defaultScreenHeightWeb: 540", text);
+        }
     }
 }

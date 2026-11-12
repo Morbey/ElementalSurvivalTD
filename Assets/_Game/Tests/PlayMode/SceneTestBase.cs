@@ -65,6 +65,9 @@ namespace ElementalTD.PlayModeTests
                 InputSystem.RemoveDevice(_addedKeyboard);
                 _addedKeyboard = null;
             }
+            // The editor's own mouse stays between tests: a test that moved it (a click on the Restart button, the pointer on Sell)
+            // would leave it over the board, and the next scene would start with a hover cell. Put it back at the corner.
+            if (Mouse.current != null) InputSystem.QueueStateEvent(Mouse.current, new MouseState { position = Vector2.zero });
             yield return null;
         }
 
@@ -80,7 +83,11 @@ namespace ElementalTD.PlayModeTests
             Assert.IsNotNull(_camera);
             Assert.IsNotNull(_document);
             // A real mouse device would overwrite the hover and could click; the tests drive the public methods.
-            if (disableInput) _input.enabled = false;
+            if (disableInput)
+            {
+                _input.enabled = false;
+                _input.Hover(OffGrid); // clears a hover the two frames of loading may have taken from a mouse resting over the board
+            }
             _label = Root.Q<Label>("message");
             Assert.IsNotNull(_label);
         }
@@ -93,6 +100,38 @@ namespace ElementalTD.PlayModeTests
         protected Vector2 ScreenOf(GridPos cell) => _camera.WorldToScreenPoint(_map.CellToWorld(cell));
 
         protected void ClickCell(int x, int y) => _input.Click(ScreenOf(new GridPos(x, y)));
+
+        // Sizes resolve on the physical pixel grid. The batch window is 640 x 480 and the panel scales by 0.73, so a size is off by up to
+        // one physical pixel (1.4 reference pixels) either way: a button of 192 resolves to 190.9, a label of 18 to 19.1.
+        protected const float Snap = 1.5f;
+
+        protected static IEnumerator Frames(int count)
+        {
+            for (int i = 0; i < count; i++) yield return null;
+        }
+
+        /// <summary>Selects the tower on the cell by a click and checks that it is the selected one.</summary>
+        protected Tower SelectByClick(int x, int y)
+        {
+            var cell = new GridPos(x, y);
+            Tower tower = Board.TowerOn(cell);
+            Assert.IsNotNull(tower, $"no tower on ({x},{y})");
+            ClickCell(x, y);
+            Assert.AreSame(tower, _input.SelectedTower, $"a click on ({x},{y}) selects its tower");
+            return tower;
+        }
+
+        /// <summary>
+        /// Sells the tower on the cell as a player does since 4c: a click selects it, then Sell. Sell's own click is
+        /// SellSelected (a batch run has no focused window; the button's click is in the panel tests).
+        /// </summary>
+        protected void SellByClick(int x, int y)
+        {
+            SelectByClick(x, y);
+            Assert.IsTrue(_input.SellSelected(), $"selling ({x},{y})");
+            Assert.IsNull(_input.SelectedTower, "a sale ends the selection");
+            Assert.IsFalse(Board.HasTower(new GridPos(x, y)), $"({x},{y}) sold");
+        }
 
         /// <summary>The line is shown from the frame after a message, by the class the style sheet fades on.</summary>
         protected bool MessageShown() => _label.ClassListContains("message--shown");
@@ -184,7 +223,7 @@ namespace ElementalTD.PlayModeTests
                 int gold = Battle.Gold;
                 if (buy) _input.Select(light ? 0 : 1);
                 int cost = _input.Tower.ToStats().Cost;
-                ClickCell(x, y);
+                if (buy) ClickCell(x, y); else SellByClick(x, y);
                 string where = $"tick {tick} ({x},{y}) {(buy ? "buy" : "sell")}";
                 if (buy)
                 {
@@ -212,8 +251,7 @@ namespace ElementalTD.PlayModeTests
             return gold;
         }
 
-        /// <summary>A real left click through the Input System, which the UI Toolkit panel and the placement input both read.</summary>
-        protected IEnumerator ClickScreen(Vector2 position)
+        private Mouse EnsureMouse()
         {
             if (Mouse.current == null) _addedMouse = InputSystem.AddDevice<Mouse>();
             // A batch run has no focused window; without this the Input System drops the events.
@@ -221,6 +259,21 @@ namespace ElementalTD.PlayModeTests
             InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
             Mouse mouse = Mouse.current;
             if (!mouse.enabled) InputSystem.EnableDevice(mouse); // the unfocused batch window disabled it
+            return mouse;
+        }
+
+        /// <summary>Puts the real pointer at a screen position for one frame; it stays there until it is moved. The placement input must be enabled to read it.</summary>
+        protected IEnumerator MovePointer(Vector2 position)
+        {
+            Mouse mouse = EnsureMouse();
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = position });
+            yield return null;
+        }
+
+        /// <summary>A real left click through the Input System, which the UI Toolkit panel and the placement input both read.</summary>
+        protected IEnumerator ClickScreen(Vector2 position)
+        {
+            Mouse mouse = EnsureMouse();
             InputSystem.QueueStateEvent(mouse, new MouseState { position = position });
             yield return null;
             InputSystem.QueueStateEvent(mouse, new MouseState { position = position }.WithButton(UnityEngine.InputSystem.LowLevel.MouseButton.Left));
@@ -228,6 +281,93 @@ namespace ElementalTD.PlayModeTests
             yield return null;
             InputSystem.QueueStateEvent(mouse, new MouseState { position = position });
             yield return null;
+        }
+
+        protected const string MaterialDir = "Assets/_Game/Presentation/Materials/";
+
+        protected static Color Hex(string hex)
+        {
+            Assert.IsTrue(ColorUtility.TryParseHtmlString("#" + hex, out Color color), hex);
+            return color;
+        }
+
+        protected static void AssertColor(Color expected, Color actual, string what, float tolerance = 1.5f / 255f)
+        {
+            Assert.AreEqual(expected.r, actual.r, tolerance, what + " red");
+            Assert.AreEqual(expected.g, actual.g, tolerance, what + " green");
+            Assert.AreEqual(expected.b, actual.b, tolerance, what + " blue");
+            Assert.AreEqual(expected.a, actual.a, tolerance, what + " alpha");
+        }
+
+        protected static Material LoadMaterial(string name)
+        {
+#if UNITY_EDITOR
+            Material material = UnityEditor.AssetDatabase.LoadAssetAtPath<Material>(MaterialDir + name + ".mat");
+#else
+            Material material = null;
+#endif
+            Assert.IsNotNull(material, name);
+            return material;
+        }
+
+        protected static string PathOf(Object asset)
+        {
+#if UNITY_EDITOR
+            return UnityEditor.AssetDatabase.GetAssetPath(asset);
+#else
+            return string.Empty;
+#endif
+        }
+
+        protected struct Area { public float X0, X1, Y0, Y1; }
+
+        /// <summary>The board area as a fraction of the screen, from the bottom-left.</summary>
+        protected Area BoardArea()
+        {
+            Rect root = Root.worldBound, area = Root.Q<VisualElement>("board-area").worldBound;
+            return new Area
+            {
+                X0 = (area.xMin - root.xMin) / root.width,
+                X1 = (area.xMax - root.xMin) / root.width,
+                Y0 = 1f - (area.yMax - root.yMin) / root.height,
+                Y1 = 1f - (area.yMin - root.yMin) / root.height,
+            };
+        }
+
+        protected void AssertLayout(string when)
+        {
+            const float e = 0.002f;
+            Area a = BoardArea();
+            Assert.Greater(a.X1 - a.X0, 0.1f, when + ": the board area has a size");
+            float cell = _map.CellSize, pad = 0.3f * cell;
+            float width = _map.Width * cell, depth = _map.Height * cell;
+            Vector3 lo = _camera.WorldToViewportPoint(new Vector3(-pad, 0f, -pad));
+            Vector3 hi = _camera.WorldToViewportPoint(new Vector3(width + pad, 0f, depth + pad));
+            Assert.GreaterOrEqual(lo.x, a.X0 - e, when + ": left");
+            Assert.LessOrEqual(hi.x, a.X1 + e, when + ": right");
+            Assert.GreaterOrEqual(lo.y, a.Y0 - e, when + ": bottom");
+            Assert.LessOrEqual(hi.y, a.Y1 + e, when + ": top");
+
+            bool widthBound = Mathf.Abs(lo.x - a.X0) < e && Mathf.Abs(hi.x - a.X1) < e;
+            bool heightBound = Mathf.Abs(lo.y - a.Y0) < e && Mathf.Abs(hi.y - a.Y1) < e;
+            Assert.IsTrue(widthBound || heightBound, $"{when}: the padded board touches the area on two opposite sides (x {lo.x:F3}..{hi.x:F3} of {a.X0:F3}..{a.X1:F3}, y {lo.y:F3}..{hi.y:F3} of {a.Y0:F3}..{a.Y1:F3})");
+
+            Vector3 centre = _camera.WorldToViewportPoint(new Vector3(width * 0.5f, 0f, depth * 0.5f));
+            Assert.AreEqual((a.X0 + a.X1) * 0.5f, centre.x, e, when + ": the board's centre is the area's centre on x");
+            Assert.AreEqual((a.Y0 + a.Y1) * 0.5f, centre.y, e, when + ": and on y");
+
+            // The padding is 0.3 cells on the side that binds.
+            Vector3 board0 = _camera.WorldToViewportPoint(Vector3.zero), board1 = _camera.WorldToViewportPoint(new Vector3(width, 0f, depth));
+            float cellX = (board1.x - board0.x) / _map.Width, cellY = (board1.y - board0.y) / _map.Height;
+            if (widthBound) Assert.AreEqual(0.3f * cellX, board0.x - a.X0, e, when + ": 0.3 cells of padding on x");
+            if (heightBound) Assert.AreEqual(0.3f * cellY, board0.y - a.Y0, e, when + ": 0.3 cells of padding on y");
+
+            // No bar covers a cell: the board's rectangle in panel coordinates misses both bars.
+            Rect root = Root.worldBound;
+            var boardRect = Rect.MinMaxRect(board0.x * root.width, (1f - board1.y) * root.height, board1.x * root.width, (1f - board0.y) * root.height);
+            Assert.IsFalse(boardRect.Overlaps(Root.Q<VisualElement>("top-bar").worldBound), when + ": the top bar covers no cell");
+            Assert.IsFalse(boardRect.Overlaps(Root.Q<VisualElement>("bottom-bar").worldBound), when + ": the bottom bar covers no cell");
+            Assert.IsFalse(boardRect.Overlaps(Root.Q<VisualElement>("side-column").worldBound), when + ": the side column covers no cell (4c-AC7)");
         }
 
         // ---- Elements, buttons and keys (4b)

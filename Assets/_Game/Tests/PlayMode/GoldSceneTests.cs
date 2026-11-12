@@ -31,7 +31,7 @@ namespace ElementalTD.PlayModeTests
             yield return null; // the label follows one frame after the gold
             Assert.AreEqual($"Gold {start - Cost}", GoldLabel.text);
 
-            ClickCell(2, 2);
+            SellByClick(2, 2);
             yield return null;
             Assert.AreEqual($"Gold {start}", GoldLabel.text);
             Assert.AreEqual(0, FindByName("Towers").childCount);
@@ -86,7 +86,7 @@ namespace ElementalTD.PlayModeTests
 
             // The tower has fired by now: the sale gives cost * percent / 100, not the full cost.
             int before = Battle.Gold;
-            ClickCell(1, 3);
+            SellByClick(1, 3);
             yield return null;
             int refund = Battle.Gold - before;
             Assert.AreEqual(Cost * 50 / 100, refund, "50 percent of the cost, rounded down");

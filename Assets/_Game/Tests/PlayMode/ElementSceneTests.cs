@@ -18,50 +18,6 @@ namespace ElementalTD.PlayModeTests
     /// </summary>
     public class ElementSceneTests : SceneTestBase
     {
-        private const string MaterialDir = "Assets/_Game/Presentation/Materials/";
-
-        private static Color Hex(string hex)
-        {
-            Assert.IsTrue(ColorUtility.TryParseHtmlString("#" + hex, out Color color), hex);
-            return color;
-        }
-
-        private static void AssertColor(Color expected, Color actual, string what, float tolerance = 1.5f / 255f)
-        {
-            Assert.AreEqual(expected.r, actual.r, tolerance, what + " red");
-            Assert.AreEqual(expected.g, actual.g, tolerance, what + " green");
-            Assert.AreEqual(expected.b, actual.b, tolerance, what + " blue");
-            Assert.AreEqual(expected.a, actual.a, tolerance, what + " alpha");
-        }
-
-        private static Material LoadMaterial(string name)
-        {
-#if UNITY_EDITOR
-            Material material = UnityEditor.AssetDatabase.LoadAssetAtPath<Material>(MaterialDir + name + ".mat");
-#else
-            Material material = null;
-#endif
-            Assert.IsNotNull(material, name);
-            return material;
-        }
-
-        private static string PathOf(Object asset)
-        {
-#if UNITY_EDITOR
-            return UnityEditor.AssetDatabase.GetAssetPath(asset);
-#else
-            return string.Empty;
-#endif
-        }
-
-        // Sizes resolve on the physical pixel grid (half pixels at the batch window's scale), so a size is judged to within one pixel.
-        private const float Snap = 1f;
-
-        private IEnumerator Frames(int count)
-        {
-            for (int i = 0; i < count; i++) yield return null;
-        }
-
         // ---- 4b-AC6 choosing
 
         [UnityTest]
@@ -122,9 +78,8 @@ namespace ElementalTD.PlayModeTests
             ClickCell(2, 2); // buys the selected tower
             Assert.AreEqual(1, _input.SelectedIndex, "a purchase keeps the selection");
             Assert.AreEqual(ElementOfTower(1), Board.TowerOn(new GridPos(2, 2)).Stats.Element, "the click bought the selected tower");
-            ClickCell(2, 2); // sells it
-            Assert.IsFalse(Board.HasTower(new GridPos(2, 2)));
-            Assert.AreEqual(1, _input.SelectedIndex, "a sale keeps the selection");
+            SellByClick(2, 2);
+            Assert.AreEqual(1, _input.SelectedIndex, "a sale keeps the tower to buy");
 
             ClickButton(buttons[0]);
             Assert.AreEqual(0, _input.SelectedIndex);
@@ -176,7 +131,7 @@ namespace ElementalTD.PlayModeTests
                 Assert.AreEqual($"{tower.ToStats().Cost} gold", button.Q<Label>(className: "tower-button__price").text, $"button {i} cost");
                 VisualElement swatch = button.Q<VisualElement>(className: "tower-button__swatch");
                 AssertColor(LookOf(tower.ToStats().Element).Tower.color, swatch.resolvedStyle.backgroundColor, $"button {i} swatch");
-                Assert.AreEqual(152f, button.resolvedStyle.width, Snap, $"button {i} width");
+                Assert.AreEqual(192f, button.resolvedStyle.width, Snap, $"button {i} width (the column's)");
                 Assert.AreEqual(56f, button.resolvedStyle.height, Snap, $"button {i} height");
                 Assert.AreEqual(22f, swatch.resolvedStyle.width, Snap, $"button {i} swatch width");
                 Assert.AreEqual(22f, swatch.resolvedStyle.height, Snap, $"button {i} swatch height");
@@ -234,7 +189,7 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(1, _input.SelectedIndex);
             Assert.IsTrue(buttons[1].ClassListContains("tower-button--selected"));
 
-            ClickCell(3, 2); // sells a tower that never fired: the full cost back
+            SellByClick(3, 2); // a tower that never fired: the full cost back
             yield return Frames(2);
             foreach (Button b in buttons)
             {
@@ -251,12 +206,12 @@ namespace ElementalTD.PlayModeTests
         {
             if (aspect > 0f) _camera.aspect = aspect;
             yield return Frames(3);
-            ClickCell(2, 2); // a tower to sell, if a click could reach the board
+            ClickCell(2, 2); // a tower to select or sell, if a click could reach the board
             int gold = Battle.Gold, towers = Board.TowerCount;
             Transform hover = FindByName("Hover");
             Transform disc = FindByName("RangeDisc");
 
-            foreach (string barName in new[] { "top-bar", "bottom-bar" })
+            foreach (string barName in new[] { "top-bar", "bottom-bar", "side-column" })
             {
                 _input.Hover(ScreenOf(new GridPos(4, 4))); // the pointer is on the board first
                 yield return null;
@@ -285,6 +240,24 @@ namespace ElementalTD.PlayModeTests
             ClickButton(TowerButtons()[1]);
             Assert.AreEqual(1, _input.SelectedIndex);
             Assert.AreEqual((towers, gold), (Board.TowerCount, Battle.Gold), "a click on a button changes the selection and nothing on the board");
+
+            // 4c-AC4 and AC7: the panel's column, Sell, Upgrade and the close button take the pointer too, with a tower selected.
+            Tower selected = SelectByClick(2, 2);
+            yield return Frames(2);
+            Assert.AreEqual(DisplayStyle.Flex, Root.Q<VisualElement>("tower-panel").resolvedStyle.display);
+            foreach (string name in new[] { "side-column", "sell-button", "upgrade-button", "panel-close" })
+            {
+                Vector2 centre = ScreenCentreOf(Root.Q<VisualElement>(name));
+                _input.Hover(centre);
+                _input.Click(centre);
+                yield return null;
+                Assert.IsFalse(_input.HasHoverCell, $"{name}: no hover cell");
+                Assert.IsFalse(hover.gameObject.activeSelf, $"{name}: no hover");
+                Assert.AreSame(selected, _input.SelectedTower, $"{name}: a click there keeps the selection");
+                Assert.IsTrue(disc.gameObject.activeSelf && FindByName("SelectionFrame").gameObject.activeSelf, $"{name}: the selected tower's frame and disc stay");
+                Assert.AreEqual((towers, gold), (Board.TowerCount, Battle.Gold), $"{name}: nothing bought or sold");
+                Assert.IsFalse(MessageShown(), $"{name}: no refusal");
+            }
         }
 
         // ---- 4b-AC9 colours
@@ -479,56 +452,6 @@ namespace ElementalTD.PlayModeTests
 
         // ---- 4b-AC16 layout
 
-        private struct Area { public float X0, X1, Y0, Y1; }
-
-        /// <summary>The board area as a fraction of the screen, from the bottom-left.</summary>
-        private Area BoardArea()
-        {
-            Rect root = Root.worldBound, area = Root.Q<VisualElement>("board-area").worldBound;
-            return new Area
-            {
-                X0 = (area.xMin - root.xMin) / root.width,
-                X1 = (area.xMax - root.xMin) / root.width,
-                Y0 = 1f - (area.yMax - root.yMin) / root.height,
-                Y1 = 1f - (area.yMin - root.yMin) / root.height,
-            };
-        }
-
-        private void AssertLayout(string when)
-        {
-            const float e = 0.002f;
-            Area a = BoardArea();
-            Assert.Greater(a.X1 - a.X0, 0.1f, when + ": the board area has a size");
-            float cell = _map.CellSize, pad = 0.3f * cell;
-            float width = _map.Width * cell, depth = _map.Height * cell;
-            Vector3 lo = _camera.WorldToViewportPoint(new Vector3(-pad, 0f, -pad));
-            Vector3 hi = _camera.WorldToViewportPoint(new Vector3(width + pad, 0f, depth + pad));
-            Assert.GreaterOrEqual(lo.x, a.X0 - e, when + ": left");
-            Assert.LessOrEqual(hi.x, a.X1 + e, when + ": right");
-            Assert.GreaterOrEqual(lo.y, a.Y0 - e, when + ": bottom");
-            Assert.LessOrEqual(hi.y, a.Y1 + e, when + ": top");
-
-            bool widthBound = Mathf.Abs(lo.x - a.X0) < e && Mathf.Abs(hi.x - a.X1) < e;
-            bool heightBound = Mathf.Abs(lo.y - a.Y0) < e && Mathf.Abs(hi.y - a.Y1) < e;
-            Assert.IsTrue(widthBound || heightBound, $"{when}: the padded board touches the area on two opposite sides (x {lo.x:F3}..{hi.x:F3} of {a.X0:F3}..{a.X1:F3}, y {lo.y:F3}..{hi.y:F3} of {a.Y0:F3}..{a.Y1:F3})");
-
-            Vector3 centre = _camera.WorldToViewportPoint(new Vector3(width * 0.5f, 0f, depth * 0.5f));
-            Assert.AreEqual((a.X0 + a.X1) * 0.5f, centre.x, e, when + ": the board's centre is the area's centre on x");
-            Assert.AreEqual((a.Y0 + a.Y1) * 0.5f, centre.y, e, when + ": and on y");
-
-            // The padding is 0.3 cells on the side that binds.
-            Vector3 board0 = _camera.WorldToViewportPoint(Vector3.zero), board1 = _camera.WorldToViewportPoint(new Vector3(width, 0f, depth));
-            float cellX = (board1.x - board0.x) / _map.Width, cellY = (board1.y - board0.y) / _map.Height;
-            if (widthBound) Assert.AreEqual(0.3f * cellX, board0.x - a.X0, e, when + ": 0.3 cells of padding on x");
-            if (heightBound) Assert.AreEqual(0.3f * cellY, board0.y - a.Y0, e, when + ": 0.3 cells of padding on y");
-
-            // No bar covers a cell: the board's rectangle in panel coordinates misses both bars.
-            Rect root = Root.worldBound;
-            var boardRect = Rect.MinMaxRect(board0.x * root.width, (1f - board1.y) * root.height, board1.x * root.width, (1f - board0.y) * root.height);
-            Assert.IsFalse(boardRect.Overlaps(Root.Q<VisualElement>("top-bar").worldBound), when + ": the top bar covers no cell");
-            Assert.IsFalse(boardRect.Overlaps(Root.Q<VisualElement>("bottom-bar").worldBound), when + ": the bottom bar covers no cell");
-        }
-
         [UnityTest]
         public IEnumerator S4b_AC16_The_Board_Is_Framed_Inside_The_Board_Area_At_The_Games_Aspect_And_At_1_And_2_5(
             [Values(0f, 1f, 2.5f)] float aspect)
@@ -568,16 +491,32 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(FontStyle.Bold, Root.Q<Label>("wave-label").resolvedStyle.unityFontStyleAndWeight);
             Assert.AreEqual(24f, Root.Q<Label>("lives-label").resolvedStyle.marginLeft, Snap, "lives sit 24 from the wave line");
             Assert.AreEqual(16f, _label.resolvedStyle.marginLeft, Snap, "the message line sits 16 from the gold");
-            // The bars have no background: the camera background shows.
-            Assert.AreEqual(0f, Root.Q<VisualElement>("top-bar").resolvedStyle.backgroundColor.a);
-            Assert.AreEqual(0f, Root.Q<VisualElement>("bottom-bar").resolvedStyle.backgroundColor.a);
-            // The message line lies inside the bottom bar, the tower buttons at its right.
+            // The bars and the column have the camera's background colour (1.3, 1.5).
+            foreach (string name in new[] { "top-bar", "bottom-bar", "side-column" })
+                AssertColor(Hex("2E2C29"), Root.Q<VisualElement>(name).resolvedStyle.backgroundColor, name + " background");
+            // The message line lies inside the bottom bar; from 4c the tower buttons are stacked in the side column.
             Rect bottom = Root.Q<VisualElement>("bottom-bar").worldBound;
             Assert.IsTrue(bottom.Contains(_label.worldBound.center));
+            Assert.Greater(_label.worldBound.xMin, GoldLabel.worldBound.xMax);
+            Rect root = Root.worldBound, top = Root.Q<VisualElement>("top-bar").worldBound;
+            VisualElement column = Root.Q<VisualElement>("side-column");
+            Rect col = column.worldBound;
+            Assert.AreEqual(216f, col.width, Snap, "the column is 216 wide");
+            Assert.AreEqual(root.xMax, col.xMax, Snap, "at the right edge");
+            Assert.AreEqual(top.yMax, col.yMin, Snap, "under the top bar");
+            Assert.AreEqual(bottom.yMin, col.yMax, Snap, "over the bottom bar");
+            Assert.AreEqual(12f, column.resolvedStyle.paddingLeft, Snap, "padding 12");
             Button[] buttons = TowerButtons();
-            Assert.Greater(buttons[0].worldBound.xMin, GoldLabel.worldBound.xMax);
-            Assert.AreEqual(12f, buttons[1].worldBound.xMin - buttons[0].worldBound.xMax, Snap, "buttons 12 apart");
-            Assert.AreEqual(bottom.xMax - 16f, buttons[1].worldBound.xMax, Snap, "right-aligned with 16 of padding");
+            Assert.AreEqual(2, buttons.Length);
+            foreach (Button b in buttons)
+            {
+                Assert.AreEqual(192f, b.resolvedStyle.width, Snap, "192 wide");
+                Assert.AreEqual(56f, b.resolvedStyle.height, Snap, "56 high");
+                Assert.AreEqual(col.xMin + 12f, b.worldBound.xMin, Snap, "at the column's padding");
+                Assert.IsTrue(col.Contains(b.worldBound.center), "inside the column");
+            }
+            Assert.AreEqual(col.yMin + 12f, buttons[0].worldBound.yMin, Snap, "the first starts at the top of the column");
+            Assert.AreEqual(8f, buttons[1].worldBound.yMin - buttons[0].worldBound.yMax, Snap, "stacked 8 apart");
         }
 
         [UnityTest]
@@ -826,7 +765,7 @@ namespace ElementalTD.PlayModeTests
         // ---- 4b-AC14 allocation of the views
 
         [UnityTest]
-        public IEnumerator S4b_AC14_The_Views_Allocate_Nothing_On_A_Frame_Where_Nothing_Changes()
+        public IEnumerator S4b_AC14_And_S4c_AC11_The_Views_Allocate_Nothing_On_A_Frame_Where_Nothing_Changes_With_A_Tower_Selected()
         {
             // A busy scene: towers of both elements, enemies of one wave, shots in flight, a hover on a cell.
             _input.Select(1);
@@ -834,8 +773,11 @@ namespace ElementalTD.PlayModeTests
             _input.Select(0);
             ClickCell(1, 5);
             yield return TickUntil(() => Battle.ProjectileCount > 0 && Board.EnemyCount > 1, 3000, 20);
-            _input.Hover(ScreenOf(new GridPos(1, 3)));
+            ClickCell(1, 3); // 4c-AC11: a tower is selected and the panel is open, its Sell value already at the refund
+            Assert.IsNotNull(_input.SelectedTower);
+            _input.Hover(ScreenOf(new GridPos(8, 6)));
             yield return Frames(3);
+            Assert.AreEqual(DisplayStyle.Flex, Root.Q<VisualElement>("tower-panel").resolvedStyle.display, "the panel is open");
 
             var views = new MonoBehaviour[]
             {
@@ -845,6 +787,7 @@ namespace ElementalTD.PlayModeTests
                 Object.FindAnyObjectByType<TowerBarView>(),
                 Object.FindAnyObjectByType<MessageView>(),
                 Object.FindAnyObjectByType<BoardCameraFramer>(),
+                Object.FindAnyObjectByType<TowerPanelView>(),
             };
             foreach (MonoBehaviour view in views) Assert.IsNotNull(view);
 
