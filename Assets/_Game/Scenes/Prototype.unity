@@ -757,7 +757,7 @@ MonoBehaviour:
   heightCells: 0.7
   risePixels: 20
   opaqueShare: 0.6
-  topLimitPixels: 36
+  topLimitPixels: 78
   spawnOffsets:
   - {x: 0, y: 0}
   - {x: -12, y: -6}

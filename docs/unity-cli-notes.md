@@ -28,6 +28,7 @@ What the team has learned about driving this project with the `unity` CLI. Add a
 - Another agent saving a script in the worktree during Play reloads the domain, and every view then throws a `NullReferenceException` each frame. Call `AssetDatabase.DisallowAutoRefresh()` before Play and `AllowAutoRefresh()` after Stop.
 - `capture game_view --output-path <png>` works in Play and includes the UI Toolkit HUD. Queued `KeyboardState` and `MouseState` events, each sent from its own `script eval` (press, then release), reach both the game and UI Toolkit.
 - A malformed `unity command` writes "No command named …" errors to the editor console. Clear it (`unity command console clear`) before a clean-compile check.
+- Read the console with `unity command console get --level warn` (errors and warnings only); its `groundTruth` line gives the error and warning counts and whether compilation failed. It has no `--types` parameter.
 - Set the Game view to the canvas size with `PlayModeWindow.SetCustomRenderingResolution(960, 540, "<name>")` in a `script eval`. `capture game_view` then still returns 1280 x 720; `ScreenCapture.CaptureScreenshot(<absolute png>)` from a `script eval` in Play saves the real size with the HUD.
 - In a `script eval`, `Screen.width` and `Screen.height` report the editor window (1414 x 794 seen), not the game view; `Camera.main.pixelWidth` and `pixelHeight` give the game view's size.
 - `editor quit --save true` rewrote `ProjectSettings/TimeManager.asset` into a newer format with the same timestep. Revert it when the task did not change it.

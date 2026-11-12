@@ -474,7 +474,8 @@ Button#sell-button.sell-button--settle {
     bottom: auto;
 }
 
-/* Looks of text over the board: visual direction, sections 2 and 1.3. Every one has a black outline of 1 and no shadow. */
+/* Looks of text over the board: visual direction, sections 2 and 1.3. Black outline and no shadow; the width is 1 here
+   (the refusal) and each kind class sets its own, which wins by coming later. */
 
 .floating-text {
     -unity-text-outline-width: 1px;
@@ -486,24 +487,31 @@ Button#sell-button.sell-button--settle {
     font-size: 16px;
     -unity-font-style: normal;
     color: rgb(179, 172, 160);
+    -unity-text-outline-width: 1px;
 }
 
 .damage-number--normal {
     font-size: 20px;
     -unity-font-style: bold;
     color: rgb(255, 255, 255);
+    -unity-text-outline-width: 2px;
 }
 
 .damage-number--strong {
     font-size: 26px;
     -unity-font-style: bold;
     color: rgb(255, 194, 61);
+    -unity-text-outline-width: 2px;
 }
 
 .immune-word {
-    font-size: 16px;
-    -unity-font-style: normal;
-    color: rgb(189, 189, 189);
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: rgb(217, 212, 200);
+    background-color: rgba(30, 28, 26, 0.8);
+    padding: 0 4px;
+    border-radius: 3px;
+    -unity-text-outline-width: 0;
 }
 
 #refusal {
