@@ -16,7 +16,7 @@ Each scenario has its own look; element colours (1.2) are the same in all of the
 | Surface | Must pass |
 |---|---|
 | Floor | L between 0.10 and 0.36 (contrast at least 2.0 with both the Light and the Shadow body); S at most 0.20, so Fire and Water, which share the floor's value, read by saturation; not green, red, orange or blue in hue |
-| Wall | contrast at least 1.8 with the floor; S at most 0.25 |
+| Wall | contrast at least 2.5 with the floor; S at most 0.25 |
 | Spawn, exit | achromatic; contrast at least 2.5 with the floor and with each other |
 | Background | contrast at least 3.0 with the floor; at least 7.0 with `#FFFFFF` (HUD text) |
 
@@ -27,7 +27,7 @@ Each scenario has its own look; element colours (1.2) are the same in all of the
 | Surface | Before | Stone | Test |
 |---|---|---|---|
 | Free cell (`Cell_Free`) | `#BFBFBF` | `#968F7F` | L 0.28, S 0.15: passes |
-| Wall (`Cell_Blocked`) | `#333340` | `#5E5850` | 2.2: passes |
+| Wall (`Cell_Blocked`) | `#333340` | `#4D4943` | 2.8: passes |
 | Camera background (grid lines and the area around the board) | taupe from the clear | solid `#2E2C29` | 4.3 and 13.9: passes |
 | Spawn, exit | `#33BF4D`, `#D94033` | the rings of section 3 | green and red fail (1.3 and 1.4 with the floor, read by hue only); the rings pass (2.9 and 5.7) |
 
@@ -37,7 +37,7 @@ Accepted for testing; Eduardo judges them in the build. One row per base element
 | Element | Body | Projectile | UI | Value | Extra |
 |---|---|---|---|---|---|
 | **Light** | `#FFE27A` | `#FFF6CC` | `#FFE27A` | brightest | body emission `#5C4A12`: every face stays bright, even in shade; no halo or bloom wanted |
-| **Shadow** | `#3B1F5C` | `#2A1340` | `#B48CFF` | darkest | smoothness 0: matte |
+| **Shadow** | `#3B1F5C` | `#2A1340` | `#B48CFF` | darkest | |
 | Air | `#BDF2EC` | `#FFFFFF` | `#BDF2EC` | bright, cool | |
 | Fire | `#F06A2B` | `#FFB347` | `#FF8A4C` | mid, warm | reads by saturation against the stone; recheck when Fire is built |
 | Water | `#1F5FC0` | `#7CC4FF` | `#6DB4FF` | mid-dark, cool | |
@@ -46,6 +46,7 @@ Accepted for testing; Eduardo judges them in the build. One row per base element
 Hybrids get their own row when they are built (Nature green, Lightning, Hellfire, Poison); each must pass the scenario test of 1.1 like the base elements.
 
 - Tower and enemy of the same element share the body colour; shape tells them apart (cube 0.7 cells against a flattened sphere 0.5 cells).
+- Bodies are matte (smoothness 0): a specular highlight whitens Light into its own projectile colour.
 - Projectile: sphere **0.25 cells** (was 0.2), Unlit, no shadow, at the height it has now.
 - One material per colour (ADR 0002), for example `Tower_Light`, `Enemy_Shadow`, `Projectile_Light`.
 
@@ -78,7 +79,7 @@ Nothing permanent sits over the board. The camera frames the board inside the sc
 
 **Placement refusal at the cell** (the damage-numbers step; until then it uses the message line): One pooled label, 18, bold, `#FFFFFF`, outline 1 `#000000`. Its bottom centre starts 0.6 cells above the cell centre (screen up), rises 16 over 1.5 s linear, and fades to 0 over the last 0.4 s; clamped 8 inside the board area. A new refusal restarts it. Texts are unchanged.
 
-**End screen**: overlay `rgba(20, 19, 17, 0.8)` over everything. Title 48, bold: `Victory` in `#FFC23D`, `Defeat` in `#FF6B5E`. 24 below, the Restart button: padding 10 32, background `#45413B`, border 2 `#FFFFFF`, radius 6, text 24 bold `#FFFFFF`; hover background `#57524A`.
+**End screen**: overlay `rgba(20, 19, 17, 0.8)` over everything. Title 48, bold: `Victory` in `#FFC23D`, `Defeat` in `#FF6B5E`. The countdown and the message line hide when it shows; the rest of the HUD stays under it. 24 below, the Restart button: padding 10 32, background `#45413B`, border 2 `#FFFFFF`, radius 6, text 24 bold `#FFFFFF`; hover background `#57524A`.
 
 ### 1.4 Hover and range
 The hover is a flat quad on the cell, **under** the tower, so it never washes a tower out; under a tower only its rim shows.
@@ -163,11 +164,11 @@ The closed look, in values. Numbers are pooled; nothing allocates per hit.
 | Wall height | change, low priority: blocks 0.5 cells high on a full 1.0-cell footprint | walls cast shadows and join into one wall, the Bad North read of terrain |
 | Tower cube 0.7, Lit, casts shadows | keep shape; colour per element (1.2) | |
 | Enemy flattened sphere 0.5 x 0.25 | keep shape; colour per element (1.2) | |
-| Directional light, real-time shadows | keep | shadows give the cubes their volume from straight above |
+| Directional light, real-time shadows | keep, with shadow strength 0.5; only towers cast shadows | shadows give the cubes their volume; at full strength a Shadow enemy disappears in a tower's shadow, and enemy shadows read as dark blobs |
 | Health bar 0.8 x 0.12 cells, fill `#33D940`, back `#1A1A1A` | keep colours; hide the bar until the enemy first takes damage | twenty full bars are noise; a bar appears where something is happening |
 | Projectile pink `#FF33E6`, 0.2 cells | change (1.2) | the colour said nothing; the element is the point |
 | Hover white α 0.5 above the tower | change (1.4) | it washed the tower out |
-| Range disc light blue α 0.15 | change (1.4); later a 0.05-cell edge line at α 0.6 | the edge shows the exact reach on a busy board |
+| Range disc light blue α 0.15 | change (1.4); later (parked) a 0.05-cell edge line at α 0.6, a round mesh of 64 sides and the disc clipped to the board | the edge shows the exact reach on a busy board; the built-in cylinder shows its 20 facets, and the part beyond the board means nothing |
 | Placement message, top centre over the board | change (1.3) | covered the top rows, far from where the player looked |
 | HUD text with outline and shadow, stacked top-left | change (1.3) | covered the top-left cells |
 | End screen and default Restart button | change (1.3) | the title said nothing by colour; the button looked like an editor control |

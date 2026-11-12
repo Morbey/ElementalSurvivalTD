@@ -99,7 +99,7 @@ Ideas raised mid-slice, one line each. Review them when a slice closes.
 - A click uses the pointer position of the frame that handles it, not of the press, so a click followed by a fast move inside one long frame lands on the wrong cell.
 - The run HUD (wave, lives, countdown) is drawn over the top-left cells of the board. Move it off the grid when the HUD gets its first real layout.
 - Health bars hidden until the enemy first takes damage (visual direction 3): a few lines in the enemy view.
-- Walls as raised blocks, and a thin edge line on the range disc (visual direction 3).
+- Walls as raised blocks; and for the range disc a thin edge line, a round mesh instead of the 20-sided cylinder, and clipping to the board so it does not spill behind the top bar (visual direction 3).
 - Spawn and exit as rings (visual direction 3, open choice 2), when the first green or red element is built.
 - Wave health comes from one enemy asset per wave. Replace it with a per-wave modifier when the modifier system exists.
 - The cells beside a diagonal lane are refused while an enemy is on that step, about 70 percent of a wave. If it annoys in play, queue the placement until the cell is free.
