@@ -22,7 +22,7 @@
   - A tower can only be placed if the spawn and every living enemy can still reach the exit, and never on the spawn cell, the exit cell or a cell an enemy occupies. Otherwise the game refuses it and tells the player why.
   - Towers can be sold, so the player can rework the board freely. The refund is total until the tower fires its first shot and partial after that.
   - A click on a tower selects it: the tower is highlighted and the player is offered Upgrade and Sell. Sell shows the gold it returns, and the value shown is always what a click pays at that moment: it drops the moment the tower fires its first shot, also while the pointer rests on Sell. (Upgrade is shown and does nothing yet.)
-  - The selection ends with Escape, a click on empty ground (which then buys nothing), a sale, or choosing a tower to buy; a click on another tower selects that one.
+  - The selection ends with the panel's close button, Escape, a click on empty ground (which then buys nothing), a sale, or choosing a tower to buy; a click on another tower selects that one.
   - The same panel later shows what the tower is: damage type, damage per shot, shots per second, kind of shot (single target, area and so on) and the synergies the player already knows.
 - Economy: gold per kill, a gold bonus for each wave survived, and interest at the start of each wave, with a cap that rises through talents.
   - The wave bonus is paid when the last enemy of that wave has left the board, killed or not, to a player who is still alive. It does not depend on kills, so a leak does not starve the next wave.

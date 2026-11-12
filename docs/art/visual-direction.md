@@ -2,7 +2,7 @@
 
 The single home of how the game looks and reads. Rules and numbers live in `docs/design/DECISIONS.md`; this file only says how they are shown.
 
-**Units.** UI sizes are reference pixels of the panel (960 x 600, scale with screen size, match 0.5): multiply by about 0.78 on the 750 x 469 browser canvas and 1.9 at 1920 x 1080. World sizes are in cells. Colours are sRGB hex; "α" is alpha.
+**Units.** UI sizes are reference pixels of the panel (reference 960 x 600, scale with screen size, match 0.5). The browser canvas is 960 x 540 from 4c (UI scale 0.95; 960 x 600 at 1.0 before); at 1920 x 1080 the scale is 1.9. World sizes are in cells. Colours are sRGB hex; "α" is alpha.
 
 **Three checks for every look:** it reads with twenty enemies and twenty towers on screen; it never relies on hue alone (value, size, shape or a word carries the same meaning); it is cheap on WebGL (one material asset per colour, pooled objects, no per-frame allocation).
 
@@ -51,7 +51,7 @@ Hybrids get their own row when they are built (Nature green, Lightning, Hellfire
 - One material per colour (ADR 0002), for example `Tower_Light`, `Enemy_Shadow`, `Projectile_Light`.
 
 ### 1.3 HUD
-Nothing permanent sits over the board. The camera frames the board inside the screen area between the top bar and the bottom bar, with **0.3 cells** of padding on every side (about 39 px per cell on the browser canvas, against 42 now). The bars have no background: they sit on the camera background.
+Nothing permanent sits over the board. The camera frames the board inside the screen area between the top bar and the bottom bar, with **0.3 cells** of padding on every side (a cell is 50.4 px on the 960 x 600 canvas of 4b, 44.8 px with the side column of 4c). The bars, and from 4c the side column, have background `#2E2C29`, the camera background's colour: they look like no background, but the range disc never shows under their text. Check on a screenshot that the two colours match.
 
 **Text style** (`.hud-text`): bold, `#FFFFFF`, no outline and no shadow (the background is dark).
 
@@ -101,19 +101,19 @@ No sale look on towers in 4b: a click still sells there, but 4c replaces it a st
 **Selection frame**: a square frame of four bars around the selected tower's cell, outer 1.1 cells, bar width 0.08 cells, at height 0.03, Unlit, opaque `#FFFFFF` (contrast 3.2 with the stone floor). It lies outside the tile, over the grid lines, with a ring of floor between it and the tower, so it never touches or tints the tower: Light and Shadow keep their contrast with the floor. It differs from the hover by being opaque, larger than the cell and a frame, not a fill. One pooled frame; no pulse.
 
 **Side column** (from 4c). The panel must later hold four or five stats and a list of synergies, which a 72-high bar cannot. So 4c adds a column on the right, width **216**, between the top and the bottom bar, padding 12, no background; the camera frames the board in the area left of it. It holds the buy buttons while no tower is selected and the tower panel while one is. Nothing in it lies over a cell, so the input rule of 4b holds.
-- Cost: on a 16:9 screen the board loses nothing (it is height-bound); on the 16:10 browser canvas a cell goes from about 39 to 35 px. A bottom bar tall enough for the panel would cost height on every screen; a panel beside the tower would cover cells and enemies and bring back the click rule.
-- Buy buttons in the column: the tower button of 1.3, 192 x 56, stacked 8 apart from the top; six take 376 of the 488 available. The compact form is no longer needed.
+- Cost: at 960 wide a cell goes from 50.4 to 44.8 px, at 16:10 and 16:9 alike; only a wider canvas wins it back. A bottom bar tall enough for the panel would cost height on every screen; a panel beside the tower would cover cells and enemies and bring back the click rule.
+- Buy buttons in the column: the tower button of 1.3, 192 x 56, stacked 8 apart from the top; six take 376 of the 429 inside the column at any 16:9 size (460 at 16:10). The compact form is no longer needed.
 
 **Tower panel** (`#tower-panel`), stacked from the top of the column; the actions sit at its bottom:
-- **Header**: element tile 28 x 28 (1.3) and, 8 to its right, `Light tower`, 18, bold, `#FFFFFF`.
+- **Header**: element tile 28 x 28 (1.3) without its letter, like the tower button's swatch, because the name stands beside it; 8 to its right, `Light tower`, 18, bold, `#FFFFFF`; at the row's right, the close button: 28 x 28, no background or border, `×` 20 bold `#B5AFA3`, hover and pressed `#FFFFFF`. A click on it ends the selection. It is the visible way out: Escape may leave the browser's full screen instead of reaching the game, and a click on the ground does not say that it closes.
 - **Stats**, 12 below: one row each, height 22, label left 16 regular `#B5AFA3`, value right 16 bold `#FFFFFF`. In 4c: `Element` (the name in its UI colour), `Damage` `10`, `Shots/s` `1.5`, `Range` `2.5`. Later rows (kind of shot, and so on) append below. Recommended for 4c: the values exist, it costs four labels, and the panel gets its real shape now.
 - **Synergies**, 16 below: heading `Synergies`, 14 bold `#B5AFA3`, then rows of height 28, up to six. In 4c it holds one line, `Found by playing the scenarios`, 14 regular `#8A8478`, marking the empty place.
   - Known synergy: a 24 x 24 icon in its colours and its name, 16 bold `#FFFFFF`.
   - Not yet discovered, if shown: a 24 x 24 tile `#3A3733` with border 1 `#6B655A` and a `?` (14, bold, `#8A8478`), with no name.
-- **Actions**, at the bottom of the column: Upgrade and Sell side by side, each 90 x 56, 12 apart.
+- **Actions**, at the bottom of the column: Upgrade 80 x 56 and, 12 to its right, Sell taking the rest (100 x 56), so a three-digit line such as `+125 of 250` fits (about 80 of the 84 inside Sell's border and padding 0 6). Recheck when the first three-digit cost is built.
 - **Upgrade**, not available yet: background `#3A3733`, border 2 `#4F4A43`, radius 6; `Upgrade` 18 bold over `Soon` 14 regular, both `#8A8478`. Takes no clicks and has no hover or pressed look, so it reads as planned, not broken.
 - **Sell**: background `#45413B`, radius 6; hover and pressed `#57524A`. `Sell` 18 bold `#FFFFFF` over the value line. A click sells at once and ends the selection.
-- Height: about 28 + 12 + 88 + 16 + 18 + 168 + 16 + 56 = 402 of the 488 available.
+- Height: header, stats and actions keep their size; the synergies area takes what is left (flex-grow 1, flex-shrink 1, min-height 0, overflow hidden) and becomes a vertical scroll when its rows outgrow it. 4c needs about 262 of the 429; the full panel, 28 + 12 + 88 + 16 + 18 + 168 + 16 + 56 = 402, fits, with a fifth stat row by 5.
 
 **Sell value**, always what a click pays now. The value line is live while the panel is open, hovered or not: it follows the tower's state, never a pointer event.
 
@@ -124,9 +124,9 @@ No sale look on towers in 4b: a click still sells there, but 4c replaces it a st
 
 The two looks differ by colour, by the gold border and by the ` of 40` tail, not only by the number.
 
-**The drop**, when the tower fires its first shot while the panel is open: on the frame after, the line switches to the refund, the number turns `#FF6B5E` and pops (scale 1.4 to 1.0 over 0.25 s, ease-out), the Sell border turns 2 `#FF6B5E`; after 0.25 s both ease to the refund look over 0.5 s (USS transition). 0.75 s in all, so a resting pointer still sees it happen. The two texts are built when the tower is selected; the drop only swaps them.
+**The drop**, when the tower fires its first shot while the panel is open: on the frame after, the line switches to the refund and holds the pop look for one frame: number `#FF6B5E` at scale 1.4 (about its centre), Sell border 2 `#FF6B5E`, no transition. Then the settle look: the scale eases to 1.0 over 0.25 s, ease-out; the number's and the border's colours ease to the refund look over 0.5 s after a delay of 0.25 s. 0.75 s in all, so a resting pointer still sees it happen. A text is built when the value polled from the game changes, never per frame.
 
-**Ending the selection**: a click on empty ground ends it and does not buy (the next click buys); Escape ends it; a click on another tower selects that one; a key 1 or 2 ends it and selects that tower to buy; selling ends it. Waves do not end it.
+**Ending the selection**: a click on empty ground ends it and does not buy (the next click buys); the panel's close button ends it; Escape ends it; a click on another tower selects that one; a key 1 or 2 ends it and selects that tower to buy; selling ends it. Waves do not end it.
 
 **While a tower is selected**: the range disc shows the selected tower's range and stays there wherever the pointer is; the hover still shows on other cells, without a disc of its own. Ending the selection brings back the buy buttons, with the selected tower to buy unchanged.
 
@@ -152,7 +152,7 @@ The closed look, in values. Numbers are pooled; nothing allocates per hit.
 **Changes to the closed look**, each a clarification it left open:
 1. A critical keeps the colour and the relative size of its kind (a strong critical is a large gold `32!`), so the "!" never hides whether the hit was strong or weak.
 2. The immune word is per enemy, not per tower and enemy: three towers wasting shots on one enemy show one word, not three.
-3. The weak number is dimmed by colour, not opacity, so its outline stays solid; its size floor is 16 (12.5 px on the browser canvas).
+3. The weak number is dimmed by colour, not opacity, so its outline stays solid; its size floor is 16 (15 px on the browser canvas).
 4. Weak numbers are the first to go under load: they carry the least decision.
 
 ## 3. Review of what is on screen
@@ -168,7 +168,7 @@ The closed look, in values. Numbers are pooled; nothing allocates per hit.
 | Health bar 0.8 x 0.12 cells, fill `#33D940`, back `#1A1A1A` | keep colours; hide the bar until the enemy first takes damage | twenty full bars are noise; a bar appears where something is happening |
 | Projectile pink `#FF33E6`, 0.2 cells | change (1.2) | the colour said nothing; the element is the point |
 | Hover white α 0.5 above the tower | change (1.4) | it washed the tower out |
-| Range disc light blue α 0.15 | change (1.4); later (parked) a 0.05-cell edge line at α 0.6, a round mesh of 64 sides and the disc clipped to the board | the edge shows the exact reach on a busy board; the built-in cylinder shows its 20 facets, and the part beyond the board means nothing |
+| Range disc light blue α 0.15 | change (1.4); later (parked) a 0.05-cell edge line at α 0.6, a round mesh of 64 sides and the disc clipped to the board (the bars' and the column's background already hide it under the HUD) | the edge shows the exact reach on a busy board; the built-in cylinder shows its 20 facets, and the part beyond the board means nothing |
 | Placement message, top centre over the board | change (1.3) | covered the top rows, far from where the player looked |
 | HUD text with outline and shadow, stacked top-left | change (1.3) | covered the top-left cells |
 | End screen and default Restart button | change (1.3) | the title said nothing by colour; the button looked like an editor control |
