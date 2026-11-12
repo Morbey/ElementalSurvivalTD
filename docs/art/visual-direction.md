@@ -64,9 +64,7 @@ Nothing permanent sits over the board. The camera frames the board inside the sc
 
 **Bottom bar**: anchored bottom, full width, height **72**, padding 0 16, one row, centred vertically. Economy and building live here.
 - Left: `Gold 115`, 24, `#FFC23D`.
-- 16 to its right, the message line, 20, bold, one label shared by two kinds; a newer message replaces the one shown, and each fades to opacity 0 over 0.3 s (USS transition) at the end of its time:
-  - wave bonus `Wave 3 survived +25`: `#FFC23D`, 3.0 s;
-  - placement refusal, until it moves to the refused cell (below): `#FFFFFF`, 2.0 s, the texts of today.
+- 16 to its right, the message line, 20, bold: the wave bonus `Wave 3 survived +25`, `#FFC23D`, for 3.0 s, then a fade to opacity 0 over 0.3 s (USS transition); a newer one replaces it. A refusal never shows here: it shows at the cell (below).
 - Right, right-aligned: the tower buttons, 12 apart.
 - From 4c the tower buttons move to the side column (1.5), where six fit; the bottom bar keeps the gold and the message line.
 
@@ -77,7 +75,7 @@ Nothing permanent sits over the board. The camera frames the board inside the sc
 - Selected: background `#6B655A`, border 3 `#FFFFFF` (padding 0 9 so the size holds). Exactly one button is selected; keys 1 and 2 select too.
 - Gold below the price: the price turns `#FF6B5E`. The button stays clickable, so the player can still select it.
 
-**Placement refusal at the cell** (the damage-numbers step; until then it uses the message line): One pooled label, 18, bold, `#FFFFFF`, outline 1 `#000000`. Its bottom centre starts 0.6 cells above the cell centre (screen up), rises 16 over 1.5 s linear, and fades to 0 over the last 0.4 s; clamped 8 inside the board area. A new refusal restarts it. Texts are unchanged.
+**Placement refusal at the cell**: one pooled label over the board, 18, bold, `#FFFFFF`, outline 1 `#000000`. Its bottom centre starts 0.6 cells above the cell centre (screen up), rises 16 over 1.5 s linear, and fades to 0 over the last 0.4 s. Its whole rectangle is kept 8 inside the board area on every frame, so it never covers a bar: on the top row it is pinned over the upper half of the refused cell, does not rise and still fades, which reads because it sits on the cell just clicked. A new refusal restarts it at its own cell. Texts are unchanged.
 
 **End screen**: overlay `rgba(20, 19, 17, 0.8)` over everything. Title 48, bold: `Victory` in `#FFC23D`, `Defeat` in `#FF6B5E`. The countdown and the message line hide when it shows; the rest of the HUD stays under it. 24 below, the Restart button: padding 10 32, background `#45413B`, border 2 `#FFFFFF`, radius 6, text 24 bold `#FFFFFF`; hover background `#57524A`.
 
@@ -141,13 +139,16 @@ The closed look, in values. Numbers are pooled; nothing allocates per hit.
 | Critical | the kind's number + `!` | its kind's size x 1.3 (21, 26, 34) | its kind's colour | its kind's + 0.2 s |
 | Immune | `immune` | 16 regular | `#BDBDBD` | see below |
 
-- All kinds: outline 1 `#000000`, no shadow. Whole numbers, rounded to nearest, at least 1.
-- **Position**: spawned 0.7 cells above the enemy centre (screen up, just above the health bar), at that point in the world; it does not follow the enemy.
+- All kinds: outline 1 `#000000`, no shadow. Whole numbers, rounded to nearest with a half up (2.5 shows 3), at least 1.
+- Offsets, the rise and the clamp are panel pixels, negative y up. "Ease-out" is `1 − (1 − t)²`, t the elapsed share.
+- **Position**: a number hangs by its bottom centre, 0.7 cells above the enemy centre (screen up, just above the health bar), at that point of the board; it does not follow the enemy.
 - **Motion**: rises 20 with ease-out over its life; full opacity for the first 60 %, then linear to 0.
+- **Top of the screen**: a number's bottom centre never goes higher than 36 from the panel's top, so the strong number, the tallest built, keeps its whole outline on screen. A number held there stops rising and fades as usual. It may lie over the top bar and its text: it is whole, newer than the bar's text and gone within 0.8 s. Recheck the 36 when the critical (34) is built.
 - **Pop (critical)**: scale 1.6 to 1.0 over 0.12 s, ease-out, then the normal motion.
 - **No stacking**: each new number takes the next spawn offset (x, y) from the cycle (0, 0), (-12, -6), (12, -6), (-6, -12), (6, -12), one global counter.
 - **Cap**: 40 numbers alive; at the cap the oldest is recycled. From 30 alive, weak numbers are not spawned.
-- **Immune**: at most one per enemy. It follows the enemy at the same 0.7-cell offset, appears without a pop, and hides 1.0 s after the last immune hit on that enemy (fade over the last 0.2 s). Towers fire every 0.67 s, so a steady stream keeps it alive. It does not count towards the cap.
+- **Immune**: at most one per enemy. It hangs by its **top** centre 0.35 cells **below** the enemy centre (screen down) and follows the enemy as drawn; it appears without a pop, and hides 1.0 s after the last immune hit on that enemy (fade over the last 0.2 s). Towers fire every 0.67 s, so a steady stream keeps it alive. It does not count towards the cap. On the bottom row it stays inside the board area.
+- **Numbers above, the word below**, with the body and the health bar between them: an enemy hit by towers of both elements shows each apart. Its own numbers start 1.05 cells (about 50) above its word; an enemy walking screen up at 2 cells/s reaches a number only in the last 8 % of its life, below 20 % opacity. Enemies of a wave are 2 cells apart, so a word never reaches the next enemy's bar.
 
 **Changes to the closed look**, each a clarification it left open:
 1. A critical keeps the colour and the relative size of its kind (a strong critical is a large gold `32!`), so the "!" never hides whether the hit was strong or weak.
