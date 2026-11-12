@@ -137,13 +137,15 @@ The closed look, in values. Numbers are pooled; nothing allocates per hit.
 | Normal | `8` | 20 bold | `#FFFFFF` | 0.7 s |
 | Strong | `16` | 26 bold | `#FFC23D` | 0.8 s |
 | Critical | the kind's number + `!` | its kind's size x 1.3 (21, 26, 34) | its kind's colour | its kind's + 0.2 s |
-| Immune | `immune` | 16 regular | `#BDBDBD` | see below |
+| Immune | `immune` | 14 bold | `#D9D4C8` on a plate | see below |
 
-- All kinds: outline 1 `#000000`, no shadow. Whole numbers, rounded to nearest with a half up (2.5 shows 3), at least 1.
+- Numbers: outline `#000000`, 2 on normal and strong (1 drew a hairline that lost the gold over a Light tower), 1 on weak; no shadow.
+- **Immune plate**: background `#1E1C1A` α 0.8, padding 0 4, radius 3, no outline. Light text on a dark plate reads by value on the floor and on both tower colours, and the plate is a shape no number has; small and achromatic, it does not compete with the gold.
+- Whole numbers, rounded to nearest with a half up (2.5 shows 3), at least 1.
 - Offsets, the rise and the clamp are panel pixels, negative y up. "Ease-out" is `1 − (1 − t)²`, t the elapsed share.
 - **Position**: a number hangs by its bottom centre, 0.7 cells above the enemy centre (screen up, just above the health bar), at that point of the board; it does not follow the enemy.
 - **Motion**: rises 20 with ease-out over its life; full opacity for the first 60 %, then linear to 0.
-- **Top of the screen**: a number's bottom centre never goes higher than 36 from the panel's top, so the strong number, the tallest built, keeps its whole outline on screen. A number held there stops rising and fades as usual. It may lie over the top bar and its text: it is whole, newer than the bar's text and gone within 0.8 s. Recheck the 36 when the critical (34) is built.
+- **Top of the board**: a number's bottom centre never goes higher than 78 from the panel's top (top bar 44, the strong number about 31, 3 to spare), so no number enters the top bar: a number over "Lives 10" read as a new figure. A number held there stops rising and fades as usual. Cost: on the top row it covers the enemy's health bar while hits land. Recheck the 78 when the critical (34) is built.
 - **Pop (critical)**: scale 1.6 to 1.0 over 0.12 s, ease-out, then the normal motion.
 - **No stacking**: each new number takes the next spawn offset (x, y) from the cycle (0, 0), (-12, -6), (12, -6), (-6, -12), (6, -12), one global counter.
 - **Cap**: 40 numbers alive; at the cap the oldest is recycled. From 30 alive, weak numbers are not spawned.
@@ -152,7 +154,7 @@ The closed look, in values. Numbers are pooled; nothing allocates per hit.
 
 **Changes to the closed look**, each a clarification it left open:
 1. A critical keeps the colour and the relative size of its kind (a strong critical is a large gold `32!`), so the "!" never hides whether the hit was strong or weak.
-2. The immune word is per enemy, not per tower and enemy: three towers wasting shots on one enemy show one word, not three.
+2. The immune word is per enemy, not per tower and enemy: three towers wasting shots on one enemy show one word, not three. It stays small and grey, on a dark plate: grey alone on the stone floor was the weakest text on screen.
 3. The weak number is dimmed by colour, not opacity, so its outline stays solid; its size floor is 16 (15 px on the browser canvas).
 4. Weak numbers are the first to go under load: they carry the least decision.
 

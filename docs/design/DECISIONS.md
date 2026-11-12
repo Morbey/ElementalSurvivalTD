@@ -102,6 +102,7 @@ Ideas raised mid-slice, one line each. Review them when a slice closes.
 - Walls as raised blocks; and for the range disc a thin edge line, a round mesh instead of the 20-sided cylinder, and clipping to the board so it does not spill behind the top bar (visual direction 3).
 - Spawn and exit as rings (visual direction 3, open choice 2), when the first green or red element is built.
 - After the tower panel is closed with its close button, a second click at the same spot lands on the first buy button and changes the tower to buy. If it annoys in play, ignore clicks in the column for a moment after closing.
+- Damage numbers of an enemy on the top row are held below the top bar, so they cover that enemy's health bar. Place them beside the enemy instead (visual direction 2).
 - Wave health comes from one enemy asset per wave. Replace it with a per-wave modifier when the modifier system exists.
 - The cells beside a diagonal lane are refused while an enemy is on that step, about 70 percent of a wave. If it annoys in play, queue the placement until the cell is free.
 - On open ground enemies walk straight and then diagonal instead of the straightest line. Free-angle movement would fix the look, at a much higher cost.
