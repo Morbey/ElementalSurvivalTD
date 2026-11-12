@@ -95,17 +95,17 @@ Serves 4c-AC5, AC6 and AC11. Code only; `BoardView.cs`.
 Serves 4c-AC4, AC5, AC7 to AC9 and AC11. Code and `Hud.uxml`; in parallel with T4c-2.
 
 - `Hud.uxml`: a row `board-row` between the bars holds `board-area` and `side-column`; `tower-bar` moves from `bottom-bar` into `side-column`, beside a new `tower-panel`:
-  - `tower-panel-tile` and the label `tower-panel-title`;
+  - `tower-panel-tile`, the label `tower-panel-title` and the `Button` `panel-close`, not focusable;
   - four rows of class `stat-row`, each a caption and a value label: `stat-element`, `stat-damage`, `stat-shots`, `stat-range`;
   - `synergies-heading` and `synergies-empty`;
   - `upgrade-button`, a plain element with two labels that ignores picking;
   - the `Button` `sell-button`, not focusable, holding its caption and the labels `sell-value` and `sell-value-tail`.
 
-  Only the buy buttons, Sell and the end screen take picking. `Hud.uss` gets only what keeps these in place and shows `tower-panel` in place of `tower-bar` while `side-column` has the class `side-column--tower`; T4c-4 styles them.
+  Only the buy buttons, the close button, Sell and the end screen take picking. `Hud.uss` gets only what keeps these in place and shows `tower-panel` in place of `tower-bar` while `side-column` has the class `side-column--tower`; T4c-4 styles them.
 - New `TowerPanelView.cs`: a serialized document, placement input, palette, bootstrap and the five texts of the table above. In `LateUpdate`:
   - When `SelectedTower` is not the tower shown: it switches `side-column--tower`; for a tower it writes the title, the tile's background (the colour of its look's tower material), the element name with its UI colour as the label's colour, and the three numbers through the number format with the invariant culture; it removes the drop classes.
   - With a tower selected it reads `TryGetSellValue`. When the value is not the one shown: it writes `sell-value` (the full text at the cost, the refund text below it) and `sell-value-tail`, and `sell-button` has `sell-button--refund` while the value is below the cost. If the tower was already shown, `sell-button` also gets `sell-button--pop`; on the view's next frame that class gives way to `sell-button--settle`, which stays until the selection changes.
-  - `sell-button.clicked` calls `SellSelected`.
+  - `sell-button.clicked` calls `SellSelected`; `panel-close.clicked` calls `Deselect`.
 - `TowerBarView.cs`: its summary names the side column.
 
 **Done when:** the view holds no rule, no number, no colour and no text of its own, and computes no refund.
@@ -129,7 +129,7 @@ On the worktree with its editor closed. A test not listed under "Tests that chan
 - `SceneTestBase`: a helper that sells a cell (click it, check it is selected, `SellSelected`). `RunReferenceActionsAt` uses it for its sale rows; the gold after every row stays the document's. `RealAssetRunTests` sells through `Battle` and passes untouched.
 - `PrototypeSceneTests` 2b-AC1/AC2: the second click selects; the removal and the full refund go through the helper.
 - `GoldSceneTests`: both sales (before and after firing) go through the helper.
-- `ElementSceneTests`: the two 4b-AC6 and 4b-AC7 tests that sell by a click use the helper; the 4b-AC7 button width and the 4b-AC16 place of the buttons become the column's; the 4b-AC8 test adds the column, Sell and Upgrade to the places with no hover cell; `AssertLayout` adds that the column covers no cell; the 4b-AC14 test adds `TowerPanelView`.
+- `ElementSceneTests`: the two 4b-AC6 and 4b-AC7 tests that sell by a click use the helper; the 4b-AC7 button width and the 4b-AC16 place of the buttons become the column's; the 4b-AC8 test adds the column, Sell, Upgrade and the close button to the places with no hover cell; `AssertLayout` adds that the column covers no cell; the 4b-AC14 test adds `TowerPanelView`.
 - `RunSceneTests` 3b-AC6, after a win and after a defeat: a click on a tower also selects nothing.
 
 **EditMode**
@@ -138,8 +138,8 @@ On the worktree with its editor closed. A test not listed under "Tests that chan
 - **4c-AC11:** source tests: outside `Core/` and `Tests/` only `TowerPlacementInput.cs` calls `TrySellTower`, and no file under `Presentation/` contains `RefundPercent`. The determinism test of 3b-AC10 passes untouched.
 
 **PlayMode**, in `Prototype.unity`
-- **4c-AC2, AC3:** a click on a tower selects it with the same gold and towers; another tower takes the selection; the same tower keeps it. Each way of ending: Escape, through a queued key with the input enabled; a click on a free cell, a wall, the spawn and the exit (no tower placed, the same gold, no message; the next click on a free cell buys); key 1 and key 2, also the one already chosen, and `Select` of each index; a sale. A click off the grid, key 3 and a wave starting keep it. `SelectedIndex` is the same before and after a selection that Escape ends.
-- **4c-AC4:** `ClickButton` on Sell removes the tower, pays, ends the selection and brings the buy buttons back; with the pointer at the centre of Sell and of Upgrade, `Click` on the board input does nothing; Upgrade is no `Button` and ignores picking.
+- **4c-AC2, AC3:** a click on a tower selects it with the same gold and towers; another tower takes the selection; the same tower keeps it. Each way of ending: `ClickButton` on `panel-close`; Escape, through a queued key with the input enabled; a click on a free cell, a wall, the spawn and the exit (no tower placed, the same gold, no message; the next click on a free cell buys); key 1 and key 2, also the one already chosen, and `Select` of each index; a sale. A click off the grid, key 3 and a wave starting keep it. `SelectedIndex` is the same before and after a selection that Escape ends.
+- **4c-AC4:** `ClickButton` on Sell removes the tower, pays, ends the selection and brings the buy buttons back; with the pointer at the centre of Sell, of Upgrade and of `panel-close`, `Click` on the board input does nothing; Upgrade is no `Button` and ignores picking.
 - **4c-AC5:** with a tower selected, tick to a defeat: on the next frame `SelectedTower` is null, the column shows the buy buttons under the end screen, the frame and the disc are inactive; a click on a tower selects nothing. After a restart nothing is selected.
 - **4c-AC6:** selected: the frame is active on the tower's cell centre with the direction's size, height and material; the disc has that tower's range and material with the pointer on a free cell, on another tower, off the grid and over the column; the hover is on the hovered cell. Shadow selected to buy and a Light tower selected: the disc is Light's. After the selection ends the disc follows the hover again with the tower to buy (4b-AC17).
 - **4c-AC7:** at the game view's aspect and at 1 and 2.5: `AssertLayout`; the column's rectangle lies between the bars and misses the board's; exactly one of `tower-bar` and `tower-panel` is displayed, before and after a selection; the buttons hold what 4b-AC7 says; the column and the buttons resolve to the direction's sizes.
@@ -149,7 +149,7 @@ On the worktree with its editor closed. A test not listed under "Tests that chan
   2. On the first frame after the tick that lowers the value: the refund text (the asset's 20), the tail with the cost, `sell-button--refund` and `sell-button--pop`, the number resolved to the drop's colour and scale.
   3. On the next frame `sell-button--pop` is gone and `sell-button--settle` is on; after the direction's whole drop time, in real seconds, the number and the border resolve to the refund look at scale 1.
   4. `ClickButton` on Sell: the gold rises by exactly the number last shown, not by the cost; the tower is gone and the buy buttons are back.
-- **4c-AC9, others:** the same drop with the pointer off the UI; a tower selected after it fired shows the refund look with neither drop class; selecting a never-fired tower after a fired one shows the full look and clears `sell-button--settle`; no class and no text is written on a frame where the value did not change.
+- **4c-AC9, others:** the same drop with the pointer off the UI; a tower selected after it fired shows the refund look with neither drop class; selecting a never-fired tower after a fired one shows the full look and clears `sell-button--settle`; no class and no text is written on a frame where the value did not change, except the frame after a drop, where the pop gives way to the settle.
 - **4c-AC11:** the 4b-AC14 measurement with a tower selected and the panel open, for the input's `Update`, the board view and the panel view.
 - **4c-AC12:** the scene tests of 2b to 4b pass with the changes above, the reference order's win on its tick with its gold included.
 
