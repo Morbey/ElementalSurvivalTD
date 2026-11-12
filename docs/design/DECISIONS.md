@@ -22,6 +22,7 @@
   - A tower can only be placed if the spawn and every living enemy can still reach the exit, and never on the spawn cell, the exit cell or a cell an enemy occupies. Otherwise the game refuses it and tells the player why.
   - Towers can be sold, so the player can rework the board freely. The refund is total until the tower fires its first shot and partial after that.
   - A click on a tower selects it: the tower is highlighted and the player is offered Upgrade and Sell. Sell shows the gold it returns, and the value shown is always what a click pays at that moment: it drops the moment the tower fires its first shot, also while the pointer rests on Sell. (Upgrade is shown and does nothing yet.)
+  - The selection ends with Escape, a click on empty ground (which then buys nothing), a sale, or choosing a tower to buy; a click on another tower selects that one.
   - The same panel later shows what the tower is: damage type, damage per shot, shots per second, kind of shot (single target, area and so on) and the synergies the player already knows.
 - Economy: gold per kill, a gold bonus for each wave survived, and interest at the start of each wave, with a cap that rises through talents.
   - The wave bonus is paid when the last enemy of that wave has left the board, killed or not, to a player who is still alive. It does not depend on kills, so a leak does not starve the next wave.
@@ -97,7 +98,6 @@ Ideas raised mid-slice, one line each. Review them when a slice closes.
 - The hover may stick when the mouse leaves the canvas fast (visual direction 1.4 wants it hidden): needs a pointer-leave signal from the browser.
 - Smarter tower targeting: count damage already in flight, so towers do not waste shots on an enemy about to die.
 - A click uses the pointer position of the frame that handles it, not of the press, so a click followed by a fast move inside one long frame lands on the wrong cell.
-- The run HUD (wave, lives, countdown) is drawn over the top-left cells of the board. Move it off the grid when the HUD gets its first real layout.
 - Health bars hidden until the enemy first takes damage (visual direction 3): a few lines in the enemy view.
 - Walls as raised blocks; and for the range disc a thin edge line, a round mesh instead of the 20-sided cylinder, and clipping to the board so it does not spill behind the top bar (visual direction 3).
 - Spawn and exit as rings (visual direction 3, open choice 2), when the first green or red element is built.
