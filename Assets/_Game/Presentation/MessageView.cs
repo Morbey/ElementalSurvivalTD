@@ -63,6 +63,13 @@ namespace ElementalTD.Presentation
 
         private void Update()
         {
+            // Under the end screen the line stays hidden until the next run, also for the last wave's survived line.
+            if (_battle.Outcome != RunOutcome.Running)
+            {
+                if (_shown) Hide();
+                return;
+            }
+
             int survived = _battle.SurvivedWaves;
             if (survived != _seenSurvivedWaves)
             {

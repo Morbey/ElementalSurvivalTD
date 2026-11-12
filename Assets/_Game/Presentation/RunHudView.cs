@@ -127,17 +127,21 @@ namespace ElementalTD.Presentation
                 _goldLabel.text = string.Format(goldText, gold.ToString());
             }
 
+            RunOutcome outcome = _battle.Outcome;
+            bool outcomeChanged = (int)outcome != _shownOutcome;
+
             float secondsLeft = waves.SecondsToNextWave;
             int seconds = secondsLeft > 0f ? Mathf.CeilToInt(secondsLeft) : 0; // 0: no delay is running
-            if (seconds != _shownSeconds || wavesChanged)
+            if (seconds != _shownSeconds || wavesChanged || outcomeChanged)
             {
                 _shownSeconds = seconds;
-                if (seconds > 0) _nextWaveLabel.text = string.Format(nextWaveText, seconds.ToString(), _nextWaveNames);
-                _nextWaveLabel.style.display = seconds > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                // A run that has ended freezes its countdown; the end screen hides it.
+                bool show = seconds > 0 && outcome == RunOutcome.Running;
+                if (show) _nextWaveLabel.text = string.Format(nextWaveText, seconds.ToString(), _nextWaveNames);
+                _nextWaveLabel.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
             }
 
-            RunOutcome outcome = _battle.Outcome;
-            if ((int)outcome != _shownOutcome)
+            if (outcomeChanged)
             {
                 _shownOutcome = (int)outcome;
                 if (outcome != RunOutcome.Running) _endTitle.text = outcome == RunOutcome.Won ? victoryText : defeatText;
