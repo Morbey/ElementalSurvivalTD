@@ -42,7 +42,7 @@
 - Secondary resistances (damage **x0.75**): Earth resists Fire, Fire resists Shadow, Air resists Light and Shadow resists Earth.
 - Immunity to the own element is absolute and nothing breaks it, not even Cursed.
 - A tower shoots the enemy closest to the exit in its range, even one immune to it; those shots are wasted. A talent teaches towers never to attack an enemy of their own element.
-- Every hit shows its damage over the enemy, and the look of the number tells an immune, a weak, a normal, a strong and a critical hit apart (for 8 base damage: 0, 2, 8, 16; a critical doubles it). It must stay readable with many enemies on screen, so the look carries the meaning and only the immune hit uses a word:
+- Every hit shows its damage over the enemy, one number per hit and never a sum of several hits, and the look of the number tells an immune, a weak, a normal, a strong and a critical hit apart (for 8 base damage: 0, 2, 8, 16; a critical doubles it). It must stay readable with many enemies on screen, so the look carries the meaning and only the immune hit uses a word:
   - normal: a white number; strong: a larger, gold number; weak: a small, dim number; critical: the number with "!" and a small pop;
   - immune: the small grey word "immune" and no number, shown once and kept alive while the tower keeps hitting that enemy, not repeated per shot.
 - Hybrids: there are 15 combinations of two elements, and each base element takes part in five. Some three-element hybrids appear late in the run, as rares.
