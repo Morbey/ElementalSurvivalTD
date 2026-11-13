@@ -6,7 +6,7 @@ The single home of how the game looks and reads. Rules and numbers live in `docs
 
 **Three checks for every look:** it reads with twenty enemies and twenty towers on screen; it never relies on hue alone (value, size, shape or a word carries the same meaning); it is cheap on WebGL (one material asset per colour, pooled objects, no per-frame allocation).
 
-## 1. Slice 4
+## 1. Board, HUD and screens
 
 ### 1.1 Board and scenarios
 Each scenario has its own look; element colours (1.2) are the same in all of them. Elements are saturated and sit at the value extremes; a board is desaturated and mid-value, so both a very light and a very dark element stand out on it.
@@ -62,9 +62,9 @@ Nothing permanent sits over the board. The camera frames the board inside the sc
 - **Element tile**, the reusable mark for an element in small UI: 20 x 20, the element's body colour, border 2 `#D9D4C8`, radius 3, its initial centred (14, bold; `#1A1918` on Light and Air, `#FFFFFF` on the others). Initials: L, S, F, W, E, A; a hybrid gets a letter that no other element uses when it is defined.
 - Element names are coloured with rich text, for example `<color=#B48CFF>Shadow</color>`. A label's text is rebuilt only when its seconds or elements change.
 
-**Bottom bar**: anchored bottom, full width, height **72**, padding 0 16, one row, centred vertically. Economy and building live here.
+**Bottom bar**: anchored bottom, full width, height **72**, padding 0 16, a column. Economy and progress live here: the XP row at the top (1.6), then one row that takes the rest, centred vertically (the gold's centre sits at 50 of 72).
 - Left: `Gold 115`, 24, `#FFC23D`.
-- 16 to its right, the message line, 20, bold: the wave bonus `Wave 3 survived +25`, `#FFC23D`, for 3.0 s, then a fade to opacity 0 over 0.3 s (USS transition); a newer one replaces it. A refusal never shows here: it shows at the cell (below).
+- 16 to its right, the message line, 20, bold: the wave bonus `Wave 3 survived +25`, `#FFC23D`, for 3.0 s of battle time (it stops while the level-up screen is open, so a bonus earned by the kill that levels up is still seen after the pick), then a fade to opacity 0 over 0.3 s (USS transition); a newer one replaces it. A refusal never shows here: it shows at the cell (below).
 - Right, right-aligned: the tower buttons, 12 apart.
 - From 4c the tower buttons move to the side column (1.5), where six fit; the bottom bar keeps the gold and the message line.
 
@@ -77,7 +77,7 @@ Nothing permanent sits over the board. The camera frames the board inside the sc
 
 **Placement refusal at the cell**: one pooled label over the board, 18, bold, `#FFFFFF`, outline 1 `#000000`. Its bottom centre starts 0.6 cells above the cell centre (screen up), rises 16 over 1.5 s linear, and fades to 0 over the last 0.4 s. Its whole rectangle is kept 8 inside the board area on every frame, so it never covers a bar: on the top row it is pinned over the upper half of the refused cell, does not rise and still fades, which reads because it sits on the cell just clicked. A new refusal restarts it at its own cell. Texts are unchanged.
 
-**End screen**: overlay `rgba(20, 19, 17, 0.8)` over everything. Title 48, bold: `Victory` in `#FFC23D`, `Defeat` in `#FF6B5E`. The countdown and the message line hide when it shows; the rest of the HUD stays under it. 24 below, the Restart button: padding 10 32, background `#45413B`, border 2 `#FFFFFF`, radius 6, text 24 bold `#FFFFFF`; hover background `#57524A`.
+**End screen**: overlay `rgba(20, 19, 17, 0.8)` over everything. Title 48, bold: `Victory` in `#FFC23D`, `Defeat` in `#FF6B5E`. The countdown and the message line hide when it shows; the rest of the HUD stays under it. 8 below the title, `Level 6`, 20 bold `#B5AFA3` (open choice 3). 24 below, the Restart button: padding 10 32, background `#45413B`, border 2 `#FFFFFF`, radius 6, text 24 bold `#FFFFFF`; hover background `#57524A`.
 
 ### 1.4 Hover and range
 The hover is a flat quad on the cell, **under** the tower, so it never washes a tower out; under a tower only its rim shows.
@@ -105,6 +105,7 @@ No sale look on towers in 4b: a click still sells there, but 4c replaces it a st
 **Tower panel** (`#tower-panel`), stacked from the top of the column; the actions sit at its bottom:
 - **Header**: element tile 28 x 28 (1.3: border 2 `#D9D4C8`, radius 3) without its letter, like the tower button's swatch, because the name stands beside it; 8 to its right, `Light tower`, 18, bold, `#FFFFFF`; at the row's right, the close button: 28 x 28, no background or border, `×` 24 bold `#B5AFA3`, hover and pressed `#FFFFFF`. A click on it ends the selection. It is the visible way out: Escape may leave the browser's full screen instead of reaching the game, and a click on the ground does not say that it closes.
 - **Stats**, 12 below: one row each, height 22, label left 16 regular `#B5AFA3`, value right 16 bold `#FFFFFF`. In 4c: `Element` (the name in its UI colour), `Damage` `10`, `Shots/s` `1.5`, `Range` `2.5`. Later rows (kind of shot, and so on) append below. Recommended for 4c: the values exist, it costs four labels, and the panel gets its real shape now.
+  - From 5b a value is the effective one. When perks change it, a tail follows 4 to its right: the difference, `+2.5`, 14 bold `#7FE08A` (a lower value: `−0.5`, `#FF6B5E`). The sign carries the meaning, the green the usual "improved"; the tail never sits beside an element name. Values: three significant figures, half up, trailing zeros trimmed (`1.73`, `12.5`, `3`); the tail is the shown value less the shown base, at most two decimals, trimmed (`+0.23`, `+0.5`). One decimal would hide small perks: +5 % on 1.5 shots/s shows no change.
 - **Synergies**, 16 below: heading `Synergies`, 14 bold `#B5AFA3`, height 18, then rows of height 28, up to six. In 4c it holds one row, `None found yet`, 14 regular `#8A8478`, marking the empty place.
   - Known synergy: a 24 x 24 icon in its colours and its name, 16 bold `#FFFFFF`.
   - Not yet discovered, if shown: a 24 x 24 tile `#3A3733` with border 1 `#6B655A` and a `?` (14, bold, `#8A8478`), with no name.
@@ -127,6 +128,58 @@ The two looks differ by colour, by the gold border and by the ` of 40` tail, not
 **Ending the selection**: a click on empty ground ends it and does not buy (the next click buys); the panel's close button ends it; Escape ends it; a click on another tower selects that one; a key 1 or 2 ends it and selects that tower to buy; selling ends it. Waves do not end it.
 
 **While a tower is selected**: the range disc shows the selected tower's range and stays there wherever the pointer is; the hover still shows on other cells, without a disc of its own. Ending the selection brings back the buy buttons, with the selected tower to buy unchanged.
+
+### 1.6 Level and XP (5a)
+The XP row sits at the top of the bottom bar, which has the room (72 high for one row of 24 text). No bar grows: the board area and its 44.8-px cells do not change. The top bar is full with three-element waves, and the side column needs its height for the tower panel.
+
+**XP row** (`#xp-row`): margin-top 8, height 20, row, centred vertically, across the bottom bar's whole content width (under the side column too).
+- Level label: `Level 3`, 16 bold `#FFFFFF`, min-width 76 (fits `Level 99`), so the track does not move when a digit is added. Smaller than the gold, which stays the bar's main number.
+- Track: flex-grow 1, height 10, background `#45413B` (the buttons' grey), no border, radius 0: a rounded clip would cost a stencil pass.
+- Fill: absolute over the whole track, `#F4F1EA`, radius 0, transform-origin left centre, scale x = the share of the current level's XP (0 to 1), y 1. Warm white because every hue becomes an element's or a hybrid's sooner or later, and gold is yellow; XP belongs to no element, and its long thin bar tells it from the gold by shape as well (open choice 2).
+
+| Event | Look |
+|---|---|
+| XP gained | the fill's scale eases to the new share over 0.15 s, ease-out (USS transition on scale); no text changes |
+| Level gained | the label shows the new level. Pop, one frame, no transition: label scale 1.5 about its left centre; track background `#F4F1EA`, so the whole bar flashes full; the fill jumps to the new share. Settle: label scale to 1.0 over 0.3 s, ease-out; track background to `#45413B` over 0.5 s, ease. Several levels at once play one pop with the last level |
+| Level table ended | fill held at scale 1 in `#8A8478`, label `Max level 8`; no more pops. A bright full bar would promise a level that never comes |
+
+- The label is rewritten only when the level changes, the fill's scale only when XP changes. Cost: two elements, two class writes per level, transitions on scale and colour only.
+- The empty track at the start reads as an empty slot, like the Upgrade button: no `0 XP` text. The bar carries no numbers.
+
+### 1.7 Level-up screen (5b)
+**Overlay** (`#level-up`): over the whole panel, above the floating texts, under the end screen; `rgba(20, 19, 17, 0.7)`, lighter than the end screen's 0.8 so the paused board stays readable: the pick depends on it (which towers stand, which element comes next). It takes every click, so the board and the column take none while it shows. Its content is a column centred both ways:
+- Title `Level 5`, 40 bold `#FFFFFF`; with each choice it enters at scale 1.3 and eases to 1.0 over 0.25 s, ease-out.
+- 4 below, `Choose one`, 18 regular `#B5AFA3`. Two choices in a row: `Choose one (1 of 2)`, then `(2 of 2)`, each titled with its own level.
+- 24 below, the cards: a row of three, 24 apart, 708 wide in the 1010 x 568 panel of 960 x 540; the block is 338 high. A fourth card (more options from luck) still fits, at 952.
+
+**Perk card** (`Button.perk-card`): 220 x 240, padding 16, column, centred horizontally; background `#45413B`, border 2 `#6B655A`, radius 6, the tower button's look. The border colour is kept for rarity later; the element shows on the tile and the title.
+- Tile 48 x 48, margin-bottom 12. An element perk shows the element tile (1.3) at this size: border 2 `#D9D4C8`, radius 4, initial 28 bold. Any other perk: background `#2E2C29`, border 2 `#D9D4C8`, radius 4, `All` 16 bold `#FFFFFF`; a gold perk the same with border 2 `#FFC23D` and `Gold` 14 bold `#FFC23D`.
+- Title: 20 bold `#FFFFFF`, one line, the element name in its UI colour.
+- Number, 8 below: 36 bold `#FFFFFF`, the largest text on the card, because it is the reward.
+- Attribute: 16 regular `#D9D4C8`.
+- Stack line, at the bottom (margin-top auto), height 18, only for a perk taken before: `Total +50 %`, 14 regular `#B5AFA3` with the total in bold `#FFFFFF`, the total after this pick. Otherwise empty: early every card is new, so a `New` would say nothing.
+
+| Tile | Title | Number | Attribute |
+|---|---|---|---|
+| L | `Light towers` | `+25 %` | `damage` |
+| S | `Shadow towers` | `+25 %` | `damage` |
+| All | `All towers` | `+15 %` | `fire rate` |
+| All | `All towers` | `+0.5` | `range` |
+| Gold | `Gold` | `+2` | `per kill` |
+
+Every line fits on one line in the 188 inside; the longest planned, `Shadow towers` and `critical chance`, take about 150 and 120.
+
+| Card state | Look |
+|---|---|
+| Dealing | from opacity 0 and translate 0 24 to 1 and 0 over 0.25 s, ease-out; cards 2 and 3 delayed 0.1 and 0.2 s; picking-mode Ignore |
+| Hover | background `#57524A`, border 2 `#D9D4C8` |
+| Pressed | background `#6B655A`, border 2 `#FFFFFF` |
+| Picked | background `#6B655A`, border 3 `#FFFFFF`, padding 15; the other two fade to opacity 0.35 over 0.15 s |
+
+- **Lock**: the cards take no hover and no click for **0.6 s** after a choice appears, the second one too; a click then lands on the overlay and does nothing. The cards are visibly arriving for 0.45 s of it, so they never sit still and dead.
+- **Pick**: one click (release over the card) picks. The picked look holds **0.35 s** with no input, so the player sees what was taken; then the next choice deals in, or the overlay hides at once and the battle resumes. With the lock, two picks are at least 0.95 s apart. No keyboard pick.
+- The lock, the hold and the transitions run on real time while the battle is paused.
+- Cost: one overlay, three cards of five labels each, written once per choice; transitions on opacity, translate and scale only.
 
 ## 2. Damage numbers
 Every hit shows its own number, never a sum. Numbers are pooled UI Toolkit labels, moved by `translate` and `scale` and faded by `opacity`; nothing allocates per hit. Panel pixels, negative y up; at 960 x 540 a cell is about 47.
@@ -193,3 +246,5 @@ Every hit shows its own number, never a sum. Numbers are pooled UI Toolkit label
 
 ## 4. Open choices for Eduardo
 1. **Spawn and exit as white and black rings in 4b, with the stone board,** instead of when green or red elements arrive (section 3). Recommended: green and red fail the scenario test on stone and Eduardo judges the stone board in that build; the cost is two materials and an inset quad on two cells. The alternative keeps green and red, read by hue only, until then.
+2. **XP in warm white, not a colour** (1.6). Recommended: blue, green, cyan, purple and orange will all be elements or hybrids, and yellow is gold, so any hue for XP collides with one of them by Fire, Water, Earth and Air. The alternative is a saturated XP colour (the genre's blue), read by the bar's shape only.
+3. **The level on the end screen** (1.3). Recommended: one label, and the level is the run's headline of growth. The alternative leaves it for a run summary later (level, perks taken).
