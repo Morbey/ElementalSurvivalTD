@@ -1,6 +1,6 @@
 # ADR 0003 – Simulation tick, pooling and combat views
 
-Status: Accepted (prototype slice 2c). Amends ADR 0001 (deferred rules) and ADR 0002 (boundary, tower events, health bars). Amended by ADR 0004 (tick order, enemy pooling) and ADR 0006 (moments, text over the board).
+Status: Accepted (prototype slice 2c). Amends ADR 0001 (deferred rules) and ADR 0002 (boundary, tower events, health bars). Amended by ADR 0004 (tick order, enemy pooling) and ADR 0006 (moments, text over the board, the entry number).
 
 ## Context
 Slice 2c adds damage, fire rates and projectiles. With a variable time step the number of shots in a pass depends on the frame rate, so the same maze could kill in the editor and leak in the browser. 2c also has the first objects that spawn repeatedly (projectiles) and the first world-space UI (a health bar), and the 2b review found that each enemy stepped itself and that tower changes were announced by the input component.
@@ -11,7 +11,7 @@ Slice 2c adds damage, fire rates and projectiles. With a variable time step the 
 3. **Views interpolate.** Every moving Core object keeps its position at the previous tick. Views draw between the previous and the current position by the driver's fraction, in `LateUpdate`.
 4. **Combat views poll; rare changes are events.** Presentation reads the `Battle` state each frame and draws it: the n-th pooled projectile view shows the n-th projectile. Only rare structural changes are plain C# events, raised by the Core object that changes: `Board.TowerPlaced` and `Board.TowerRemoved`. Feedback on an input action (`PlacementRefused`) stays on the input component.
 5. **Presentation owns every view.** Gameplay instantiates no prefab; the enemy view moves to Presentation.
-6. **Pooling.** `Battle` reuses its projectile objects through a free list. Presentation keeps a pre-warmed pool of projectile views that grows only when exceeded. Nothing is instantiated or destroyed per shot. A reused object counts its entries, and whatever points at it remembers the count: a shot aimed at an enemy that has since left the board is dropped, even when that enemy object is already back.
+6. **Pooling.** `Battle` reuses its projectile objects through a free list. Presentation keeps a pre-warmed pool of projectile views that grows only when exceeded. Nothing is instantiated or destroyed per shot. Every entry of an enemy on the board has its own number (ADR 0006), and whatever points at an enemy remembers it: a shot aimed at an enemy that has since left the board is dropped, even when that enemy object is already back.
 7. **Health bars are meshes.** Two flat quads on the enemy prefab (back and fill), each with its own URP Unlit material; the fill is scaled by the health fraction. The camera looks straight down and enemies do not rotate, so there is no billboarding.
 
 ## Alternatives
