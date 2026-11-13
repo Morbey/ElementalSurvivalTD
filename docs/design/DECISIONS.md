@@ -10,6 +10,7 @@
 ## Core
 - A single modifier system over attributes. Targets: tower, element, hero and global (gold, XP, luck, number of perks, enemies per wave).
 - Perks on level-up, through XP: three options, pick one, and the game pauses during the choice.
+  - XP comes from kills, an amount per enemy. Each level needs more XP than the last; when the level table ends, no further level is gained.
 - Controlled randomness in perks: the player picks the starting element, the draw is weighted towards elements already owned, and the first levels always show at least one option that counters the scenario.
 - Luck: 0 is a pure draw. More luck means higher rarity, more options and more elements that are strong against the scenario.
 - Automatic waves on a timer, 5 to 20 s apart, with no manual pause. The screen always shows the next wave, with its enemy and element.
@@ -79,7 +80,9 @@ Each slice ends in something Eduardo can see or play.
   - [ ] **4c:** selecting a tower, with Upgrade (not yet working) and Sell showing its value.
   - [ ] **4d:** damage numbers over the enemies, and the refusal message at the refused cell.
   - [ ] **4e:** waves of mixed elements.
-- [ ] **Slice 5:** level up through XP and pick one perk.
+- [ ] **Slice 5**, in steps that Eduardo accepts one at a time:
+  - [ ] **5a:** kills give XP; the HUD shows the level and a bar that fills. No choice yet, and no outcome changes.
+  - [ ] **5b:** a level-up pauses the battle and offers three perks; the one picked changes the towers through the modifier system.
 
 ### After the prototype
 - [ ] Define the 12 remaining hybrids and their states.
@@ -106,7 +109,7 @@ Ideas raised mid-slice, one line each. Review them when a slice closes.
 - Damage numbers of an enemy on the top row are held below the top bar, so they cover that enemy's health bar. Place them beside the enemy instead (visual direction 2).
 - A damage number pushed into the top slot of its stack dims to 0.7 in one frame instead of with the push (art review of 4d): ease the cap with the slot.
 - Enemy and projectile pools grow when the board reaches a new peak, on 28 ticks of the reference run (4e tests): size them at the start of a run if a browser profile shows a hitch.
-- Critical hits have a look (visual direction 2) and no rule: decide where they come from and what they multiply; the look is built with the rule.
+- Critical hits have a look (visual direction 2) and no rule: decide where they come from and what they multiply; the look is built with the rule. Proposed to Eduardo: a perk gives the chance (base 0), a critical deals x2 after the elemental multiplier, as its own step after 5b.
 - Wave health comes from one enemy asset per wave. Replace it with a per-wave modifier when the modifier system exists.
 - The cells beside a diagonal lane are refused while an enemy is on that step, about 70 percent of a wave. If it annoys in play, queue the placement until the cell is free.
 - On open ground enemies walk straight and then diagonal instead of the straightest line. Free-angle movement would fix the look, at a much higher cost.
