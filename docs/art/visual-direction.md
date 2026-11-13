@@ -133,7 +133,7 @@ The two looks differ by colour, by the gold border and by the ` of 40` tail, not
 The XP row sits at the top of the bottom bar, which has the room (72 high for one row of 24 text). No bar grows: the board area and its 44.8-px cells do not change. The top bar is full with three-element waves, and the side column needs its height for the tower panel.
 
 **XP row** (`#xp-row`): margin-top 8, height 20, row, centred vertically, across the bottom bar's whole content width (under the side column too).
-- Level label: `Level 3`, 16 bold `#FFFFFF`, min-width 76 (fits `Level 99`), so the track does not move when a digit is added. Smaller than the gold, which stays the bar's main number.
+- Level label: `Level 3`, 16 bold `#FFFFFF`, min-width 108 (fits `Level 10` at its popped scale of 1.5, and `Max level 8`), so the track never moves and the popped label never lies over it. Smaller than the gold, which stays the bar's main number.
 - Track: flex-grow 1, height 10, background `#45413B` (the buttons' grey), no border, radius 0: a rounded clip would cost a stencil pass.
 - Fill: absolute over the whole track, `#F4F1EA`, radius 0, transform-origin left centre, scale x = the share of the current level's XP (0 to 1), y 1. Warm white because every hue becomes an element's or a hybrid's sooner or later, and gold is yellow; XP belongs to no element, and its long thin bar tells it from the gold by shape as well (open choice 2).
 
