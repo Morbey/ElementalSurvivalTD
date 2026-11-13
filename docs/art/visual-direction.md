@@ -157,7 +157,7 @@ The XP row sits at the top of the bottom bar, which has the room (72 high for on
 - Title: 20 bold `#FFFFFF`, one line, the element name in its UI colour.
 - Number, 8 below: 36 bold `#FFFFFF`, the largest text on the card, because it is the reward.
 - Attribute: 16 regular `#D9D4C8`.
-- Stack line, at the bottom (margin-top auto), height 18, only for a perk taken before: `Total +50 %`, 14 regular `#B5AFA3` with the total in bold `#FFFFFF`, the total after this pick. Otherwise empty: early every card is new, so a `New` would say nothing.
+- Stack line, at the bottom (margin-top auto), height 18, only for a perk taken before: `Total +56 %` (stacks compound: two of +25 % are x1.5625; an adding perk shows its sum, `Total +1`), 14 regular `#B5AFA3` with the total in bold `#FFFFFF`, the total after this pick. Otherwise empty: early every card is new, so a `New` would say nothing.
 
 | Tile | Title | Number | Attribute |
 |---|---|---|---|

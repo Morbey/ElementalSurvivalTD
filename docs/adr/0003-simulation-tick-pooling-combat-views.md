@@ -1,13 +1,13 @@
 # ADR 0003 – Simulation tick, pooling and combat views
 
-Status: Accepted (prototype slice 2c). Amends ADR 0001 (deferred rules) and ADR 0002 (boundary, tower events, health bars). Amended by ADR 0004 (tick order, enemy pooling) and ADR 0006 (moments, text over the board, the entry number).
+Status: Accepted (prototype slice 2c). Amends ADR 0001 (deferred rules) and ADR 0002 (boundary, tower events, health bars). Amended by ADR 0004 (tick order, enemy pooling), ADR 0006 (moments, text over the board, the entry number) and ADR 0007 (the pause).
 
 ## Context
 Slice 2c adds damage, fire rates and projectiles. With a variable time step the number of shots in a pass depends on the frame rate, so the same maze could kill in the editor and leak in the browser. 2c also has the first objects that spawn repeatedly (projectiles) and the first world-space UI (a health bar), and the 2b review found that each enemy stepped itself and that tower changes were announced by the input component.
 
 ## Decision
 1. **State and time are two Core classes.** `Board` holds what is on the board: the map, the flow field, one tower object per cell and the enemies on it, plus the placement rule. `Battle` holds time: `Tick()` advances everything by the constant `Battle.TickSeconds` (1/60 s) in a fixed order, listed in ADR 0004. Nothing else steps Core.
-2. **One driver.** One Gameplay component accumulates `Time.deltaTime`, calls `Battle.Tick()` zero or more times per frame and exposes the fraction of a tick left over. Pause and game speed are `Time.timeScale`.
+2. **One driver.** One Gameplay component accumulates `Time.deltaTime`, calls `Battle.Tick()` zero or more times per frame and exposes the fraction of a tick left over. Game speed is `Time.timeScale`. A stop that belongs to the rules, the end of a run or the perk choice, is battle state, and the driver then gathers no time (ADR 0004, ADR 0007).
 3. **Views interpolate.** Every moving Core object keeps its position at the previous tick. Views draw between the previous and the current position by the driver's fraction, in `LateUpdate`.
 4. **Combat views poll; rare changes are events.** Presentation reads the `Battle` state each frame and draws it: the n-th pooled projectile view shows the n-th projectile. Only rare structural changes are plain C# events, raised by the Core object that changes: `Board.TowerPlaced` and `Board.TowerRemoved`. Feedback on an input action (`PlacementRefused`) stays on the input component.
 5. **Presentation owns every view.** Gameplay instantiates no prefab; the enemy view moves to Presentation.

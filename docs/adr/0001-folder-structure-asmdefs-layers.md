@@ -1,6 +1,6 @@
 # ADR 0001 – Folder structure, asmdefs and layers
 
-Status: Accepted (prototype slice 1). Amended by ADR 0002, which adds the Presentation layer, by ADR 0003, which adds the simulation tick and pooling, and by ADR 0004, which pools enemies. The flow field moved from four to eight directions in slice 3c (plan 0006).
+Status: Accepted (prototype slice 1). Amended by ADR 0002, which adds the Presentation layer, by ADR 0003, which adds the simulation tick and pooling, by ADR 0004, which pools enemies, and by ADR 0007, which brings the modifier system and the seeded generator. The flow field moved from four to eight directions in slice 3c (plan 0006).
 
 ## Context
 The project has no game code yet. Slice 1 (a grid and one enemy crossing it with pathfinding) needs a home for pure rules, data assets, Unity glue and tests. CLAUDE.md section 7 sets the layer rules and the WebGL performance rules. This ADR fixes only what slice 1 uses and records what is deferred.
@@ -30,8 +30,8 @@ Pathfinding is one **flow field**: shortest distances from the exit over an 8-ne
 | Object pooling | **Applies.** Projectiles from slice 2c (ADR 0003), enemies from slice 3a (ADR 0004). | – |
 | GPU instancing | Deferred. A few hundred primitives with a shared material batch through the SRP Batcher; slice 3a has about twenty enemies at most (ADR 0004). | A browser measurement shows the enemy peak costing frames. |
 | Fixed-tick logic | **Applies from slice 2c** (ADR 0003). | – |
-| Modifier system | Deferred. Enemy and tower stats are read directly from data; the elemental multiplier is not a modifier (ADR 0005). | The first modifier (slice 5 perks, or Slowed). |
-| Seeded, injectable RNG | Not needed. Nothing is random yet. | The first random draw (slice 5 perk options). |
+| Modifier system | **Applies from step 5b** (ADR 0007), to tower stats and the gold per kill. Enemy stats are still read directly from data; the elemental multiplier is not a modifier (ADR 0005). | – |
+| Seeded, injectable RNG | **Applies from step 5b** (ADR 0007). | – |
 | Zero allocations in `Update` | **Applies now.** Arrays are allocated once; no LINQ, boxing or closures in the movement path. | – |
 
 ## Alternatives

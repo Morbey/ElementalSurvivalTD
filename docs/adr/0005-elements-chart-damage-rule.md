@@ -1,6 +1,6 @@
 # ADR 0005 – Elements: identity, the chart and the damage rule
 
-Status: Accepted (prototype slice 4, step 4b). Amends ADR 0001 (the modifier system stays deferred) and ADR 0004 (a look per element). Amended by ADR 0006 (the kind of a hit is recorded).
+Status: Accepted (prototype slice 4, step 4b). Amends ADR 0001 (the elemental multiplier is not a modifier) and ADR 0004 (a look per element). Amended by ADR 0006 (the kind of a hit is recorded) and ADR 0007 (the modifier system).
 
 ## Context
 Slice 4 brings the first two of the six base elements: Light and Shadow deal x2 to each other and nothing to their own. The other four bring x0.25 and x0.75, and hybrids follow. CLAUDE.md asks for elements as data and no balance number in code, and Core may not see a ScriptableObject. Three closed decisions shape the rule: a tower shoots the closest enemy even when it is immune (a talent changes that later), every hit will show its damage and what kind of hit it was (the step after this one), and a wave may mix elements.
@@ -14,7 +14,7 @@ Slice 4 brings the first two of the six base elements: Light and Shadow deal x2 
 6. **Targeting knows no element.** The talent that stops towers from attacking their own element will be a filter in the choice of target, on a multiplier of 0.
 7. **No element** deals and takes x1 and is never immune. Core tests and simulations use it; no playable asset does.
 8. **How an element looks belongs to Presentation.** One `ElementPalette` asset maps an element to its UI colour and to the materials of its towers, enemies, shots and range disc. Data holds no colour and no material. Views stay anonymous (ADR 0004): a pooled view takes the material of whatever it shows and changes it only when the element changes.
-9. **The modifier system stays deferred.** A modifier changes an attribute of one target, has a source and can be removed. The elemental multiplier belongs to a pair of attacker and defender and is looked up per hit; nothing is added, stacked or removed. Its first real user is still slice 5 (ADR 0001). It will plug in on both sides of this lookup: the tower's damage before it, the target's resistances after it.
+9. **The elemental multiplier is not a modifier.** A modifier changes an attribute of one target and has a source (ADR 0007). The multiplier belongs to a pair of attacker and defender and is looked up per hit; nothing is added, stacked or removed. The modifier system plugs in on both sides of this lookup: the tower's damage before it, from step 5b, and the target's resistances after it, later.
 
 ## Alternatives
 - **An enum of elements in Core.** Readable, but every new element is a code change and Core would know the content. Rejected.
