@@ -10,6 +10,8 @@ namespace ElementalTD.Core
     /// the hit log, or as a mark on an enemy it cannot hurt (ADR 0006);
     /// a wave pays its survival bonus once its last enemy has entered and none of its enemies is on the board.
     /// Towers are bought and sold here: the battle checks the gold, the board keeps the placement rule.
+    /// A level gained opens a choice of perks at the end of a tick that leaves the run running; while it is open the battle
+    /// stands still, and the perk picked joins the run's modifiers (ADR 0007).
     /// </summary>
     public sealed class Battle
     {
@@ -27,6 +29,10 @@ namespace ElementalTD.Core
         public WaveSchedule Waves { get; }
         /// <summary>The run's XP and level; never null (ADR 0004).</summary>
         public Progression Progression { get; }
+        /// <summary>The run's modifiers; never null, the battle makes it.</summary>
+        public Modifiers Modifiers { get; }
+        /// <summary>A choice of perks is open: Tick() does nothing until a perk is picked.</summary>
+        public bool AwaitingChoice => Progression.ChoiceOpen;
         public int Lives { get; private set; }
         /// <summary>Whole gold, never below 0.</summary>
         public int Gold { get; private set; }
@@ -70,17 +76,40 @@ namespace ElementalTD.Core
             _sellRefundPercent = sellRefundPercent;
             _elements = elements ?? new ElementChart(0);
             Progression = progression ?? new Progression(null);
+            Modifiers = new Modifiers();
             Outcome = RunOutcome.Running;
         }
 
-        /// <summary>The gold is checked before the board rule; only a placed tower costs gold.</summary>
+        /// <summary>
+        /// The gold is checked before the board rule; only a placed tower costs gold, its base cost.
+        /// The new tower takes every modifier so far.
+        /// </summary>
         public PlacementResult TryBuyTower(GridPos cell, in TowerStats stats)
         {
             if (Gold < stats.Cost) return PlacementResult.NotEnoughGold;
 
             PlacementResult result = Board.TryPlaceTower(cell, stats);
-            if (result == PlacementResult.Placed) Gold -= stats.Cost;
+            if (result != PlacementResult.Placed) return result;
+
+            Gold -= stats.Cost;
+            Board.TowerOn(cell).Stats = Modifiers.Apply(stats);
             return result;
+        }
+
+        /// <summary>
+        /// Answers the open choice: the perk on that slot joins the modifiers and every tower is recomputed; a shot in flight
+        /// and a running cooldown keep their values. The next owed choice, if any, opens at once.
+        /// Throws when no choice is open or the slot is outside the offer.
+        /// </summary>
+        public void PickPerk(int slot)
+        {
+            int perk = Progression.Pick(slot);
+            Modifiers.Add(Progression.PerkAt(perk));
+            for (int i = 0; i < Board.TowerCount; i++)
+            {
+                Tower tower = Board.TowerAt(i);
+                tower.Stats = Modifiers.Apply(tower.BaseStats);
+            }
         }
 
         /// <summary>
@@ -96,7 +125,7 @@ namespace ElementalTD.Core
                 return false;
             }
 
-            int cost = tower.Stats.Cost;
+            int cost = tower.BaseStats.Cost;
             // Integer arithmetic, so the refund is the same under Mono and IL2CPP.
             gold = tower.HasFired ? cost * _sellRefundPercent / 100 : cost;
             return true;
@@ -112,10 +141,10 @@ namespace ElementalTD.Core
             return true;
         }
 
-        /// <summary>Does nothing once the run is won or lost.</summary>
+        /// <summary>Does nothing, and counts nothing, once the run is won or lost and while a choice is open.</summary>
         public void Tick()
         {
-            if (Outcome != RunOutcome.Running) return;
+            if (Outcome != RunOutcome.Running || AwaitingChoice) return;
 
             // First, so everything stamped during this tick carries the count it has once the tick has run.
             TickCount++;
@@ -125,6 +154,8 @@ namespace ElementalTD.Core
             StepProjectiles();
             StepWaveBonuses();
             JudgeOutcome();
+            // Last, so the choice sees the tick's bonuses, and a level gained on the tick that ends the run opens none.
+            if (Outcome == RunOutcome.Running) Progression.OpenChoice();
         }
 
         private void StepWaves()
@@ -205,7 +236,7 @@ namespace ElementalTD.Core
                 if (target.Health <= 0f)
                 {
                     // Removal makes later shots at it TargetGone, so a kill pays once.
-                    Gold += target.GoldReward;
+                    Gold += Modifiers.ApplyWhole(Stat.GoldPerKill, target.GoldReward);
                     Progression.AddXp(target.XpReward);
                     Board.RemoveEnemy(target);
                 }

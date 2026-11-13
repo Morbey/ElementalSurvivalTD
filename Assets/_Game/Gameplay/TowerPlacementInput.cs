@@ -9,7 +9,8 @@ namespace ElementalTD.Gameplay
     /// <summary>
     /// Turns the pointer into board cells: hover, and a click that selects a tower on the board, ends that selection,
     /// or tries to buy the tower to buy. Holds the buyable towers and which one is the tower to buy: number key N chooses the N-th.
-    /// Picks nothing without a running battle, so a click on the end screen never reaches the board.
+    /// Picks nothing without a running battle, so a click on the end screen never reaches the board, and nothing, keys
+    /// included, while a choice of perks is open; a selection made before it stays (ADR 0007).
     /// The selection is input state only; the rules live in the Core Battle and Board (ADR 0004).
     /// </summary>
     public sealed class TowerPlacementInput : MonoBehaviour
@@ -116,6 +117,8 @@ namespace ElementalTD.Gameplay
         {
             Keyboard keyboard = Keyboard.current;
             if (keyboard == null) return;
+            Battle battle = bootstrap != null ? bootstrap.Battle : null;
+            if (battle != null && battle.AwaitingChoice) return;
 
             if (keyboard.escapeKey.wasPressedThisFrame) Deselect();
             for (int i = 0; i < TowerCount && Key.Digit1 + i <= Key.Digit0; i++)
@@ -127,7 +130,7 @@ namespace ElementalTD.Gameplay
             cell = default;
             if (bootstrap == null || viewCamera == null || Tower == null) return false;
             Battle battle = bootstrap.Battle;
-            if (battle == null || battle.Outcome != RunOutcome.Running) return false;
+            if (battle == null || battle.Outcome != RunOutcome.Running || battle.AwaitingChoice) return false;
 
             Ray ray = viewCamera.ScreenPointToRay(screenPosition);
             if (!Ground.Raycast(ray, out float distance)) return false;

@@ -5,8 +5,8 @@ using UnityEngine;
 namespace ElementalTD.Data
 {
     /// <summary>
-    /// A whole run: the lives, the gold, the level table and the waves in order, each with its groups, edited and balanced
-    /// as one asset (ADR 0004).
+    /// A whole run: the lives, the gold, the level table, the perk pool and the waves in order, each with its groups,
+    /// edited and balanced as one asset (ADR 0004, ADR 0007).
     /// </summary>
     [CreateAssetMenu(fileName = "Run_", menuName = "ElementalTD/Run Definition")]
     public sealed class RunDefinition : ScriptableObject
@@ -53,6 +53,8 @@ namespace ElementalTD.Data
         [SerializeField, Range(0, 100)] private int sellRefundPercent = 100;
         [Tooltip("Item n is the XP from level n to n + 1; each at least 1. Past the last item no level is gained.")]
         [SerializeField] private int[] xpPerLevel = new int[0];
+        [Tooltip("In order: a perk's place is its name in the draw. None, or at least three distinct perks.")]
+        [SerializeField] private PerkDefinition[] perks = new PerkDefinition[0];
         [SerializeField] private WaveEntry[] waves = new WaveEntry[0];
 
         public int Lives => lives;
@@ -68,6 +70,37 @@ namespace ElementalTD.Data
                 if (xpPerLevel[i] < 1)
                     throw new InvalidOperationException($"{name}: item {i + 1} of the level table is {xpPerLevel[i]}; it must be at least 1.");
             return (int[])xpPerLevel.Clone();
+        }
+
+        public PerkDefinition PerkAt(int index) => perks[index];
+
+        /// <summary>
+        /// The pool's modifiers in order. An empty pool is allowed and never opens a choice; throws for one or two perks,
+        /// an empty place, a perk listed twice, or a perk its own asset refuses.
+        /// </summary>
+        public Modifier[] ToPerks()
+        {
+            if (perks == null || perks.Length == 0) return new Modifier[0];
+            if (perks.Length < Progression.OfferSize)
+                throw new InvalidOperationException($"{name}: the pool has {perks.Length} perks; it needs none or at least {Progression.OfferSize}.");
+
+            var result = new Modifier[perks.Length];
+            for (int i = 0; i < perks.Length; i++)
+            {
+                if (perks[i] == null) throw new InvalidOperationException($"{name}: perk {i + 1} of the pool is empty.");
+                for (int j = 0; j < i; j++)
+                    if (perks[j] == perks[i])
+                        throw new InvalidOperationException($"{name}: {perks[i].name} is listed twice in the pool, as perks {j + 1} and {i + 1}.");
+                try
+                {
+                    result[i] = perks[i].ToModifier();
+                }
+                catch (InvalidOperationException exception)
+                {
+                    throw new InvalidOperationException($"{name}: perk {i + 1} of the pool: {exception.Message}", exception);
+                }
+            }
+            return result;
         }
 
         public Wave[] ToWaves()
