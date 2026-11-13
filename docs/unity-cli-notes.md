@@ -33,6 +33,7 @@ What the team has learned about driving this project with the `unity` CLI. Add a
 - In a `script eval`, `Screen.width` and `Screen.height` report the editor window (1414 x 794 seen), not the game view; `Camera.main.pixelWidth` and `pixelHeight` give the game view's size.
 - `editor quit --save true` rewrote `ProjectSettings/TimeManager.asset` into a newer format with the same timestep. Revert it when the task did not change it.
 - The turn between two CLI calls is longer than a wave countdown. Freeze the battle with `Time.timeScale = 0` while setting up (frames, input and UI still run), then set it back to 1.
+- The battle runs from Play's first frame, before any `script eval` can freeze it. To replay a timetable from tick 0, set `Time.timeScale = 0` and call `PrototypeBootstrap.Restart()` in one `script eval`, then call `Battle.Tick()` in a loop from the next, acting on `TickCount`; the views follow on the next frame.
 - To observe every drawn frame, add a callback to `RenderPipelineManager.endCameraRendering` filtered on `Camera.main` and `Time.frameCount`; it runs after `LateUpdate` and the UI update, so resolved styles are the frame's. Write the log to a file and remove the callback when done.
 - The `Hud` object carries only a `UIDocument`. A `PanelRenderer` on it with the same UXML draws a second, unwired copy of the HUD over the real one (found in 4c; it was invisible while the bars had no background). Dump `panel.visualTree` when the HUD draws but shows nothing.
 

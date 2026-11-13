@@ -105,6 +105,7 @@ Ideas raised mid-slice, one line each. Review them when a slice closes.
 - After the tower panel is closed with its close button, a second click at the same spot lands on the first buy button and changes the tower to buy. If it annoys in play, ignore clicks in the column for a moment after closing.
 - Damage numbers of an enemy on the top row are held below the top bar, so they cover that enemy's health bar. Place them beside the enemy instead (visual direction 2).
 - A damage number pushed into the top slot of its stack dims to 0.7 in one frame instead of with the push (art review of 4d): ease the cap with the slot.
+- Enemy and projectile pools grow when the board reaches a new peak, on 28 ticks of the reference run (4e tests): size them at the start of a run if a browser profile shows a hitch.
 - Critical hits have a look (visual direction 2) and no rule: decide where they come from and what they multiply; the look is built with the rule.
 - Wave health comes from one enemy asset per wave. Replace it with a per-wave modifier when the modifier system exists.
 - The cells beside a diagonal lane are refused while an enemy is on that step, about 70 percent of a wave. If it annoys in play, queue the placement until the cell is free.

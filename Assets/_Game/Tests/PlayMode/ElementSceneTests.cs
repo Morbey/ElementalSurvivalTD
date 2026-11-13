@@ -438,7 +438,7 @@ namespace ElementalTD.PlayModeTests
         [UnityTest]
         public IEnumerator S4b_AC10_When_The_Last_Wave_Starts_No_Countdown_Shows_And_Nothing_Is_Thrown()
         {
-            // The run ticked far with a huge life count would need a new battle; the reference order wins in 10165 ticks, and the last wave starts on tick 8460.
+            // The run ticked far with a huge life count would need a new battle; the reference order wins in 10317 ticks, and the last wave starts on tick 8460.
             int ticks = 0;
             while (Battle.Waves.StartedWaves < Battle.Waves.WaveCount && ticks < 12000 && Battle.Outcome == RunOutcome.Running)
             {
@@ -449,7 +449,8 @@ namespace ElementalTD.PlayModeTests
             yield return Frames(2);
             Assert.AreEqual(10, Battle.Waves.StartedWaves);
             Assert.AreEqual(DisplayStyle.None, Root.Q<Label>("next-wave-label").resolvedStyle.display, "no wave is left");
-            Assert.AreEqual($"Wave 10/10: {Markup(ElementOfTower(1))}", Root.Q<Label>("wave-label").text);
+            Assert.AreEqual($"Wave 10/10: {WaveElements(Battle.Waves.WaveAt(9))}", Root.Q<Label>("wave-label").text);
+            Assert.AreEqual($"Wave 10/10: {Markup(ElementOfTower(0))} + {Markup(ElementOfTower(1))}", Root.Q<Label>("wave-label").text, "document: wave 10 is L1 S1 six times, so Light is named first");
         }
 
         // ---- 4b-AC16 layout

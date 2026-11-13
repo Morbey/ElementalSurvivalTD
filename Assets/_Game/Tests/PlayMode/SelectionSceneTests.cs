@@ -459,7 +459,7 @@ namespace ElementalTD.PlayModeTests
             while (Battle.Outcome == RunOutcome.Running)
             {
                 RunReferenceActionsAt(ticks);
-                if (ticks == 9900) selected = SelectByClick(3, 1); // the last purchase of the order; the run wins 265 ticks later
+                if (ticks == 9900) selected = SelectByClick(0, 3); // the last purchase of the order; the run wins 417 ticks later
                 Battle.Tick();
                 ticks++;
                 Assert.Less(ticks, 12000, "the run never ended");
@@ -479,7 +479,7 @@ namespace ElementalTD.PlayModeTests
             Assert.IsTrue(Displayed("tower-bar"), "win: bar");
             Assert.IsFalse(FindByName("SelectionFrame").gameObject.activeSelf, "win: frame");
             Assert.IsFalse(FindByName("RangeDisc").gameObject.activeSelf, $"win: disc (hover cell {_input.HasHoverCell}, input enabled {_input.enabled})");
-            ClickCell(3, 1);
+            ClickCell(0, 3);
             Assert.IsNull(_input.SelectedTower);
             Assert.AreEqual((gold, towers), (Battle.Gold, Board.TowerCount));
         }

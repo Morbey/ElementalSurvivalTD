@@ -196,13 +196,13 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(RunOutcome.Won, Battle.Outcome);
             Assert.AreEqual(10, Battle.Lives);
             Assert.AreEqual(105, Battle.Gold, "document: 105 left");
-            Assert.AreEqual(10165, _endTicks, "document: won on the 10165th Tick(), through the scene");
+            Assert.AreEqual(10317, _endTicks, "document: won on the 10317th Tick(), through the scene");
             int lightTowers = 0, shadowTowers = 0;
             for (int i = 0; i < Board.TowerCount; i++)
             {
                 if (Board.TowerAt(i).Stats.Element == ElementOfTower(0)) lightTowers++; else shadowTowers++;
             }
-            Assert.AreEqual((16, 12), (lightTowers, shadowTowers), "document: 28 towers");
+            Assert.AreEqual((14, 15), (lightTowers, shadowTowers), "document: 29 towers, 14 Light and 15 Shadow");
             Assert.Greater(_framesAtCost, 0, "a frame had a gold equal to a cost, so the short-of-gold boundary was checked");
             Assert.AreEqual("Gold 105", GoldLabel.text);
             Assert.AreEqual($"Wave 10/10: {WaveElements(Battle.Waves.WaveAt(9))}", Text("wave-label").text);
