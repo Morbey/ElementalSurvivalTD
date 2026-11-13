@@ -13,7 +13,7 @@ namespace ElementalTD.Data
         {
             [SerializeField] private EnemyDefinition enemy;
             [SerializeField, Min(1)] private int count = 1;
-            [Tooltip("Must be above 0.")]
+            [Tooltip("Time before each enemy of the group, its first included; a wave's first enemy enters when the wave's delay ends. Must be above 0.")]
             [SerializeField, Min(0f)] private float spawnIntervalSeconds = 1f;
 
             public WaveGroup ToGroup(string runName, int waveNumber, int groupNumber)

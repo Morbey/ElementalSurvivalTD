@@ -2,7 +2,10 @@ using System;
 
 namespace ElementalTD.Core
 {
-    /// <summary>Enemies of one type within a wave, entering one per spawn interval.</summary>
+    /// <summary>
+    /// Enemies of one type within a wave. The spawn interval is the time before each of them, the first included,
+    /// except a wave's first enemy, which enters when the wave's delay ends (ADR 0004).
+    /// </summary>
     public readonly struct WaveGroup
     {
         public readonly EnemyStats Enemy;

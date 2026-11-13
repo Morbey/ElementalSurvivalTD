@@ -66,7 +66,7 @@ namespace ElementalTD.Core.Tests
         }
 
         [Test]
-        public void S4a_AC1_ToWaves_Converts_Every_Group_In_Asset_Order_And_The_Schedule_Refuses_A_Wave_Of_Two()
+        public void S4a_AC1_ToWaves_Converts_Every_Group_In_Asset_Order_And_The_Schedule_Accepts_A_Wave_Of_Two()
         {
             EnemyDefinition a = Enemy(2f, 100f), b = Enemy(3f, 40f);
             var run = ScriptableObject.CreateInstance<RunDefinition>();
@@ -99,7 +99,7 @@ namespace ElementalTD.Core.Tests
                 WaveGroup first = result[0].GroupAt(0), second = result[0].GroupAt(1);
                 Assert.AreEqual((2f, 100f, 3, 1f), (first.Enemy.Speed, first.Enemy.MaxHealth, first.Count, first.SpawnIntervalSeconds));
                 Assert.AreEqual((3f, 40f, 5, 0.25f), (second.Enemy.Speed, second.Enemy.MaxHealth, second.Count, second.SpawnIntervalSeconds));
-                Assert.Throws<ArgumentException>(() => new WaveSchedule(result), "one group only until mixed waves are built");
+                Assert.DoesNotThrow(() => new WaveSchedule(result), "4e-AC1: the schedule walks a wave of two groups");
             }
             finally
             {

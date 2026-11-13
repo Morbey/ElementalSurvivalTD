@@ -3,14 +3,16 @@ using System;
 namespace ElementalTD.Core
 {
     /// <summary>
-    /// Says when the next enemy of a run enters: the waves in order, each after its delay, its enemies one per spawn interval.
-    /// One timer counts both; at most one enemy enters per step. Every wave has exactly one group until mixed waves are built (ADR 0004).
+    /// Says when the next enemy of a run enters: the waves in order, and within a wave its groups in order (ADR 0004).
+    /// A wave's first enemy enters when its delay ends; every other enemy enters its own group's spawn interval after the one before it.
+    /// One timer counts both; at most one enemy enters per step.
     /// </summary>
     public sealed class WaveSchedule
     {
         private readonly Wave[] _waves;
         private int _wave;
-        private int _enteredInWave;
+        private int _group;
+        private int _enteredInGroup;
         private bool _inDelay;
         private float _timer;
 
@@ -29,7 +31,7 @@ namespace ElementalTD.Core
             if (waves == null) throw new ArgumentNullException(nameof(waves));
             if (waves.Length == 0) throw new ArgumentException("A run needs at least one wave.", nameof(waves));
             for (int i = 0; i < waves.Length; i++)
-                if (waves[i].GroupCount != 1) throw new ArgumentException($"Wave {i + 1} must have exactly one group.", nameof(waves));
+                if (waves[i].GroupCount < 1) throw new ArgumentException($"Wave {i + 1} has no group.", nameof(waves));
 
             // A copy, so changing the caller's array cannot change a running schedule.
             _waves = (Wave[])waves.Clone();
@@ -52,20 +54,29 @@ namespace ElementalTD.Core
             // shorter than a tick from eating into the next wave's delay.
             if (_timer < -dt) _timer = -dt;
 
-            WaveGroup group = _waves[_wave].GroupAt(0);
+            Wave wave = _waves[_wave];
+            WaveGroup group = wave.GroupAt(_group);
             enemy = group.Enemy;
-            if (_enteredInWave == 0) StartedWaves++;
-            _enteredInWave++;
+            if (_group == 0 && _enteredInGroup == 0) StartedWaves++;
+            _enteredInGroup++;
             _inDelay = false;
 
-            if (_enteredInWave < group.Count)
+            if (_enteredInGroup < group.Count)
             {
                 _timer += group.SpawnIntervalSeconds;
                 return true;
             }
 
+            _enteredInGroup = 0;
+            if (_group + 1 < wave.GroupCount)
+            {
+                _group++;
+                _timer += wave.GroupAt(_group).SpawnIntervalSeconds;
+                return true;
+            }
+
+            _group = 0;
             _wave++;
-            _enteredInWave = 0;
             if (_wave < _waves.Length)
             {
                 _inDelay = true;

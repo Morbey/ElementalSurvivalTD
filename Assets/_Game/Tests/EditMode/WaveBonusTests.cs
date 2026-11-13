@@ -99,11 +99,11 @@ namespace ElementalTD.Core.Tests
         }
 
         [Test]
-        public void S4a_AC1_WaveSchedule_Refuses_Two_Groups_And_A_Default_Wave_And_WaveAt_Returns_Each_Wave()
+        public void S4a_AC1_WaveSchedule_Accepts_Two_Groups_Refuses_A_Default_Wave_And_WaveAt_Returns_Each_Wave()
         {
             var two = new Wave(new[] { new WaveGroup(Still(), 1, 1f), new WaveGroup(Still(), 1, 1f) }, 0f);
             var one = new Wave(Still(), 1, 1f, 0f, 3);
-            Assert.Throws<ArgumentException>(() => new WaveSchedule(new[] { one, two }));
+            Assert.DoesNotThrow(() => new WaveSchedule(new[] { one, two }), "4e-AC1: a wave of several groups is walked");
             Assert.Throws<ArgumentException>(() => new WaveSchedule(new[] { one, default }));
             Assert.Throws<ArgumentException>(() => new WaveSchedule(new[] { default(Wave) }));
 
