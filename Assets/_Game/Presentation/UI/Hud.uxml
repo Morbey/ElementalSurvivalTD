@@ -56,8 +56,16 @@
         </ui:VisualElement>
     </ui:VisualElement>
     <ui:VisualElement name="bottom-bar" picking-mode="Ignore">
-        <ui:Label name="gold-label" class="hud-text" picking-mode="Ignore" />
-        <ui:Label name="message" class="hud-text" picking-mode="Ignore" />
+        <ui:VisualElement name="xp-row" picking-mode="Ignore">
+            <ui:Label name="level-label" class="hud-text" picking-mode="Ignore" />
+            <ui:VisualElement name="xp-track" picking-mode="Ignore">
+                <ui:VisualElement name="xp-fill" picking-mode="Ignore" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="economy-row" picking-mode="Ignore">
+            <ui:Label name="gold-label" class="hud-text" picking-mode="Ignore" />
+            <ui:Label name="message" class="hud-text" picking-mode="Ignore" />
+        </ui:VisualElement>
     </ui:VisualElement>
     <ui:VisualElement name="floating-texts" picking-mode="Ignore">
         <ui:VisualElement name="immune-words" class="floating-layer" picking-mode="Ignore" />

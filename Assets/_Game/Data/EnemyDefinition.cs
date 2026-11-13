@@ -10,12 +10,14 @@ namespace ElementalTD.Data
         [SerializeField, Min(1f)] private float maxHealth = 1f;
         [Tooltip("Gold paid when it is killed.")]
         [SerializeField, Min(0)] private int goldReward;
+        [Tooltip("XP added when it is killed.")]
+        [SerializeField, Min(0)] private int xpReward;
         [Tooltip("While unassigned, no element: it takes x1.")]
         [SerializeField] private ElementDefinition element;
 
         public float SpeedCellsPerSecond => speedCellsPerSecond;
 
         public EnemyStats ToStats() =>
-            new EnemyStats(speedCellsPerSecond, maxHealth, goldReward, element != null ? element.ToElement() : default);
+            new EnemyStats(speedCellsPerSecond, maxHealth, goldReward, element != null ? element.ToElement() : default, xpReward);
     }
 }

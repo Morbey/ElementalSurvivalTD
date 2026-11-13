@@ -15,6 +15,7 @@ MonoBehaviour:
   lives: 10
   startingGold: 115
   sellRefundPercent: 50
+  xpPerLevel: 1e00000028000000460000005a0000006e0000008200000096000000aa000000be000000d2000000i
   waves:
   - delayBeforeSeconds: 15
     survivalBonus: 40

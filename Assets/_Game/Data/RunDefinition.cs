@@ -4,7 +4,10 @@ using UnityEngine;
 
 namespace ElementalTD.Data
 {
-    /// <summary>A whole run: the lives, the gold and the waves in order, each with its groups, edited and balanced as one asset (ADR 0004).</summary>
+    /// <summary>
+    /// A whole run: the lives, the gold, the level table and the waves in order, each with its groups, edited and balanced
+    /// as one asset (ADR 0004).
+    /// </summary>
     [CreateAssetMenu(fileName = "Run_", menuName = "ElementalTD/Run Definition")]
     public sealed class RunDefinition : ScriptableObject
     {
@@ -48,11 +51,24 @@ namespace ElementalTD.Data
         [SerializeField, Min(0)] private int startingGold;
         [Tooltip("Percent of its cost a tower refunds once it has fired; rounded down.")]
         [SerializeField, Range(0, 100)] private int sellRefundPercent = 100;
+        [Tooltip("Item n is the XP from level n to n + 1; each at least 1. Past the last item no level is gained.")]
+        [SerializeField] private int[] xpPerLevel = new int[0];
         [SerializeField] private WaveEntry[] waves = new WaveEntry[0];
 
         public int Lives => lives;
         public int StartingGold => startingGold;
         public int SellRefundPercent => sellRefundPercent;
+
+        /// <summary>A copy of the level table.</summary>
+        public int[] ToLevelTable()
+        {
+            if (xpPerLevel == null) return new int[0];
+
+            for (int i = 0; i < xpPerLevel.Length; i++)
+                if (xpPerLevel[i] < 1)
+                    throw new InvalidOperationException($"{name}: item {i + 1} of the level table is {xpPerLevel[i]}; it must be at least 1.");
+            return (int[])xpPerLevel.Clone();
+        }
 
         public Wave[] ToWaves()
         {

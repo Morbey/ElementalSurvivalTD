@@ -15,4 +15,5 @@ MonoBehaviour:
   speedCellsPerSecond: 2
   maxHealth: 360
   goldReward: 10
+  xpReward: 10
   element: {fileID: 11400000, guid: 470fdc55befeb43398959be568366ba3, type: 2}

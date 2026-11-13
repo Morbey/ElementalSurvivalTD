@@ -29,7 +29,7 @@ Discarded: XP and the level as fields of `Battle` (they would join combat, waves
 
 **Read of the direction, for the art-director to confirm in its section 1.6.**
 1. The row under the XP row is 44 high (72 less the XP row's 8 and 20), so the gold's centre is at 50. The message line stays beside the gold, as built.
-2. Nothing separates the label from the track but the label's minimum width, 108 (settled by the orchestrator after this reading): it holds `Max level 8` and `Level 10` at the popped scale of 1.5 (about 99), so the track never moves and the popped label never lies over it.
+2. Nothing separates the label from the track but the label's minimum width, 108 (settled by the orchestrator after this reading): it holds `Level 10` at the popped scale of 1.5 (103 measured) and `Max level 11` unpopped (100), so the track never moves and a popped level never lies over it; the pop of the level that ends the table lies over the grey full fill.
 3. The level that ends the table pops like any other; "no more pops" means none after it. The grey fill at scale 1 covers the track's flash, so only the label is seen to pop.
 4. The first frame of a run shows level 1 and an empty track with no pop and no ease.
 5. The ease and the settle run on the panel's clock, as the sell value's drop does: real time, not battle time.

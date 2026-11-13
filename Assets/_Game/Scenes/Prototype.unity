@@ -587,6 +587,7 @@ GameObject:
   - component: {fileID: 1997445115}
   - component: {fileID: 1997445117}
   - component: {fileID: 1997445116}
+  - component: {fileID: 1997445118}
   m_Layer: 0
   m_Name: Hud
   m_TagString: Untagged
@@ -771,6 +772,22 @@ MonoBehaviour:
   immuneHoldSeconds: 1
   immuneFadeSeconds: 0.2
   prewarmWords: 32
+--- !u!114 &1997445118
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1997445108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c3c84ca993cb425689b599592233652, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.XpBarView
+  document: {fileID: 1997445110}
+  bootstrap: {fileID: 1930703238}
+  levelText: Level {0}
+  maxLevelText: Max level {0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

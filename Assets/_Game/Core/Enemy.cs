@@ -13,6 +13,7 @@ namespace ElementalTD.Core
         /// <summary>Keeps its last value while off the board.</summary>
         public float Health { get; private set; }
         public int GoldReward { get; private set; }
+        public int XpReward { get; private set; }
         public Element Element { get; private set; }
         /// <summary>The index of the wave it entered with; -1 outside a wave.</summary>
         public int WaveIndex { get; private set; }
@@ -48,6 +49,7 @@ namespace ElementalTD.Core
             MaxHealth = stats.MaxHealth;
             Health = MaxHealth;
             GoldReward = stats.GoldReward;
+            XpReward = stats.XpReward;
             Element = stats.Element;
             ImmuneHitTick = 0;
             Follower.Restart(spawn);

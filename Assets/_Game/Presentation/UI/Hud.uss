@@ -1,4 +1,4 @@
-/* Values: docs/art/visual-direction.md, sections 1.3, 1.5 and 2. The bars and the column are the only place their sizes live (ADR 0002). */
+/* Values: docs/art/visual-direction.md, sections 1.3, 1.5, 1.6 and 2. The bars and the column are the only place their sizes live (ADR 0002). */
 
 .hud-text {
     margin: 0;
@@ -122,15 +122,82 @@
     display: flex;
 }
 
-/* Bottom bar */
+/* Bottom bar: the XP row on top, then the economy row in the rest, so the gold's centre sits at 50 of 72. */
 
 #bottom-bar {
     flex-shrink: 0;
     height: 72px;
     padding: 0 16px;
+    flex-direction: column;
+    background-color: rgb(46, 44, 41);
+}
+
+#economy-row {
+    flex-grow: 1;
     flex-direction: row;
     align-items: center;
-    background-color: rgb(46, 44, 41);
+}
+
+/* XP row. The fill moves by scale only, so a gain costs no layout; the base rules carry the ease and the settle. */
+
+#xp-row {
+    flex-shrink: 0;
+    margin-top: 8px;
+    height: 20px;
+    flex-direction: row;
+    align-items: center;
+}
+
+#level-label {
+    min-width: 108px;
+    font-size: 16px;
+    transform-origin: left center;
+    transition-property: scale;
+    transition-duration: 0.3s;
+    transition-timing-function: ease-out;
+}
+
+#xp-track {
+    flex-grow: 1;
+    height: 10px;
+    background-color: rgb(69, 65, 59);
+    transition-property: background-color;
+    transition-duration: 0.5s;
+    transition-timing-function: ease;
+}
+
+#xp-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(244, 241, 234);
+    transform-origin: left center;
+    scale: 0 1;
+    transition-property: scale;
+    transition-duration: 0.15s;
+    transition-timing-function: ease-out;
+}
+
+/* A level: held for one frame (XpBarView) with no transition, so the fill takes its new scale at once. */
+
+#xp-row.xp-row--pop #level-label {
+    scale: 1.5 1.5;
+    transition-duration: 0s;
+}
+
+#xp-row.xp-row--pop #xp-track {
+    background-color: rgb(244, 241, 234);
+    transition-duration: 0s;
+}
+
+#xp-row.xp-row--pop #xp-fill {
+    transition-duration: 0s;
+}
+
+#xp-row.xp-row--max #xp-fill {
+    background-color: rgb(138, 132, 120);
 }
 
 #gold-label {

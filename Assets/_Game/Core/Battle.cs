@@ -5,7 +5,7 @@ namespace ElementalTD.Core
 {
     /// <summary>
     /// Plays one run in fixed ticks: waves, enemies, towers, projectiles, wave bonuses, then the outcome, in that order.
-    /// Enemies enter by the wave schedule, cost a life at the exit and pay their gold reward when killed;
+    /// Enemies enter by the wave schedule, cost a life at the exit and pay their gold and then their XP reward when killed;
     /// a shot that lands deals its damage times the chart's multiplier, 0 against the own element, and is recorded in
     /// the hit log, or as a mark on an enemy it cannot hurt (ADR 0006);
     /// a wave pays its survival bonus once its last enemy has entered and none of its enemies is on the board.
@@ -25,6 +25,8 @@ namespace ElementalTD.Core
 
         public Board Board { get; }
         public WaveSchedule Waves { get; }
+        /// <summary>The run's XP and level; never null (ADR 0004).</summary>
+        public Progression Progression { get; }
         public int Lives { get; private set; }
         /// <summary>Whole gold, never below 0.</summary>
         public int Gold { get; private set; }
@@ -48,8 +50,12 @@ namespace ElementalTD.Core
             return _hits[index % HitLogCapacity];
         }
 
-        /// <summary>Without a chart every pair of elements deals x1; immunity to the own element still holds.</summary>
-        public Battle(Board board, Wave[] waves, int lives, int startingGold = 0, int sellRefundPercent = 100, ElementChart elements = null)
+        /// <summary>
+        /// Without a chart every pair of elements deals x1; immunity to the own element still holds.
+        /// Without a progression the battle makes one with no table: XP counts and the level stays 1.
+        /// </summary>
+        public Battle(Board board, Wave[] waves, int lives, int startingGold = 0, int sellRefundPercent = 100, ElementChart elements = null,
+            Progression progression = null)
         {
             Board = board ?? throw new ArgumentNullException(nameof(board));
             if (lives < 1) throw new ArgumentOutOfRangeException(nameof(lives), lives, "A run needs at least one life.");
@@ -63,6 +69,7 @@ namespace ElementalTD.Core
             Gold = startingGold;
             _sellRefundPercent = sellRefundPercent;
             _elements = elements ?? new ElementChart(0);
+            Progression = progression ?? new Progression(null);
             Outcome = RunOutcome.Running;
         }
 
@@ -199,6 +206,7 @@ namespace ElementalTD.Core
                 {
                     // Removal makes later shots at it TargetGone, so a kill pays once.
                     Gold += target.GoldReward;
+                    Progression.AddXp(target.XpReward);
                     Board.RemoveEnemy(target);
                 }
             }

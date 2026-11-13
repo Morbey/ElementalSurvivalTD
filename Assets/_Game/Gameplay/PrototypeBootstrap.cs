@@ -41,7 +41,8 @@ namespace ElementalTD.Gameplay
                 return;
             }
 
-            Battle = new Battle(Board, run.ToWaves(), run.Lives, run.StartingGold, run.SellRefundPercent, elementChart.ToChart());
+            Battle = new Battle(Board, run.ToWaves(), run.Lives, run.StartingGold, run.SellRefundPercent, elementChart.ToChart(),
+                new Progression(run.ToLevelTable()));
         }
 
         private void Update()
