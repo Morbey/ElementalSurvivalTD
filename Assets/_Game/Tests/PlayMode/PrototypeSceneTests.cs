@@ -142,7 +142,7 @@ namespace ElementalTD.PlayModeTests
             [ValueSource(nameof(RefusalCases))] string reason)
         {
             yield return null;
-            Assert.IsFalse(MessageShown(), "message must start hidden");
+            Assert.IsFalse(RefusalShown(), "the refusal must start hidden");
 
             string expected;
             switch (reason)
@@ -158,36 +158,39 @@ namespace ElementalTD.PlayModeTests
                 default:
                     ClickCell(5, 7);
                     yield return null;
-                    Assert.IsFalse(MessageShown(), "a placement shows no message");
+                    Assert.IsFalse(RefusalShown(), "a placement shows no refusal");
                     ClickCell(5, 8);
                     expected = PathText;
                     break;
             }
             yield return null;
-            Assert.IsTrue(MessageShown());
-            Assert.AreEqual(expected, _label.text);
+            Assert.IsTrue(RefusalShown());
+            Assert.AreEqual(expected, RefusalText);
+            Assert.IsFalse(MessageShown(), "4d-AC10: nothing on the message line");
+            Assert.IsEmpty(_label.text);
         }
 
         private static readonly string[] RefusalCases = { "spawnOrExit", "wall", "enemy", "path" };
 
         [UnityTest]
-        public IEnumerator S2b_AC4_Refusal_Hides_After_2s_Unscaled_And_A_New_Refusal_Replaces_It_And_Restarts_The_Timer()
+        public IEnumerator S2b_AC4_And_S4d_AC10_Refusal_Hides_After_Its_Life_Unscaled_And_A_New_Refusal_Replaces_It_And_Restarts_The_Timer()
         {
+            // The refusal's life is the direction's 1.5 s (1.3), not the 2 s of 2b-AC4.
             ClickCell(_map.Spawn.X, _map.Spawn.Y);
             yield return null;
-            Assert.IsTrue(MessageShown());
-            Assert.AreEqual(SpawnOrExitText, _label.text);
+            Assert.IsTrue(RefusalShown());
+            Assert.AreEqual(SpawnOrExitText, RefusalText);
 
-            yield return new WaitForSecondsRealtime(1.5f);
+            yield return new WaitForSecondsRealtime(1.0f);
             ClickCell(5, 0);
             yield return null;
-            Assert.AreEqual(WallText, _label.text, "a new refusal replaces the text");
+            Assert.AreEqual(WallText, RefusalText, "a new refusal replaces the text");
 
-            yield return new WaitForSecondsRealtime(1.0f); // 2.5 s after the first, 1.0 s after the second
-            Assert.IsTrue(MessageShown(), "timer must restart on the new refusal");
+            yield return new WaitForSecondsRealtime(0.8f); // 1.8 s after the first, 0.8 s after the second
+            Assert.IsTrue(RefusalShown(), "timer must restart on the new refusal");
 
-            yield return new WaitForSecondsRealtime(1.4f); // 2.4 s after the second
-            Assert.IsFalse(MessageShown(), "message must hide after 2 s");
+            yield return new WaitForSecondsRealtime(1.0f); // 1.8 s after the second
+            Assert.IsFalse(RefusalShown(), "the refusal must hide after 1.5 s");
         }
 
         [UnityTest]
@@ -197,6 +200,7 @@ namespace ElementalTD.PlayModeTests
             _input.Click(OffGrid);
             yield return null;
             Assert.IsFalse(MessageShown());
+            Assert.IsFalse(RefusalShown());
             Assert.AreEqual(distanceBefore, _bootstrap.Board.Field.Distance(_map.Spawn));
             Assert.AreEqual(0, FindByName("Towers").childCount);
         }
@@ -367,14 +371,14 @@ namespace ElementalTD.PlayModeTests
         {
             yield return TickUntilOnStep(new GridPos(1, 4), new GridPos(2, 5));
             int gold = Battle.Gold;
-            Assert.IsFalse(MessageShown());
+            Assert.IsFalse(RefusalShown());
 
             foreach (var side in new[] { new GridPos(2, 4), new GridPos(1, 5) })
             {
                 ClickCell(side.X, side.Y);
                 yield return null;
-                Assert.IsTrue(MessageShown(), $"{side}");
-                Assert.AreEqual(EnemyText, _label.text, $"{side}");
+                Assert.IsTrue(RefusalShown(), $"{side}");
+                Assert.AreEqual(EnemyText, RefusalText, $"{side}");
                 Assert.IsFalse(Board.HasTower(side), $"{side}");
                 Assert.IsNull(GameObject.Find($"Tower {side.X},{side.Y}"));
                 Assert.AreEqual(0, Board.TowerCount);

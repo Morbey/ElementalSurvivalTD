@@ -235,6 +235,7 @@ namespace ElementalTD.PlayModeTests
                 Assert.AreEqual(towers, Board.TowerCount, "nothing bought or sold");
                 Assert.AreEqual(gold, Battle.Gold);
                 Assert.IsFalse(MessageShown(), "no refusal either");
+                Assert.IsFalse(RefusalShown(), "no refusal either");
             }
 
             ClickButton(TowerButtons()[1]);
@@ -257,6 +258,7 @@ namespace ElementalTD.PlayModeTests
                 Assert.IsTrue(disc.gameObject.activeSelf && FindByName("SelectionFrame").gameObject.activeSelf, $"{name}: the selected tower's frame and disc stay");
                 Assert.AreEqual((towers, gold), (Board.TowerCount, Battle.Gold), $"{name}: nothing bought or sold");
                 Assert.IsFalse(MessageShown(), $"{name}: no refusal");
+                Assert.IsFalse(RefusalShown(), $"{name}: no refusal");
             }
         }
 
@@ -634,39 +636,13 @@ namespace ElementalTD.PlayModeTests
             Assert.IsFalse(disc.gameObject.activeSelf);
         }
 
-        // ---- 4b-AC18 the message line
+        // ---- 4b-AC18 the message line (the refusal left it in 4d-AC10)
 
         private Color32 LineColour => _label.resolvedStyle.color;
 
         [UnityTest]
-        public IEnumerator S4b_AC18_A_Refusal_Shows_In_Its_Style_For_2_Seconds_And_Keeps_Its_Class_While_It_Fades()
+        public IEnumerator S4b_AC18_The_Survived_Line_Is_Gold_And_Lasts_3_Seconds()
         {
-            yield return null;
-            Assert.IsFalse(MessageShown());
-            ClickCell(_map.Spawn.X, _map.Spawn.Y);
-            yield return null;
-            Assert.IsTrue(MessageShown());
-            Assert.IsTrue(_label.ClassListContains("message--refusal"));
-            Assert.AreEqual(new Color32(255, 255, 255, 255), LineColour, "a refusal is white");
-            Assert.AreEqual(1f, _label.resolvedStyle.opacity, 0.01f);
-
-            yield return new WaitForSecondsRealtime(1.7f);
-            Assert.IsTrue(MessageShown(), "a refusal is still shown at 1.7 s");
-            yield return new WaitForSecondsRealtime(0.5f);
-            Assert.IsFalse(MessageShown(), "and hidden by 2.2 s: the refusal lasts 2 s, not the 3 of the survived line");
-            Assert.IsTrue(_label.ClassListContains("message--refusal"), "the refusal class stays while the line fades");
-            Assert.AreEqual(new Color32(255, 255, 255, 255), LineColour, "so it fades white");
-            yield return new WaitForSecondsRealtime(0.6f);
-            Assert.AreEqual(0f, _label.resolvedStyle.opacity, 0.01f, "faded out after 0.3 s");
-        }
-
-        [UnityTest]
-        public IEnumerator S4b_AC18_The_Survived_Line_Is_Gold_Lasts_3_Seconds_Replaces_A_Refusal_And_Drops_Its_Class()
-        {
-            ClickCell(_map.Spawn.X, _map.Spawn.Y);
-            yield return null;
-            Assert.IsTrue(_label.ClassListContains("message--refusal"));
-
             int ticks = 0;
             while (Battle.SurvivedWaves < 1 && ticks < 3000)
             {
@@ -676,23 +652,13 @@ namespace ElementalTD.PlayModeTests
             yield return Frames(3);
             Assert.IsTrue(MessageShown());
             Assert.AreEqual("Wave 1 survived +40", _label.text);
-            Assert.IsFalse(_label.ClassListContains("message--refusal"), "the survived line is not a refusal");
             Assert.AreEqual(new Color32(255, 194, 61, 255), LineColour, "gold");
 
             yield return new WaitForSecondsRealtime(2.6f);
             Assert.IsTrue(MessageShown(), "the survived line is still shown at 2.6 s");
             yield return new WaitForSecondsRealtime(0.7f);
             Assert.IsFalse(MessageShown(), "and hidden by 3.3 s");
-            Assert.IsFalse(_label.ClassListContains("message--refusal"));
             Assert.AreEqual(new Color32(255, 194, 61, 255), LineColour, "it fades gold");
-
-            // A refusal after it replaces it in its own style.
-            ClickCell(5, 0);
-            yield return null;
-            Assert.IsTrue(MessageShown());
-            Assert.IsTrue(_label.ClassListContains("message--refusal"));
-            Assert.AreEqual("Cannot build on a wall.", _label.text);
-            Assert.AreEqual(new Color32(255, 255, 255, 255), LineColour);
         }
 
         // ---- 4b-AC19 the end screen
@@ -788,6 +754,8 @@ namespace ElementalTD.PlayModeTests
                 Object.FindAnyObjectByType<MessageView>(),
                 Object.FindAnyObjectByType<BoardCameraFramer>(),
                 Object.FindAnyObjectByType<TowerPanelView>(),
+                Object.FindAnyObjectByType<DamageNumberView>(),
+                Object.FindAnyObjectByType<RefusalView>(),
             };
             foreach (MonoBehaviour view in views) Assert.IsNotNull(view);
 

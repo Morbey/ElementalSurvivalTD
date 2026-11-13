@@ -151,6 +151,7 @@ namespace ElementalTD.PlayModeTests
             yield return null;
             Assert.AreEqual((gold, towers, 0), (Battle.Gold, Board.TowerCount, refusals));
             Assert.IsFalse(MessageShown());
+            Assert.IsFalse(RefusalShown());
         }
 
         // ---- 4c-AC3 ending
@@ -194,6 +195,7 @@ namespace ElementalTD.PlayModeTests
             _input.Hover(OffGrid);
             yield return Frames(2);
             Assert.IsFalse(MessageShown(), $"{how}: no message");
+            Assert.IsFalse(RefusalShown(), $"{how}: no refusal");
             Assert.IsTrue(Displayed("tower-bar"), $"{how}: the buy buttons are back");
             Assert.IsFalse(Displayed("tower-panel"), $"{how}: the panel is gone");
             Assert.IsFalse(FindByName("SelectionFrame").gameObject.activeSelf, $"{how}: no frame");

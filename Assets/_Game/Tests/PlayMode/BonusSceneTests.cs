@@ -70,7 +70,7 @@ namespace ElementalTD.PlayModeTests
         }
 
         [UnityTest]
-        public IEnumerator S4a_AC4_A_Refusal_Replaces_The_Survived_Line()
+        public IEnumerator S4a_AC4_And_S4d_AC10_A_Refusal_And_The_Survived_Line_Show_Together_Each_With_Its_Own_Text_And_Time()
         {
             yield return TickToSurvived(1);
             yield return null;
@@ -79,32 +79,29 @@ namespace ElementalTD.PlayModeTests
             ClickCell(_map.Spawn.X, _map.Spawn.Y); // refused: spawn or exit
             yield return null;
 
-            Assert.IsTrue(MessageShown());
-            Assert.AreNotEqual(Survived(1), _label.text, "replaced");
-            StringAssert.DoesNotContain("survived", _label.text);
-            Assert.IsNotEmpty(_label.text);
-        }
-
-        [UnityTest]
-        public IEnumerator S4a_AC4_The_Survived_Line_Replaces_A_Refusal_And_Starts_Its_Own_Timer()
-        {
-            ClickCell(_map.Spawn.X, _map.Spawn.Y);
-            yield return null;
-            string refusal = _label.text;
-            Assert.IsNotEmpty(refusal);
-            Assert.IsTrue(MessageShown());
-
-            yield return TickToSurvived(1, 100);
-            yield return null;
-            Assert.AreNotEqual(refusal, _label.text);
+            Assert.IsTrue(MessageShown(), "the refusal does not replace the survived line");
             Assert.AreEqual(Survived(1), _label.text);
-            Assert.IsTrue(MessageShown());
+            Assert.IsTrue(RefusalShown(), "both are on screen together");
+            Assert.IsNotEmpty(RefusalText);
+            StringAssert.DoesNotContain("survived", RefusalText);
 
-            // Whatever time the refusal had left, the survived line gets its full 3 s.
-            yield return new WaitForSecondsRealtime(2.5f);
-            Assert.IsTrue(MessageShown(), "the line has its own full duration");
-            yield return new WaitForSecondsRealtime(1.0f);
+            yield return new WaitForSecondsRealtime(1.8f);
+            Assert.IsFalse(RefusalShown(), "the refusal has its own, shorter life");
+            Assert.IsTrue(MessageShown(), "the survived line keeps its own 3 s");
+            Assert.AreEqual(Survived(1), _label.text);
+            yield return new WaitForSecondsRealtime(1.5f);
             Assert.IsFalse(MessageShown());
+
+            // The other way round: a survived line that arrives while a refusal shows leaves the refusal alone.
+            ClickCell(5, 0);
+            yield return null;
+            string refusal = RefusalText;
+            Assert.IsTrue(RefusalShown());
+            yield return TickToSurvived(2, 100);
+            yield return null;
+            Assert.AreEqual(Survived(2), _label.text);
+            Assert.IsTrue(MessageShown());
+            Assert.AreEqual(refusal, RefusalText);
         }
 
         [UnityTest]
@@ -181,7 +178,8 @@ namespace ElementalTD.PlayModeTests
             {
                 ClickCell(_map.Spawn.X, _map.Spawn.Y);
                 yield return null;
-                Assert.AreNotEqual(Survived(2), _label.text);
+                Assert.AreEqual(Survived(2), _label.text, "4d-AC10: the refusal leaves the survived line");
+                Assert.IsTrue(RefusalShown());
             }
             string beforeLoss = _label.text;
             Assert.IsTrue(MessageShown(), "a message is showing before the losing tick");
@@ -196,6 +194,7 @@ namespace ElementalTD.PlayModeTests
             Assert.IsFalse(end.ClassListContains("end-screen--won"));
             Assert.AreEqual(DisplayStyle.None, countdown.resolvedStyle.display, "the countdown hides under the end screen");
             Assert.IsFalse(MessageShown(), "the message line hides under the end screen");
+            Assert.IsFalse(RefusalShown(), "4d-AC11: so does the refusal");
 
             yield return new WaitForSecondsRealtime(0.5f); // past the 0.3 s fade
             Assert.AreEqual(DisplayStyle.None, countdown.resolvedStyle.display);
@@ -223,8 +222,9 @@ namespace ElementalTD.PlayModeTests
 
             ClickCell(_map.Spawn.X, _map.Spawn.Y);
             yield return null;
-            Assert.IsTrue(MessageShown(), "a refusal shows again");
-            Assert.IsNotEmpty(_label.text);
+            Assert.IsTrue(RefusalShown(), "a refusal shows again");
+            Assert.IsNotEmpty(RefusalText);
+            Assert.IsFalse(MessageShown(), "and not on the message line");
 
             yield return TickToSurvived(1, 100);
             yield return null;

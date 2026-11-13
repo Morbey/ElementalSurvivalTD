@@ -48,13 +48,14 @@ namespace ElementalTD.PlayModeTests
             string label = GoldLabel.text;
             Assert.Less(gold, Cost);
             Assert.AreEqual($"Gold {gold}", label);
-            Assert.IsFalse(MessageShown(), "purchases that work show no message");
+            Assert.IsFalse(RefusalShown(), "purchases that work show no refusal");
 
             ClickCell(2 + bought, 2);
             yield return null;
 
-            Assert.IsTrue(MessageShown());
-            Assert.AreEqual(NotEnoughGoldText, _label.text);
+            Assert.IsTrue(RefusalShown());
+            Assert.AreEqual(NotEnoughGoldText, RefusalText);
+            Assert.IsFalse(MessageShown(), "4d-AC10: the message line stays quiet");
             Assert.IsNull(GameObject.Find($"Tower {2 + bought},2"));
             Assert.AreEqual(bought, Board.TowerCount);
             Assert.AreEqual(bought, FindByName("Towers").childCount);
@@ -68,7 +69,7 @@ namespace ElementalTD.PlayModeTests
             for (int x = 2; Battle.Gold >= Cost; x++) ClickCell(x, 2);
             ClickCell(5, 0); // a wall
             yield return null;
-            Assert.AreEqual(NotEnoughGoldText, _label.text);
+            Assert.AreEqual(NotEnoughGoldText, RefusalText);
         }
 
         [UnityTest]

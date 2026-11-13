@@ -136,6 +136,14 @@ namespace ElementalTD.PlayModeTests
         /// <summary>The line is shown from the frame after a message, by the class the style sheet fades on.</summary>
         protected bool MessageShown() => _label.ClassListContains("message--shown");
 
+        /// <summary>The refusal's own label (4d-AC10): it shows where the refused cell is and never on the message line.</summary>
+        protected Label RefusalLabel => Root.Q<Label>("refusal");
+
+        /// <summary>Shown when the view made the label visible; the text of a refusal that ended stays on the label.</summary>
+        protected bool RefusalShown() => RefusalLabel.resolvedStyle.visibility == Visibility.Visible;
+
+        protected string RefusalText => RefusalLabel.text;
+
         protected static Transform FindByName(string name)
         {
             foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include))

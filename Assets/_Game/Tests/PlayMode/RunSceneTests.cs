@@ -278,6 +278,7 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(0, Board.TowerCount);
             yield return new WaitForSecondsRealtime(3.3f); // the survived line of the last wave paid (3 s) has timed out
             Assert.IsFalse(MessageShown());
+            Assert.IsFalse(RefusalShown());
         }
 
         // ---- 3b-AC6: after a defeat, a click on a tower and on a free cell change nothing
@@ -308,6 +309,7 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual($"Gold {gold}", GoldLabel.text);
             yield return new WaitForSecondsRealtime(3.3f); // the survived line (3 s) has timed out; the clicks added no message
             Assert.IsFalse(MessageShown());
+            Assert.IsFalse(RefusalShown());
         }
 
         // ---- 3a-AC7: Restart through a real click, twice
