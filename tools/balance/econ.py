@@ -7,7 +7,8 @@ from core import *
 HERE = os.path.dirname(os.path.abspath(__file__))
 TS = dict(range=2.5, damage=10, sps=1.5, pspeed=10)
 SPEED = 2.0
-# per wave: (count, interval s, delay s, enemy health, gold per kill[, element, survival bonus])
+# per wave: (count, interval s, delay s, enemy health, gold per kill[, element, survival bonus]) for one group, or
+# ([(count, interval s, enemy health, gold per kill, element), ...], delay s, survival bonus) for several, in spawn order
 P = dict(lives=10, start_gold=100, cost=50, refund_pct=50,
          waves=[(c, 1, 15 if i == 0 else 8, 100, 10) for i, c in enumerate(range(3, 13))])
 REACT = 30  # a bot acts at most every 0.5 s
@@ -16,6 +17,10 @@ REACT = 30  # a bot acts at most every 0.5 s
 def mk_waves(p):
     out = []
     for w in p['waves']:
+        if isinstance(w[0], list):
+            gs = [((SPEED, hp, g, el), c, i) for c, i, hp, g, el in w[0]]
+            out.append((gs, sum(x[1] for x in gs), None, w[1], w[2]))
+            continue
         c, i, d, hp, g = w[:5]; el = w[5] if len(w) > 5 else None; bon = w[6] if len(w) > 6 else 0
         out.append(((SPEED, hp, g, el), c, i, d, bon))
     return out
@@ -23,11 +28,18 @@ def mk_waves(p):
 
 # ---- ELEMENT POLICIES: callables (battle, bot) -> 'L' | 'S' | None ----
 def counter(e): return None if e is None else ('S' if e == 'L' else 'L')
-def wave_elem(b, k): return b.waves.w[k][0][3]
+def wave_need(b, k):
+    """Total enemy health of wave k per enemy element."""
+    need = {'L': 0.0, 'S': 0.0}
+    for st, c, _ in b.waves.g[k]: need[st[3]] += st[1] * c
+    return need
+def wave_elem(b, k):
+    """The element with the most enemy health in wave k (its only one in a single-element wave); Shadow on a tie."""
+    n = wave_need(b, k); return 'L' if n['L'] > n['S'] else 'S'
 def announced(b):
     k = b.waves.next_index(); return wave_elem(b, k if k is not None else len(b.waves.w) - 1)
 class Reads:
-    """Buys the tower that damages the announced wave (the last wave once all have entered)."""
+    """Buys the tower that damages the announced wave's main element (the last wave once all have entered)."""
     name = 'reads'
     def __call__(self, b, bot): return counter(announced(b))
 class ReadsBoard:
@@ -38,7 +50,8 @@ class ReadsBoard:
         need = {'L': 0.0, 'S': 0.0}
         for en in b.enemies: need[en.elem] += en.hp
         k = b.waves.next_index()
-        if k is not None: w = b.waves.w[k]; need[w[0][3]] += w[0][1] * w[1]
+        if k is not None:
+            for e, v in wave_need(b, k).items(): need[e] += v
         sup = {e: 1 + sum(t.elem == counter(e) for t in b.towers) for e in 'LS'}
         a = announced(b); o = counter(a)
         return counter(a if need[a] / sup[a] >= need[o] / sup[o] else o)
@@ -50,7 +63,7 @@ class ReadsShare:
         k = b.waves.next_index(); last = (k if k is not None else len(b.waves.w)) - 1
         need = {'L': 0.0, 'S': 0.0}
         for j in [x for x in (last, k) if x is not None and x >= 0]:
-            w = b.waves.w[j]; need[w[0][3]] += w[0][1] * w[1]
+            for e, v in wave_need(b, j).items(): need[e] += v
         tot = need['L'] + need['S']; n = len(b.towers) + 1
         have = {e: sum(t.elem == counter(e) for t in b.towers) for e in 'LS'}
         a = announced(b); o = counter(a)
@@ -65,7 +78,7 @@ class ReadsAhead:
         if k is None: return counter(announced(b))
         need = {'L': 0.0, 'S': 0.0}
         for j in range(k, min(k + self.n, len(b.waves.w))):
-            w = b.waves.w[j]; need[w[0][3]] += w[0][1] * w[1]
+            for e, v in wave_need(b, j).items(): need[e] += v
         tot = need['L'] + need['S']; n = len(b.towers) + 1
         have = {e: sum(t.elem == counter(e) for t in b.towers) for e in 'LS'}
         a = announced(b); o = counter(a); gap = lambda e: need[e] / tot * n - have[e]
@@ -82,6 +95,19 @@ class Half:
     def __call__(self, b, bot):
         nl = sum(t.elem == 'L' for t in b.towers); ns = len(b.towers) - nl
         return self.first if nl == ns else ('L' if nl < ns else 'S')
+class ReadsThenMono:
+    """Reads the announcement (board + announced wave) until wave `w` is announced, then buys only element `e`:
+    a player who has not noticed the mixing."""
+    def __init__(self, e, w=4): self.e = e; self.w = w; self.rb = ReadsBoard(); self.name = f'reads to wave {w - 1}, then only {e}'
+    def __call__(self, b, bot):
+        k = b.waves.next_index()
+        return self.e if k is None or k >= self.w - 1 else self.rb(b, bot)
+class Skew:
+    """Ignores the announcement: keeps a share `r` of its towers of element `e` (buys `e` while below it)."""
+    def __init__(self, e, r): self.e = e; self.r = r; self.name = f'{round(100 * r)}% {e}'
+    def __call__(self, b, bot):
+        n = sum(t.elem == self.e for t in b.towers)
+        return self.e if n < self.r * (len(b.towers) + 1) else counter(self.e)
 class NoElem:
     name = 'no element (3c)'
     def __call__(self, b, bot): return None
@@ -225,8 +251,8 @@ class Mover(Sensible):
 
 
 class Swapper(Sensible):
-    """Reads the announcement; when wave `w`'s first enemy enters, sells its `k` oldest towers of the element that cannot
-    touch that wave (they have fired) and rebuilds the other element where it adds most."""
+    """Reads the announcement; when wave `w`'s first enemy enters, sells its `k` oldest towers of the element that does least
+    against that wave (none in a single-element wave; they have fired) and rebuilds the other element where it adds most."""
     def __init__(self, w, k=2): super().__init__(); self.w = w; self.k = k; self.done = False; self.name = f'reads, swaps {k} towers at wave {w}'
     def act(self, b):
         if not self.done and b.waves.started >= self.w:
@@ -283,5 +309,5 @@ def run(p, bot, trace_s=(30, 60, 90, 120, 150), every=1, ep=None):
     return dict(bot=bot.name, out=b.outcome, t=round(b.tick_n / 60, 1), end_tick=b.tick_n, lives=b.lives, kills=b.kills,
                 towers=len(b.towers), gold=b.gold, gold_at=gold_at, wave_start=wave_start, wave_reached=b.waves.started,
                 route=round(b.field.dist(SPAWN) / 408, 2), sold_loss=b.sold_loss, log=bot.log, first_kill=first_kill,
-                tower_cells=[t.cell for t in b.towers], bad=getattr(bot, 'bad', None), bonus=b.bonus_earned, earned=b.earned, leaks_w=b.leaks_w, shots=b.shots, wasted=b.wasted, recoverable=b.recoverable, busy=b.busy_ticks, mixed=b.mixed_ticks,
+                tower_cells=[t.cell for t in b.towers], bad=getattr(bot, 'bad', None), bonus=b.bonus_earned, earned=b.earned, leaks_w=b.leaks_w, shots_w=b.shots_w, wasted_w=b.wasted_w, recov_w=b.recov_w, busy_w=b.busy_w, mixed_w=b.mixed_w, shots=b.shots, wasted=b.wasted, recoverable=b.recoverable, busy=b.busy_ticks, mixed=b.mixed_ticks,
                 nL=sum(t.elem == 'L' for t in b.towers), nS=sum(t.elem == 'S' for t in b.towers))

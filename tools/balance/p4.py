@@ -11,7 +11,8 @@ def mk(kind, arg=0):
             'saver': lambda: Hoarder(arg), 'swap': lambda: Swapper(*arg), 'sloppy': lambda: Sloppy(arg)}[kind]()
 def mkep(e, arg=0):
     return {'reads': Reads, 'board': ReadsBoard, 'share': ReadsShare, 'ahead': lambda: ReadsAhead(arg), 'L': lambda: Mono('L'), 'S': lambda: Mono('S'), 'random': lambda: Random(arg),
-            'halfL': lambda: Half('L'), 'halfS': lambda: Half('S'), 'none': NoElem}[e]()
+            'halfL': lambda: Half('L'), 'halfS': lambda: Half('S'), 'none': NoElem,
+            'thenL': lambda: ReadsThenMono('L', arg or 4), 'thenS': lambda: ReadsThenMono('S', arg or 4), 'skewL': lambda: Skew('L', arg), 'skewS': lambda: Skew('S', arg)}[e]()
 def one(a):
     p, kind, arg, e, earg = a; return run(p, mk(kind, arg), ep=mkep(e, earg))
 def short(r): return f"{r['out'][0]}{r['lives']}"

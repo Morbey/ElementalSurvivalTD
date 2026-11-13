@@ -1,6 +1,6 @@
 # Float32-faithful port of ElementalTD.Core with the 3c eight-direction movement of plan 0006 (T3c-1) (Battle, Board, WaveSchedule, Enemy, PathFollower, FlowField, Projectile)
 # as of commit aadb638 + slice 3a, plus the 3b economy (gold, cost, bounty, sell) as an optional layer.
-# Slice 4 (balance assumptions, docs/balance/0001): elements 'L'/'S' on towers and enemies (None = 3c behaviour),
+# Step 4e: a wave may hold several groups (see Waves). Slice 4 (balance assumptions, docs/balance/0001): elements 'L'/'S' on towers and enemies (None = 3c behaviour),
 # targeting is the 3c rule (no element in it); damage is applied at the hit: x2 against the other element, 0 against the own
 # (a launch at an immune enemy is a wasted shot and counts as fired); a per-wave survival bonus paid on the tick
 # the wave has finished spawning and none of its enemies is on the board, while lives > 0.
@@ -117,9 +117,18 @@ class Tower:
         self.cd_add = f(1.0 / f(ts['sps'])); self.ps = f(ts['pspeed']); self.cd = 0.0; self.fired = False; self.cost = cost
 
 
+def groups(wave):
+    """A wave's groups in spawn order, each (enemy, count, interval). A wave is (enemy, count, interval, delay[, bonus]) for one group,
+    or ([groups], total count, None, delay[, bonus]) for several."""
+    return wave[0] if isinstance(wave[0], list) else [(wave[0], wave[1], wave[2])]
+
+
 class Waves:
-    def __init__(self, waves):  # waves: list of (enemy(speed,hp,bounty), count, interval, delay)
-        self.w = waves; self.i = 0; self.n = 0; self.timer = f(waves[0][3]); self.done = False; self.started = 0
+    """Step 4e timing: a group's interval is the time before each of its enemies, its first included, except the wave's first enemy,
+    which enters when the wave's delay ends. So after an entry the timer adds the next enemy's group interval, or the next wave's delay."""
+    def __init__(self, waves):
+        self.w = waves; self.g = [groups(w) for w in waves]
+        self.i = 0; self.n = 0; self.gi = 0; self.gn = 0; self.timer = f(waves[0][3]); self.done = False; self.started = 0
 
     def next_index(self):
         """The wave the HUD announces: the next one whose first enemy has not entered; None once all have entered."""
@@ -132,12 +141,13 @@ class Waves:
         self.timer = f(self.timer - DT)
         if self.timer > 0: return None
         if self.timer < -DT: self.timer = -DT
-        wave = self.w[self.i]; e = (wave[0], self.i)
+        gs = self.g[self.i]; e = (gs[self.gi][0], self.i)
         if self.n == 0: self.started += 1
-        self.n += 1
-        if self.n < wave[1]:
-            self.timer = f(self.timer + f(wave[2])); return e
-        self.i += 1; self.n = 0
+        self.n += 1; self.gn += 1
+        if self.gn == gs[self.gi][1]: self.gi += 1; self.gn = 0
+        if self.gi < len(gs):
+            self.timer = f(self.timer + f(gs[self.gi][2])); return e
+        self.i += 1; self.n = 0; self.gi = 0; self.gn = 0
         if self.i < len(self.w): self.timer = f(self.timer + f(self.w[self.i][3]))
         else: self.done = True
         return e
@@ -150,7 +160,8 @@ class Battle:
         self.waves = Waves(waves); self.lives = lives; self.outcome = 'Running'; self.tick_n = 0
         self.ts = tower_stats; self.gold = gold; self.cost = cost; self.refund_pct = refund_pct
         self.kills = 0; self.leaks = 0; self.earned = 0; self.spent = 0; self.sold_loss = 0
-        self.alive = [0] * len(waves); self.spawned = [0] * len(waves); self.paid = [False] * len(waves); self.leaks_w = [0] * len(waves); self.bonus_earned = 0; self.shots = 0; self.wasted = 0; self.recoverable = 0; self.busy_ticks = 0; self.mixed_ticks = 0
+        self.alive = [0] * len(waves); self.spawned = [0] * len(waves); self.total = [sum(g[1] for g in groups(w)) for w in waves]; self.paid = [False] * len(waves); self.leaks_w = [0] * len(waves); self.bonus_earned = 0; self.shots = 0; self.wasted = 0; self.recoverable = 0; self.busy_ticks = 0; self.mixed_ticks = 0
+        n = len(waves); self.shots_w = [0] * n; self.wasted_w = [0] * n; self.recov_w = [0] * n; self.busy_w = [0] * n; self.mixed_w = [0] * n  # per wave of the target / of an enemy on the board
 
     # ---- placement and selling (Board + proposed 3b economy) ----
     def can_place(self, c):
@@ -208,13 +219,13 @@ class Battle:
             if best is None: t.cd = 0.0; continue
             if t.elem is None or best.elem is None: dmg = t.dmg
             else: dmg = 0.0 if best.elem == t.elem else f(t.dmg * 2.0)  # 0 against the own element, x2 against the other
-            self.shots += 1
+            self.shots += 1; self.shots_w[best.wave] += 1
             if dmg == 0.0:  # wasted; 'recoverable' when an enemy it could damage was also in range (what skip-own-element would save)
-                self.wasted += 1
+                self.wasted += 1; self.wasted_w[best.wave] += 1
                 for en in self.enemies:
                     if en.elem != t.elem:
                         dx = f(en.x - cx); dy = f(en.y - cy)
-                        if f(f(dx * dx) + f(dy * dy)) <= t.rng2: self.recoverable += 1; break
+                        if f(f(dx * dx) + f(dy * dy)) <= t.rng2: self.recoverable += 1; self.recov_w[best.wave] += 1; break
             self.proj.append([float(cx), float(cy), best, dmg, t.ps]); t.fired = True
             t.cd = f(t.cd + t.cd_add)
         i = 0
@@ -232,11 +243,14 @@ class Battle:
             sc = f(st / f(math.sqrt(d2)))
             p[0] = f(p[0] + f(dx * sc)); p[1] = f(p[1] + f(dy * sc)); i += 1
         if self.enemies:
-            self.busy_ticks += 1; e0 = self.enemies[0].elem
-            if any(en.elem != e0 for en in self.enemies): self.mixed_ticks += 1
+            self.busy_ticks += 1; e0 = self.enemies[0].elem; mixed = any(en.elem != e0 for en in self.enemies)
+            if mixed: self.mixed_ticks += 1
+            for k in {en.wave for en in self.enemies}:
+                self.busy_w[k] += 1
+                if mixed: self.mixed_w[k] += 1
         if self.lives > 0:
             for k, wv in enumerate(self.waves.w):
-                if not self.paid[k] and self.spawned[k] == wv[1] and self.alive[k] == 0:
+                if not self.paid[k] and self.spawned[k] == self.total[k] and self.alive[k] == 0:
                     self.paid[k] = True; bon = wv[4] if len(wv) > 4 else 0; self.gold += bon; self.bonus_earned += bon
         if self.lives == 0: self.outcome = 'Lost'; return
         if self.waves.done and not self.enemies: self.outcome = 'Won'; self.proj.clear()

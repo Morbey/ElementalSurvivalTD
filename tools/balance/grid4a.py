@@ -3,7 +3,7 @@
 import sys, json
 from multiprocessing import Pool
 from p4 import *
-from proposal import up
+from proposal4b import up
 from grid2 import agg
 N = [None] * 10
 NS = int(sys.argv[2]) if len(sys.argv) > 2 else 20

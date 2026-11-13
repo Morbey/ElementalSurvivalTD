@@ -2,7 +2,7 @@
 import sys, itertools
 from multiprocessing import Pool
 from p4 import *
-from proposal import params
+from proposal4b import params
 from grid2 import agg
 from ordersearch import ok
 NS = 12

@@ -2,7 +2,7 @@
 import sys, json
 from multiprocessing import Pool
 from p4 import *
-from proposal import params, up
+from proposal4b import params, up
 from grid2 import agg
 if __name__ == '__main__':
     pool = Pool(17)
