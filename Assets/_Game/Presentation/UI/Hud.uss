@@ -451,6 +451,14 @@ Button#sell-button.sell-button--settle {
     bottom: 0;
 }
 
+/* Clipped at the board's right edge (the side column's width), so nothing over the board draws over the column.
+   Only the right inset moves: the origin, and so every translate, stays the panel's. */
+
+#floating-texts {
+    right: 216px;
+    overflow: hidden;
+}
+
 .floating-anchor {
     position: absolute;
     top: 0;

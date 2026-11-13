@@ -454,6 +454,95 @@ namespace ElementalTD.PlayModeTests
             _camera.ResetAspect();
         }
 
+        // ---- 4d-AC16 (Known limits) the layer is clipped at the board area's right edge
+
+        private VisualElement TextLayer => Root.Q<VisualElement>("floating-texts");
+
+        /// <summary>The element's world clip (internal in UI Toolkit, read by reflection): where its contents are cut. It is the layer's own bounds when the layer has overflow: hidden, and wider otherwise.</summary>
+        private static Rect ContentClip(VisualElement e)
+        {
+            var property = typeof(VisualElement).GetProperty("worldClip", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+            Assert.IsNotNull(property, "VisualElement.worldClip");
+            return (Rect)property.GetValue(e);
+        }
+
+        private static bool Inside(Rect inner, Rect outer, float t = 0.5f) =>
+            inner.xMin >= outer.xMin - t && inner.xMax <= outer.xMax + t && inner.yMin >= outer.yMin - t && inner.yMax <= outer.yMax + t;
+
+        [UnityTest]
+        public IEnumerator S4d_AC16_The_Text_Layer_Clips_At_The_Board_Areas_Right_Edge_And_Keeps_The_Panels_Origin([Values(0f, 1f, 1.7778f, 2.5f)] float aspect)
+        {
+            if (aspect > 0f) _camera.aspect = aspect;
+            yield return Frames(2);
+            Rect panel = Root.worldBound, area = BoardAreaRect, layer = TextLayer.worldBound;
+            string where = $"aspect {aspect}";
+            Assert.AreEqual(area.xMax, layer.xMax, 0.5f, where + ": right edge = board-area's right edge");
+            Assert.AreEqual(panel.xMin, layer.xMin, 0.5f, where + ": left = the panel's");
+            Assert.AreEqual(panel.yMin, layer.yMin, 0.5f, where + ": top = the panel's");
+            Assert.AreEqual(panel.yMax, layer.yMax, 0.5f, where + ": bottom = the panel's");
+            Assert.Less(layer.xMax, panel.xMax - 100f, where + ": the side column lies outside the layer");
+            // overflow: hidden resolves as a clip of the layer's contents at its own bounds (a style with no clip leaves worldClip wider than the layer).
+            Rect clip = ContentClip(TextLayer);
+            Assert.AreEqual(layer.xMax, clip.xMax, 0.5f, where + ": overflow hidden: the clip stops at the layer's right edge");
+            Assert.LessOrEqual(clip.xMax, area.xMax + 0.5f, where + ": and so at the board area's");
+            // The origin did not move: a number's bottom centre still equals its translate (grown about its bottom centre, so the scale does not shift it).
+            NumberView.Show(HitAtCell(3, 3, 20f, HitKind.Strong, OffBoard + 1));
+            yield return null;
+            for (int i = 0; i < 6; i++) { Battle.Tick(); yield return null; }
+            var numbers = DrawnNumbers();
+            Assert.AreEqual(1, numbers.Count, where);
+            Assert.AreEqual(numbers[0].Bottom.x, numbers[0].Rect.center.x, 0.5f, where + ": worldBound bottom centre x = translate x");
+            Assert.AreEqual(numbers[0].Bottom.y, numbers[0].Rect.yMax, 0.5f, where + ": worldBound bottom = translate y");
+            _camera.ResetAspect();
+        }
+
+        [UnityTest]
+        public IEnumerator S4d_AC16_A_Refusal_On_The_Last_Column_Or_A_Corner_Cell_Lies_Inside_The_Clipped_Layer([Values(0f, 1f, 1.7778f, 2.5f)] float aspect)
+        {
+            yield return null;
+            if (aspect > 0f) _camera.aspect = aspect;
+            yield return Frames(2);
+            for (int x = 1; Battle.Gold >= _input.Tower.ToStats().Cost; x++) ClickCell(x, 1);
+            foreach (var cell in new[] { new GridPos(15, 8), new GridPos(15, 4), new GridPos(15, 0), new GridPos(0, 0), new GridPos(0, 8), new GridPos(14, 8) })
+            {
+                ClickCell(cell.X, cell.Y);
+                yield return null;
+                Assert.IsTrue(RefusalShown(), $"{cell}");
+                Rect layer = TextLayer.worldBound, r = RefusalLabel.worldBound;
+                Assert.IsTrue(Inside(r, layer), $"{cell} aspect {aspect}: refusal {r} inside the layer {layer} (nothing of it cut)");
+                Assert.IsTrue(Inside(r, ContentClip(TextLayer)), $"{cell} aspect {aspect}: and inside the clip {ContentClip(TextLayer)}");
+                yield return null;
+            }
+            _camera.ResetAspect();
+        }
+
+        [UnityTest]
+        public IEnumerator S4d_AC16_An_Immune_Word_Under_An_Enemy_On_The_Bottom_Row_Lies_Inside_The_Clipped_Layer([Values(0f, 1f, 1.7778f, 2.5f)] float aspect)
+        {
+            yield return null;
+            if (aspect > 0f) _camera.aspect = aspect;
+            BuyFree(10, 1, WaveElement); // same element as the wave: immune, a word per landing; the tower closes row 1 of column 10, so the enemy passes it on row 0
+            Enemy enemy = SpawnWave1Enemy(health: 1_000_000f, speed: 1.5f);
+            int lowFramesWithWord = 0, guard = 0, anyWord = 0;
+            float minY = 99f;
+            while (OnBoard(enemy) && guard++ < 3000)
+            {
+                Battle.Tick();
+                yield return null;
+                var words = DrawnWords();
+                minY = Mathf.Min(minY, enemy.Y);
+                if (words.Count > 0) anyWord++;
+                Rect layer = TextLayer.worldBound;
+                foreach (Drawn w in words)
+                {
+                    Assert.IsTrue(Inside(w.Rect, layer), $"aspect {aspect}, enemy at ({enemy.X:F2}, {enemy.Y:F2}): word {w.Rect} inside the layer {layer}");
+                    if (enemy.Y < 0.5f) lowFramesWithWord++;
+                }
+            }
+            Assert.Greater(lowFramesWithWord, 0, $"aspect {aspect}: a word showed while the enemy was on the bottom row (lowest Y {minY:F2}, {anyWord} frames with a word, {guard} frames)");
+            _camera.ResetAspect();
+        }
+
         // ---- 4d-AC11 end of a run
 
         private void AssertNothingFloats(string when)

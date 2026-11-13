@@ -21,6 +21,9 @@ namespace ElementalTD.PlayModeTests
     {
         private const float P = 0.08f;
 
+        /// <summary>The visual direction's top-line step (section 2): pinned here, not read from the scene, so a view that ignores its field fails. A tuning changes this and the scene-values test.</summary>
+        private const float DirectionLineStep = 34f;
+
         private static float Ease(float t) => 1f - (1f - t) * (1f - t);
 
         /// <summary>Slot 0's bottom centre over an enemy as it is drawn: 0.6 cells above its centre, towards the top of the screen.</summary>
@@ -86,7 +89,7 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(0.7f, SceneValue("topSlotOpacity"));
             Assert.AreEqual(0.5f, SceneValue("opaqueShare"));
             Assert.AreEqual(47f, SceneValue("topLimitPixels"));
-            Assert.AreEqual(28f, SceneValue("lineStepPixels"));
+            Assert.AreEqual(DirectionLineStep, SceneValue("lineStepPixels"));
             Assert.AreEqual(40, (int)SceneValue("maxNumbers"));
             Assert.AreEqual(30, (int)SceneValue("weakCutoff"));
             Assert.AreEqual(0.35f, SceneValue("wordDepthCells"));
@@ -823,7 +826,7 @@ namespace ElementalTD.PlayModeTests
                     {
                         int steps = 2 - pair.expected.Order; // the newest has order 2
                         Assert.AreEqual(47f + 23f, pair.drawn.Bottom.y, PositionTolerance, "top on the limit");
-                        Assert.AreEqual(cell.x + 28f * steps, pair.drawn.Bottom.x, PositionTolerance, $"number {pair.expected.Order}: {steps} steps to the right");
+                        Assert.AreEqual(cell.x + DirectionLineStep * steps, pair.drawn.Bottom.x, PositionTolerance, $"number {pair.expected.Order}: {steps} steps to the right");
                     }
                 }
             });
@@ -858,7 +861,7 @@ namespace ElementalTD.PlayModeTests
                         {
                             Assert.IsTrue(pair.expected.OnLine, "slot 2 is on the line");
                             Assert.AreEqual(47f + 23f, pair.drawn.Bottom.y, PositionTolerance);
-                            Assert.AreEqual(cell.x + 56f, pair.drawn.Bottom.x, PositionTolerance, "two steps to the right");
+                            Assert.AreEqual(cell.x + 2f * DirectionLineStep, pair.drawn.Bottom.x, PositionTolerance, "two steps to the right");
                         }
                     }
                 }
@@ -871,7 +874,7 @@ namespace ElementalTD.PlayModeTests
             });
             Assert.Greater(leavingXs.Count, 2);
             Assert.Greater(leavingXs[leavingXs.Count - 1], leavingXs[0], "moving right along the line while it leaves");
-            Assert.AreEqual(cell.x + 84f, leavingXs[leavingXs.Count - 1], 28f * 0.3f, "towards the third step");
+            Assert.AreEqual(cell.x + 3f * DirectionLineStep, leavingXs[leavingXs.Count - 1], DirectionLineStep * 0.3f, "towards the third step");
         }
 
         // ---- 4d-AC18 measured readability

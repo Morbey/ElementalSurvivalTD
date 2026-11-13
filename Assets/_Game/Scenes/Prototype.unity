@@ -763,7 +763,7 @@ MonoBehaviour:
   topSlotOpacity: 0.7
   opaqueShare: 0.5
   topLimitPixels: 47
-  lineStepPixels: 28
+  lineStepPixels: 34
   maxNumbers: 40
   weakCutoff: 30
   immuneText: immune
