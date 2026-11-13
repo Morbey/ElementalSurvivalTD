@@ -24,8 +24,11 @@ namespace ElementalTD.Core
         public float PreviousY { get; private set; }
         /// <summary>The battle tick of the last shot that landed on it and could not hurt it; 0: none since it entered.</summary>
         public int ImmuneHitTick { get; private set; }
-        /// <summary>Counts entries, so a shot can tell the enemy it was fired at from a later one that reuses this object.</summary>
-        internal int Entry { get; private set; }
+        /// <summary>
+        /// Its number among the entries of the run, from 1 in entry order: a later enemy on this object has another, so a
+        /// shot or a view can tell the enemy it means from the one that reuses the object (ADR 0006).
+        /// </summary>
+        public int Entry { get; private set; }
 
         /// <summary>Remaining path in cells: the distance of the cell it is heading to plus the unfinished step.</summary>
         public float DistanceToExit => Follower.DistanceToExit;
@@ -37,8 +40,9 @@ namespace ElementalTD.Core
             Follower = new PathFollower(field, start);
         }
 
-        internal void Enter(GridPos spawn, in EnemyStats stats, int waveIndex)
+        internal void Enter(GridPos spawn, in EnemyStats stats, int waveIndex, int entry)
         {
+            Entry = entry;
             WaveIndex = waveIndex;
             Speed = stats.Speed;
             MaxHealth = stats.MaxHealth;
@@ -50,7 +54,6 @@ namespace ElementalTD.Core
             SyncPosition();
             KeepPosition();
             IsOnBoard = true;
-            Entry++;
         }
 
         /// <summary>Returns true on arrival at the exit.</summary>

@@ -190,7 +190,7 @@ namespace ElementalTD.Core
                 if (kind == HitKind.Immune) target.MarkImmuneHit(TickCount);
                 else
                 {
-                    _hits[HitCount % HitLogCapacity] = new Hit(target.X, target.Y, damage, kind, TickCount);
+                    _hits[HitCount % HitLogCapacity] = new Hit(target.X, target.Y, damage, kind, TickCount, target.Entry);
                     HitCount++;
                 }
                 target.TakeDamage(damage);

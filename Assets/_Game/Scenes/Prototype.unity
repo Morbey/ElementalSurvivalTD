@@ -754,14 +754,16 @@ MonoBehaviour:
   weakLifeSeconds: 0.35
   normalLifeSeconds: 0.45
   strongLifeSeconds: 0.5
-  heightCells: 0.7
-  risePixels: 20
+  weakHeight: 17
+  normalHeight: 20
+  strongHeight: 23
+  heightCells: 0.6
+  pushSeconds: 0.08
+  budgetSlots: 3
+  topSlotOpacity: 0.7
   opaqueShare: 0.5
-  topLimitPixels: 78
-  spawnOffsets:
-  - {x: 0, y: 0}
-  - {x: -36, y: -8}
-  - {x: 36, y: -8}
+  topLimitPixels: 47
+  lineStepPixels: 28
   maxNumbers: 40
   weakCutoff: 30
   immuneText: immune

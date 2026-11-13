@@ -13,6 +13,7 @@ namespace ElementalTD.Core
         private readonly List<Tower> _towers = new List<Tower>();
         private readonly List<Enemy> _enemies = new List<Enemy>();
         private readonly Stack<Enemy> _freeEnemies = new Stack<Enemy>();
+        private int _entries;
 
         /// <summary>Raised after the board has changed.</summary>
         public event Action<GridPos> TowerPlaced;
@@ -88,13 +89,13 @@ namespace ElementalTD.Core
 
         /// <summary>
         /// An enemy enters at the spawn with these stats and full health; its previous position is its position.
-        /// It belongs to the wave of that index, or to none at -1.
+        /// It belongs to the wave of that index, or to none at -1, and takes the next entry number of the run.
         /// Reuses an object that left the board, so a spawn allocates only at a new peak of enemies on the board.
         /// </summary>
         public Enemy SpawnEnemy(in EnemyStats stats, int waveIndex = -1)
         {
             Enemy enemy = _freeEnemies.Count > 0 ? _freeEnemies.Pop() : new Enemy(Field, Spawn);
-            enemy.Enter(Spawn, stats, waveIndex);
+            enemy.Enter(Spawn, stats, waveIndex, ++_entries);
             _enemies.Add(enemy);
             return enemy;
         }

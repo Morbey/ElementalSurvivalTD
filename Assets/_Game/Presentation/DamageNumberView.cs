@@ -11,6 +11,9 @@ namespace ElementalTD.Presentation
     /// <summary>
     /// A number over the board for every hit in the battle's log, and the immune word under every enemy that towers have
     /// just failed to hurt (ADR 0006). Polls the log by its count and each enemy's mark; ages everything in battle time.
+    /// The numbers of one enemy are its stack: those alive that carry its entry number. A number enters at slot 0 above
+    /// its enemy; each newer one lifts it by its own height over its own entry, and the lifts add up, so where a number is
+    /// drawn depends on the records, the clock and where its enemy is drawn, never on which frames were drawn.
     /// Every label is made at start, except words when more enemies are on the board than ever before.
     /// </summary>
     // After BoardCameraFramer, so a frame that reframes the camera places the labels with the new one.
@@ -37,16 +40,26 @@ namespace ElementalTD.Presentation
         [SerializeField, Min(0f)] private float normalLifeSeconds;
         [Tooltip("Seconds of battle time a strong number lives.")]
         [SerializeField, Min(0f)] private float strongLifeSeconds;
-        [Tooltip("Cells above the hit point, towards the top of the screen, where a number's bottom centre starts.")]
+        [Tooltip("Panel pixels a weak number takes in its stack: its label's height.")]
+        [SerializeField, Min(0f)] private float weakHeight;
+        [Tooltip("Panel pixels a normal number takes in its stack: its label's height.")]
+        [SerializeField, Min(0f)] private float normalHeight;
+        [Tooltip("Panel pixels a strong number takes in its stack: its label's height.")]
+        [SerializeField, Min(0f)] private float strongHeight;
+        [Tooltip("Cells above the enemy's centre, towards the top of the screen, where slot 0's bottom centre hangs.")]
         [SerializeField] private float heightCells;
-        [Tooltip("Panel pixels a number rises over its life, eased out.")]
-        [SerializeField] private float risePixels;
+        [Tooltip("Seconds of battle time a number grows in (ease-in), lifts the older ones (ease-out), and fades out when it leaves.")]
+        [SerializeField, Min(0.001f)] private float pushSeconds;
+        [Tooltip("Slots a stack holds; a number pushed beyond them leaves.")]
+        [SerializeField, Min(1)] private int budgetSlots;
+        [Tooltip("Opacity at most of a number in the last slot of the budget or beyond it.")]
+        [SerializeField, Range(0f, 1f)] private float topSlotOpacity;
         [Tooltip("Share of its life a number stays fully opaque before it fades linearly to 0.")]
         [SerializeField, Range(0f, 1f)] private float opaqueShare;
-        [Tooltip("Panel pixels from the panel's top above which a number's bottom centre never goes.")]
+        [Tooltip("Panel pixels from the panel's top above which a number's top never goes.")]
         [SerializeField, Min(0f)] private float topLimitPixels;
-        [Tooltip("Panel offsets (x, y; a negative y is up) given to new numbers in turn, one counter for all.")]
-        [SerializeField] private Vector2[] spawnOffsets = new Vector2[0];
+        [Tooltip("Panel pixels to the right per slot of a number held on the top line.")]
+        [SerializeField] private float lineStepPixels;
         [Tooltip("Numbers alive at most; the labels are made at start. At the cap a new number takes the oldest's.")]
         [SerializeField, Min(0)] private int maxNumbers;
         [Tooltip("From this many numbers alive, a weak hit shows none.")]
@@ -67,9 +80,14 @@ namespace ElementalTD.Presentation
         {
             public bool Alive;
             public int Tick;
+            public int Entry;       // of the enemy hit: its stack
             public float Life;
-            public float X, Y;      // the raised board point, in cells
-            public Vector2 Offset;
+            public float Height;
+            public float X, Y;      // where its enemy was last, in cells
+            public int Slot;        // newer numbers shown for its enemy
+            public float Lift;      // panel pixels: the heights of those newer numbers, once each has fully entered
+            public bool Leaving;
+            public int LeaveTick;
             public int Order;       // when it was shown: the lowest is the oldest
         }
 
@@ -81,7 +99,7 @@ namespace ElementalTD.Presentation
         private Number[] _numbers;
         private int _alive;
         private int _nextOrder;
-        private int _nextOffset;
+        private int[] _entering;   // this frame's numbers younger than the push time
         private int _readHits;
         private readonly List<FloatingLabel> _words = new List<FloatingLabel>();
         private readonly Dictionary<int, string> _amountTexts = new Dictionary<int, string>();
@@ -103,6 +121,7 @@ namespace ElementalTD.Presentation
             _readHits = _battle.HitCount;
             _numbers = new Number[maxNumbers];
             _numberLabels = new FloatingLabel[maxNumbers];
+            _entering = new int[maxNumbers];
             for (int i = 0; i < maxNumbers; i++) _numberLabels[i] = FloatingLabel.Create(numberParent);
             for (int i = 0; i < prewarmWords; i++) AddWord();
         }
@@ -126,6 +145,8 @@ namespace ElementalTD.Presentation
                 Show(in hit);
             }
             _readHits = count;
+            // Again: a hit read late may have pushed a number beyond the budget longer ago than the push time.
+            ExpireNumbers(alpha);
 
             IPanel panel = _root.panel;
             if (panel == null) return;
@@ -141,16 +162,27 @@ namespace ElementalTD.Presentation
             if (!(AgeOf(hit.Tick, bootstrap.TickAlpha) < life) || _numbers.Length == 0) return;
             if (hit.Kind == HitKind.Weak && _alive >= weakCutoff) return;
 
-            int slot = TakeSlot();
-            Vector2 offset = Vector2.zero;
-            if (spawnOffsets.Length > 0)
+            float height = HeightOf(hit.Kind);
+            for (int i = 0; i < _numbers.Length; i++)
             {
-                offset = spawnOffsets[_nextOffset];
-                _nextOffset = (_nextOffset + 1) % spawnOffsets.Length;
+                ref Number older = ref _numbers[i];
+                if (!older.Alive || older.Entry != hit.TargetEntry) continue;
+                older.X = hit.X;
+                older.Y = hit.Y;
+                older.Slot++;
+                older.Lift += height;
+                if (older.Slot >= budgetSlots && !older.Leaving)
+                {
+                    older.Leaving = true;
+                    older.LeaveTick = hit.Tick;
+                }
             }
+
+            int slot = TakeSlot();
             _numbers[slot] = new Number
             {
-                Alive = true, Tick = hit.Tick, Life = life, X = hit.X, Y = hit.Y + heightCells, Offset = offset, Order = _nextOrder++
+                Alive = true, Tick = hit.Tick, Entry = hit.TargetEntry, Life = life, Height = height, X = hit.X, Y = hit.Y,
+                Order = _nextOrder++
             };
 
             FloatingLabel label = _numberLabels[slot];
@@ -161,12 +193,15 @@ namespace ElementalTD.Presentation
         /// <summary>Battle seconds since the tick, with the fraction of a tick left over.</summary>
         private float AgeOf(int tick, float alpha) => (_battle.TickCount - tick + alpha) * Battle.TickSeconds;
 
+        /// <summary>Gone at the end of its life, or the push time after it began to leave; its label is then free.</summary>
         private void ExpireNumbers(float alpha)
         {
             for (int i = 0; i < _numbers.Length; i++)
             {
                 ref Number number = ref _numbers[i];
-                if (!number.Alive || AgeOf(number.Tick, alpha) < number.Life) continue;
+                if (!number.Alive) continue;
+                if (AgeOf(number.Tick, alpha) < number.Life
+                    && !(number.Leaving && AgeOf(number.LeaveTick, alpha) >= pushSeconds)) continue;
                 number.Alive = false;
                 _alive--;
                 _numberLabels[i].Hide();
@@ -175,20 +210,67 @@ namespace ElementalTD.Presentation
 
         private void DrawNumbers(in BoardToPanel toPanel, float alpha)
         {
+            Board board = _battle.Board;
+            int entering = 0;
+            for (int i = 0; i < _numbers.Length; i++)
+                if (_numbers[i].Alive && AgeOf(_numbers[i].Tick, alpha) < pushSeconds) _entering[entering++] = i;
+
             for (int i = 0; i < _numbers.Length; i++)
             {
                 ref Number number = ref _numbers[i];
                 if (!number.Alive) continue;
 
+                // Follows its enemy while it is on the board; after that it keeps the point where it was last.
+                for (int e = 0; e < board.EnemyCount; e++)
+                {
+                    Enemy enemy = board.EnemyAt(e);
+                    if (enemy.Entry != number.Entry) continue;
+                    // As CombatView draws the enemy: between its last two ticks.
+                    number.X = Mathf.Lerp(enemy.PreviousX, enemy.X, alpha);
+                    number.Y = Mathf.Lerp(enemy.PreviousY, enemy.Y, alpha);
+                    break;
+                }
+
+                // The whole lift and slot, less the part of each newer number's push not yet done.
+                float lift = number.Lift;
+                float slot = number.Slot;
+                for (int k = 0; k < entering; k++)
+                {
+                    ref Number newer = ref _numbers[_entering[k]];
+                    if (newer.Entry != number.Entry || newer.Order <= number.Order) continue;
+                    float left = 1f - EaseOut(AgeOf(newer.Tick, alpha) / pushSeconds);
+                    lift -= newer.Height * left;
+                    slot -= left;
+                }
+
+                Vector2 position = toPanel.Point(number.X, number.Y + heightCells);
+                position.y -= lift;
+                if (position.y - number.Height < topLimitPixels)
+                {
+                    position.y = topLimitPixels + number.Height;
+                    position.x += lineStepPixels * slot;
+                }
+
+                float age = AgeOf(number.Tick, alpha);
+                float grown = Mathf.Min(1f, age / pushSeconds);
+                float t = age / number.Life;
+                float opacity = t <= opaqueShare ? 1f : (1f - t) / (1f - opaqueShare);
+                if (number.Slot >= budgetSlots - 1) opacity = Mathf.Min(opacity, topSlotOpacity);
+                if (number.Leaving) opacity *= Mathf.Max(0f, 1f - AgeOf(number.LeaveTick, alpha) / pushSeconds);
+
                 FloatingLabel label = _numberLabels[i];
-                float t = AgeOf(number.Tick, alpha) / number.Life;
-                float eased = 1f - (1f - t) * (1f - t);
-                Vector2 position = toPanel.Point(number.X, number.Y) + number.Offset;
-                position.y = Mathf.Max(position.y - risePixels * eased, topLimitPixels);
                 label.MoveTo(position);
-                label.SetOpacity(t <= opaqueShare ? 1f : (1f - t) / (1f - opaqueShare));
+                label.SetScale(grown * grown);
+                label.SetOpacity(opacity);
                 label.Show();
             }
+        }
+
+        /// <summary>The direction's ease-out, 1 − (1 − t)², with t clamped to 0..1.</summary>
+        private static float EaseOut(float t)
+        {
+            t = Mathf.Clamp01(t);
+            return 1f - (1f - t) * (1f - t);
         }
 
         private void DrawWords(in BoardToPanel toPanel, float alpha)
@@ -245,6 +327,17 @@ namespace ElementalTD.Presentation
                 if (_numbers[i].Order < _numbers[oldest].Order) oldest = i;
             }
             return oldest;
+        }
+
+        private float HeightOf(HitKind kind)
+        {
+            switch (kind)
+            {
+                case HitKind.Weak: return weakHeight;
+                case HitKind.Normal: return normalHeight;
+                case HitKind.Strong: return strongHeight;
+                default: return 0f;
+            }
         }
 
         private float LifeOf(HitKind kind)

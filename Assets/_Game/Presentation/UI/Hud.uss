@@ -484,21 +484,21 @@ Button#sell-button.sell-button--settle {
 }
 
 .damage-number--weak {
-    font-size: 16px;
+    font-size: 14px;
     -unity-font-style: normal;
     color: rgb(179, 172, 160);
     -unity-text-outline-width: 1px;
 }
 
 .damage-number--normal {
-    font-size: 20px;
+    font-size: 17px;
     -unity-font-style: bold;
     color: rgb(255, 255, 255);
     -unity-text-outline-width: 2px;
 }
 
 .damage-number--strong {
-    font-size: 26px;
+    font-size: 20px;
     -unity-font-style: bold;
     color: rgb(255, 194, 61);
     -unity-text-outline-width: 2px;

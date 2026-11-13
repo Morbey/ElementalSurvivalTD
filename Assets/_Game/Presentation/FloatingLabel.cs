@@ -4,9 +4,10 @@ using UnityEngine.UIElements;
 namespace ElementalTD.Presentation
 {
     /// <summary>
-    /// One text over the board: a zero-size anchor moved by translate, faded by opacity and hidden by visibility, holding
-    /// a label that the style sheet hangs from it by a centre point (bottom, or top for the word). Each value is written only when it differs from the one
-    /// written last, so a still label costs nothing and none goes through layout (ADR 0006).
+    /// One text over the board: a zero-size anchor moved by translate, grown by scale, faded by opacity and hidden by
+    /// visibility, holding a label that the style sheet hangs from it by a centre point (bottom, or top for the word), so
+    /// the label grows about that point. Each value is written only when it differs from the one written last, so a still
+    /// label costs nothing and none goes through layout (ADR 0006).
     /// </summary>
     internal sealed class FloatingLabel
     {
@@ -16,6 +17,7 @@ namespace ElementalTD.Presentation
         private readonly VisualElement _anchor;
         private bool _shown;
         private float _opacity = -1f;          // forces the first write
+        private float _scale = 1f;             // the style's default
         private Vector2 _position = new Vector2(float.NaN, float.NaN);
         private string _text;
         private string _class;
@@ -65,6 +67,14 @@ namespace ElementalTD.Presentation
             if (position == _position) return;
             _position = position;
             _anchor.style.translate = new Translate(position.x, position.y);
+        }
+
+        /// <summary>Uniform, about the anchor point.</summary>
+        public void SetScale(float scale)
+        {
+            if (scale == _scale) return;
+            _scale = scale;
+            _anchor.style.scale = new Scale(new Vector2(scale, scale));
         }
 
         public void SetOpacity(float opacity)

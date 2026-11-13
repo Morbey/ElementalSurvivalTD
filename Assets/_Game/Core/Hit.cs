@@ -1,7 +1,7 @@
 namespace ElementalTD.Core
 {
     /// <summary>
-    /// One record of the battle's hit log (ADR 0006). It points at no enemy, so a hit that kills still shows.
+    /// One record of the battle's hit log (ADR 0006). It names its target by entry number, not by object, so a hit that kills still shows.
     /// </summary>
     public readonly struct Hit
     {
@@ -13,14 +13,17 @@ namespace ElementalTD.Core
         public readonly HitKind Kind;
         /// <summary>Battle.TickCount on that tick.</summary>
         public readonly int Tick;
+        /// <summary>The target's Enemy.Entry: names the enemy hit, also once its object is another enemy's.</summary>
+        public readonly int TargetEntry;
 
-        public Hit(float x, float y, float amount, HitKind kind, int tick)
+        public Hit(float x, float y, float amount, HitKind kind, int tick, int targetEntry)
         {
             X = x;
             Y = y;
             Amount = amount;
             Kind = kind;
             Tick = tick;
+            TargetEntry = targetEntry;
         }
     }
 }

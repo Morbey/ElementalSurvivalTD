@@ -17,7 +17,7 @@ What the team has learned about driving this project with the `unity` CLI. Add a
 - `scene add_to_build` and `remove_from_build` change the list only in memory. Save it explicitly and check `ProjectSettings/EditorBuildSettings.asset` on disk.
 - `settings.player set` does not cover the WebGL player settings. Set them through `script eval` (`PlayerSettings.WebGL.…`), save, and check `ProjectSettings/ProjectSettings.asset`.
 - `asset copy` refuses a source outside `Assets/`. Use `AssetDatabase.CopyAsset` through `script eval`.
-- For multi-step asset or scene work, write a C# script outside `Assets/` and run `unity command script eval --file <path>`. In it, do not use `??` on `GetComponent` or `GameObject.Find` results: Unity's fake null defeats it.
+- For multi-step asset or scene work, write a C# script outside `Assets/` and run `unity command script eval --file <path>`. Give the file's absolute path: a relative one is resolved against the project, not the shell's directory. In it, do not use `??` on `GetComponent` or `GameObject.Find` results: Unity's fake null defeats it.
 - Smoke-check a scene with `unity command editor.playmode start`, then `script eval` calls on the live objects, then `editor.playmode stop`; Play mode changes are discarded.
 - In a `script eval`, `EditorSceneManager.OpenScene` destroys objects loaded or created before it. Open the scene first, then load or create assets.
 - In a `script eval`, extension methods do not resolve: call `UnityEngine.UIElements.UQueryExtensions.Q<Label>(root, name)`, not `root.Q<Label>(name)`.
