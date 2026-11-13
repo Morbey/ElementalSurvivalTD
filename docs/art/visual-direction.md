@@ -129,33 +129,46 @@ The two looks differ by colour, by the gold border and by the ` of 40` tail, not
 **While a tower is selected**: the range disc shows the selected tower's range and stays there wherever the pointer is; the hover still shows on other cells, without a disc of its own. Ending the selection brings back the buy buttons, with the selected tower to buy unchanged.
 
 ## 2. Damage numbers
-The closed look, in values. Numbers are pooled; nothing allocates per hit.
+Every hit shows its own number, never a sum. Numbers are pooled UI Toolkit labels, moved by `translate` and `scale` and faded by `opacity`; nothing allocates per hit. Panel pixels, negative y up; at 960 x 540 a cell is about 47.
 
-| Kind | Text | Size | Colour | Life |
-|---|---|---|---|---|
-| Weak | `2` | 16 regular | `#B3ACA0` | 0.35 s |
-| Normal | `8` | 20 bold | `#FFFFFF` | 0.45 s |
-| Strong | `16` | 26 bold | `#FFC23D` | 0.5 s |
-| Critical | the kind's number + `!` | its kind's size x 1.3 (21, 26, 34) | its kind's colour | its kind's + 0.2 s |
-| Immune | `immune` | 14 bold | `#D9D4C8` on a plate | see below |
+| Kind | Text | Size | Colour | Height (pitch) | Life |
+|---|---|---|---|---|---|
+| Weak | `2` | 14 regular | `#B3ACA0` | 17 | 0.35 s |
+| Normal | `8` | 17 bold | `#FFFFFF` | 20 | 0.45 s |
+| Strong | `16` | 20 bold | `#FFC23D` | 23 | 0.5 s |
+| Critical | its kind's number + `!` | its kind's x 1.6 (22, 27, 32) | its kind's, on a plate | 2 pitches (46) | its kind's + 0.4 s |
+| Immune | `immune` | 14 bold | `#D9D4C8` on a plate | – | see below |
 
-- Numbers: outline `#000000`, 2 on normal and strong (1 drew a hairline that lost the gold over a Light tower), 1 on weak; no shadow.
-- **Immune plate**: background `#1E1C1A` α 0.8, padding 0 4, radius 3, no outline. Light text on a dark plate reads by value on the floor and on both tower colours, and the plate is a shape no number has; small and achromatic, it does not compete with the gold.
-- Whole numbers, rounded to nearest with a half up (2.5 shows 3), at least 1.
-- Offsets, the rise and the clamp are panel pixels, negative y up. "Ease-out" is `1 − (1 − t)²`, t the elapsed share.
-- **Position**: a number hangs by its bottom centre, 0.7 cells above the enemy centre (screen up, just above the health bar), at that point of the board; it does not follow the enemy.
-- **Motion**: rises 20 with ease-out over its life; full opacity for the first 50 %, then linear to 0. Lives are short on purpose: few numbers alive at once, and a number still sits by its enemy, which walks 1 cell in 0.5 s.
-- **Top of the board**: a number's bottom centre never goes higher than 78 from the panel's top (top bar 44, the strong number about 31, 3 to spare), so no number enters the top bar: a number over "Lives 10" read as a new figure. A number held there stops rising and fades as usual. Cost: on the top row it covers the enemy's health bar while hits land. Recheck the 78 when the critical (34) is built.
-- **Pop (critical)**: scale 1.6 to 1.0 over 0.12 s, ease-out, then the normal motion.
-- **No stacking**: each new number takes the next spawn offset (x, y) from the cycle (0, 0), (-36, -8), (36, -8), one global counter. The x steps are wider than a strong `20` (about 33), so numbers in different slots never overlap, also at the top limit, where the y offsets are lost. A tower fires every 0.67 s, longer than any life, so one tower never stacks on itself; two or three towers on one enemy (hits 0.2 to 0.35 s apart) keep two or three numbers alive, in three slots when their hits are consecutive. Recheck the 36 when three-digit numbers appear (step = the widest common number + 3).
-- **Cap**: 40 numbers alive; at the cap the oldest is recycled. From 30 alive, weak numbers are not spawned.
-- **Immune**: at most one per enemy. It hangs by its **top** centre 0.35 cells **below** the enemy centre (screen down) and follows the enemy as drawn; it appears without a pop, and hides 1.0 s after the last immune hit on that enemy (fade over the last 0.2 s). Towers fire every 0.67 s, so a steady stream keeps it alive. It does not count towards the cap. On the bottom row it stays inside the board area.
-- **Numbers above, the word below**, with the body and the health bar between them: an enemy hit by towers of both elements shows each apart. Its own numbers start 1.05 cells (about 50) above its word; an enemy walking screen up at 2 cells/s cannot reach a strong number within its 0.5 s life. Enemies of a wave are 2 cells apart, so a word never reaches the next enemy's bar.
+- Numbers: outline `#000000`, 2 on normal and strong, 1 on weak; no shadow. Whole numbers, rounded to nearest with a half up (2.5 shows 3), at least 1.
+- **Height** is a scene field per kind, the label's height at its size; no code measures a label. A strong `20` is about 25 wide.
+- "Ease-out" is `1 − (1 − t)²` and "ease-in" `t²`, t the elapsed share.
+
+**The stack.** Each enemy carries its own numbers in a column above it, and they follow it as drawn. When the enemy dies or leaves, its numbers stay where it was last drawn and finish their lives.
+- **Entry**: a new number takes slot 0, nearest the enemy: hung by its bottom centre, 28 (0.6 cells) above the enemy centre, just above the health bar. It grows from scale 0 to 1 about its bottom centre over **0.08 s, ease-in**: the newest is always the one nearest the enemy and the only one growing.
+- **Push**: in the same frame, every older number of that enemy moves one slot up; its target is the sum of the heights of the newer numbers below it, and it eases there from where it is over **0.08 s, ease-out**. An older number travels at least as far as the new one grows (ease-out ≥ ease-in), so they never overlap, also while moving. No other rise: the push is the motion.
+- **Budget**: the stack holds 3 pitches (69). A number pushed beyond it moves one more pitch while fading to 0 over 0.08 s, then is free. So a number is pushed at most twice; at hits 0.12 s apart it shows at least 0.36 s.
+- **Opacity**: full for the first 50 % of its life, then linear to 0; a number in the top slot (2) is capped at 0.7, so the oldest reads as older.
+- **Top of the board**: no label's top goes above 47 from the panel's top (top bar 44, 3 to spare). A slot that would go higher sits on that line instead, and the slots there line up to the right of the enemy, 28 apart (the widest common number + 3), with the same push and entry. On the top row every slot sits on that line; on the second row slot 2 does. Cost: on the top row the numbers cover the health bar while hits land.
+- **Cap**: 40 numbers alive in all; at the cap the oldest is recycled. From 30 alive, weak numbers are not spawned.
+
+**Critical** (look ready; nothing fires it until a critical rule exists; the hit needs one `Critical` flag).
+- Text 1.6 x its kind's size in its kind's colour with `!`, outline 3, on a plate: background `#1E1C1A` α 0.85, border 2 in its kind's colour, radius 4, padding 0 6. The kind stays readable by the text's colour and size order; the plate and border make it the biggest, framed event on the board. One label: the plate is its own background and border.
+- **Pop**: enters at scale 2.2, eases to 0.9 over 0.12 s (ease-out), then to 1.0 over 0.08 s, about its bottom centre. For its first 0.1 s its text is `#FFFFFF` (class `damage-number--flash`), then its kind's colour.
+- **Life** its kind's + 0.4 s (strong 0.9 s), full opacity for the first 70 %.
+- **In the stack** it takes 2 pitches, and the budget becomes 4 pitches (92) while one is alive. It is pushed like any number but never past the budget: at the top it holds until its life ends, and an ordinary number that a push would move into it hides at once instead.
+- Cost: one class write at entry and one at 0.1 s, and a scale per frame during 0.2 s; no extra element and no new draw path.
+
+**Immune**: at most one word per enemy. It hangs by its **top** centre 0.35 cells **below** the enemy centre (screen down) and follows the enemy; plate background `#1E1C1A` α 0.8, padding 0 4, radius 3, no outline. It appears without a pop and hides 1.0 s after the last immune hit on that enemy (fade over the last 0.2 s); towers fire every 0.67 s, so a steady stream keeps it alive. It does not count towards the cap. Numbers above and the word below never meet: both follow the enemy, 44 apart, with the body and the health bar between them. On the bottom row the word stays inside the board area.
+
+**Known limits.**
+- On a vertical stretch the enemy ahead or behind is 94 away: a full stack (top at 97) puts slot 2, at 0.7 opacity, over that enemy's lower body, and slot 1 over its immune plate. Numbers stay above their own enemy, so they read as that one's.
+- On the top line of the board a number entering beside an older one touches it for its first 0.02 s, while it is under 0.1 of its size.
+- Three-digit numbers (about 38 wide at 20) need a top-line step of 41, and a top-row stack of three then reaches the next enemy: recheck when they arrive.
 
 **Changes to the closed look**, each a clarification it left open:
-1. A critical keeps the colour and the relative size of its kind (a strong critical is a large gold `32!`), so the "!" never hides whether the hit was strong or weak.
+1. A critical keeps its kind's colour and size order, so the plate, the `!` and the size never hide whether the hit was strong, normal or weak.
 2. The immune word is per enemy, not per tower and enemy: three towers wasting shots on one enemy show one word, not three. It stays small and grey, on a dark plate: grey alone on the stone floor was the weakest text on screen.
-3. The weak number is dimmed by colour, not opacity, so its outline stays solid; its size floor is 16 (15 px on the browser canvas).
+3. The weak number is dimmed by colour, not opacity, so its outline stays solid.
 4. Weak numbers are the first to go under load: they carry the least decision.
 
 ## 3. Review of what is on screen
