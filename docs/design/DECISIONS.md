@@ -14,7 +14,7 @@
 - Luck: 0 is a pure draw. More luck means higher rarity, more options and more elements that are strong against the scenario.
 - Automatic waves on a timer, 5 to 20 s apart, with no manual pause. The screen always shows the next wave, with its enemy and element.
 - A run has a fixed number of waves (ten in the prototype). Clearing the last wave wins the run.
-- A wave may mix enemies of several elements. Slice 4 ships with one element per wave; mixed waves follow it.
+- A wave may mix enemies of several elements: it is a list of groups, each of one enemy, entering one after another. Each group has its own spawn interval, which is also the time before its first enemy; there is no other pause between groups.
 - An enemy that reaches the exit leaves the board and costs the player a life. At zero lives the run is lost.
 - Map: an open grid where the player builds a maze with towers. There is pathfinding, and flyers go in a straight line.
   - Enemies move in eight directions and always take a shortest path. Between equally short ways they keep going straight, otherwise turn, and go back only when that is strictly the shortest way.
@@ -104,6 +104,7 @@ Ideas raised mid-slice, one line each. Review them when a slice closes.
 - Spawn and exit as rings (visual direction 3, open choice 2), when the first green or red element is built.
 - After the tower panel is closed with its close button, a second click at the same spot lands on the first buy button and changes the tower to buy. If it annoys in play, ignore clicks in the column for a moment after closing.
 - Damage numbers of an enemy on the top row are held below the top bar, so they cover that enemy's health bar. Place them beside the enemy instead (visual direction 2).
+- A damage number pushed into the top slot of its stack dims to 0.7 in one frame instead of with the push (art review of 4d): ease the cap with the slot.
 - Critical hits have a look (visual direction 2) and no rule: decide where they come from and what they multiply; the look is built with the rule.
 - Wave health comes from one enemy asset per wave. Replace it with a per-wave modifier when the modifier system exists.
 - The cells beside a diagonal lane are refused while an enemy is on that step, about 70 percent of a wave. If it annoys in play, queue the placement until the cell is free.
