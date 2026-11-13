@@ -15,14 +15,16 @@ REACT = 30  # a bot acts at most every 0.5 s
 
 
 def mk_waves(p):
-    out = []
-    for w in p['waves']:
+    """p['xp'] (step 5a, optional): XP per enemy, one number or one per wave."""
+    out = []; xp = p.get('xp', 0)
+    for k, w in enumerate(p['waves']):
+        x = xp[k] if isinstance(xp, (list, tuple)) else xp
         if isinstance(w[0], list):
-            gs = [((SPEED, hp, g, el), c, i) for c, i, hp, g, el in w[0]]
+            gs = [((SPEED, hp, g, el, x), c, i) for c, i, hp, g, el in w[0]]
             out.append((gs, sum(x[1] for x in gs), None, w[1], w[2]))
             continue
         c, i, d, hp, g = w[:5]; el = w[5] if len(w) > 5 else None; bon = w[6] if len(w) > 6 else 0
-        out.append(((SPEED, hp, g, el), c, i, d, bon))
+        out.append(((SPEED, hp, g, el, x), c, i, d, bon))
     return out
 
 
@@ -295,7 +297,7 @@ class Replay(Bot):
 
 def run(p, bot, trace_s=(30, 60, 90, 120, 150), every=1, ep=None):
     if ep is not None: bot.ep = ep
-    b = Battle(mk_waves(p), p['lives'], TS, gold=p['start_gold'], cost=p['cost'], refund_pct=p['refund_pct'])
+    b = Battle(mk_waves(p), p['lives'], TS, gold=p['start_gold'], cost=p['cost'], refund_pct=p['refund_pct'], levels=p.get('levels', ()))
     gold_at = {}; wave_start = {}; marks = {int(s * 60): s for s in trace_s}; first_kill = None
     react = 1 if isinstance(bot, Replay) else REACT
     while b.outcome == 'Running':
@@ -310,4 +312,5 @@ def run(p, bot, trace_s=(30, 60, 90, 120, 150), every=1, ep=None):
                 towers=len(b.towers), gold=b.gold, gold_at=gold_at, wave_start=wave_start, wave_reached=b.waves.started,
                 route=round(b.field.dist(SPAWN) / 408, 2), sold_loss=b.sold_loss, log=bot.log, first_kill=first_kill,
                 tower_cells=[t.cell for t in b.towers], bad=getattr(bot, 'bad', None), bonus=b.bonus_earned, earned=b.earned, leaks_w=b.leaks_w, shots_w=b.shots_w, wasted_w=b.wasted_w, recov_w=b.recov_w, busy_w=b.busy_w, mixed_w=b.mixed_w, shots=b.shots, wasted=b.wasted, recoverable=b.recoverable, busy=b.busy_ticks, mixed=b.mixed_ticks,
-                nL=sum(t.elem == 'L' for t in b.towers), nS=sum(t.elem == 'S' for t in b.towers))
+                nL=sum(t.elem == 'L' for t in b.towers), nS=sum(t.elem == 'S' for t in b.towers),
+                xp=b.xp, level=b.level, levelup_ticks=b.levelup_ticks, kill_log=b.kill_log, paid_tick=b.paid_tick)

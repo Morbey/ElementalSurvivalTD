@@ -201,3 +201,64 @@ The reference order is a fixed timetable, not a player: it loses wherever a purc
 - **Tune first in play:** the health of waves 9 and 10 (by whole hits), then of wave 6 (the first stream: +15% there makes 1.1 enemies leak), then the order of the groups in wave 4 if the first mixed wave confuses. Every number is low to medium confidence.
 
 Simulation: `tools/balance/`. `verify3c.py`, `verify4b.py` and `verify4e.py` check the port pins; `core.py` is the port; `proposal.py` holds these numbers (`proposal4b.py` the step 4b ones); `report4e.py main | waves | sens` prints the strategy and crowd tables, the per-wave table and the reference order, and the sensitivities; `refrepair.py 0 0` builds and checks the reference order (`ref4e.json`); `explore4e.py patterns | health | margin` gives the design search above.
+
+## Step 5a: XP and level
+
+XP only counts in this step: no outcome, gold or tick above moves (`verify3c.py`, `verify4b.py` and `verify4e.py` reproduce unchanged with the counters in the port). XP is a running total that carries over, the level starts at 1, a kill adds its XP on the tick its shot lands, and no level is gained past the table's end.
+
+| Value | Where | Number | Confidence |
+|---|---|---|---|
+| XP per enemy | `xpReward` on every enemy asset | 10, the same for all 13 | medium |
+| Level table | `Run_Prototype`, the XP for level n to n + 1 | 30, 40, 70, 90, 110, 130, 150, 170, 190, 210 | medium (first three), low (the rest) |
+
+- **Flat XP.** Kills per wave already rise from 3 to 12, so a flat amount already pays later waves more. 10 rather than 1 keeps a later XP modifier in whole numbers (+10% is 1 XP) and matches the gold per kill. XP rising by wave (6 to 13) delays the first level-up past wave 1 and makes early leaks cost more: at the end of wave 3 the crowds fall 0.1 to 1.5 levels behind instead of 0 to 0.5 (`report5a.py xp`).
+- **The table in kills**: 3, 7, 14, 23, 34, 47 and 62 kills reach levels 2 to 8, so a run of all 75 kills earns 750 XP and **7 level-ups**, and ends at level 8 with 130 of the 170 XP to level 9. The step grows by 20 from level 3 on, wider than a wave's added kills, so level-ups thin out late.
+- **Spare levels: 3** (790, 980 and 1190 XP in total). The first keeps the bar short of full in every run; the other two absorb XP gains up to +58%, so an XP perk or talent does not hit the cap before the table is retuned. The table caps the level at 11.
+- **Why 7 and not 8.** Of the tables with a first step of 3 kills and rising steps, 1044 meet the three pacing targets on the reference order and on all 189 runs of 72+ kills; 167 give 6 level-ups, 868 give 7 and only 9 give 8 (`explore5a.py tables`). With 5 s between waves the 8-level tables keep the targets in 77% of those runs, the proposal in 95%; with 2 hits less health in waves 4 to 10 (a proxy for stronger towers in 5b) in 99% (`explore5a.py robust`).
+
+**Wave windows.** A wave's window runs from its first entry to the next wave's (wave 10's to the run's end): the wave on the HUD. Waves overlap, so the last enemy of a wave often dies in the next window. The pacing targets: a player who kills wave 1's three enemies levels up on the last of those kills; from wave 4 on, no window holds two level-ups; no two consecutive windows hold none.
+
+**Reference order** (`ref4e.json`): no action falls on a level-up tick. The kills that reach levels 2, 3 and 6 are the last of their wave, so that wave's gold bonus is paid on the same tick.
+
+| Level reached | Tick | Time s | Kill | Enemy of wave | Window | XP |
+|---|---|---|---|---|---|---|
+| 2 | 1452 | 24.2 | 3rd | 1 | 1 | 30 |
+| 3 | 2209 | 36.8 | 7th | 2 | 3 | 70 |
+| 4 | 3369 | 56.1 | 14th | 4 | 4 | 140 |
+| 5 | 4329 | 72.2 | 23rd | 5 | 5 | 230 |
+| 6 | 5567 | 92.8 | 34th | 6 | 7 | 340 |
+| 7 | 7233 | 120.5 | 47th | 8 | 8 | 470 |
+| 8 | 8873 | 147.9 | 62nd | 10 | 10 | 620 |
+
+Won on tick 10317 with XP 750 and level 8. **Building nothing** loses on tick 2931 with XP 0 and level 1.
+
+**Strategies and crowds** (`report5a.py main`). Level at the end of each wave window, and the level-ups per window.
+
+| Strategy | Outcome | Kills | Final level | Level at the end of waves 1–10 | Level-ups per window |
+|---|---|---|---|---|---|
+| Reads, sensible / maze; reference order | Won | 75 | 8 | 2 2 3 4 5 5 6 7 7 8 | 1 0 1 1 1 0 1 1 0 1 |
+| Half and half (all four) | Won | 72–75 | 8 | 1 2 3 4 5 5 6 7 7 8 | 0 1 1 1 1 0 1 1 0 1 |
+| Saver | Won | 71 | 8 | 2 2 3 3 4 5 6 6 7 8 | 1 0 1 0 1 1 1 0 1 1 |
+| Late: first tower at wave 2 | Lost (wave 9) | 48 | 7 | 1 2 3 4 4 5 6 6 7 – | 0 1 1 1 0 1 1 0 1 – |
+| Reads to wave 3, then Light / Shadow only | Lost (wave 9) | 52 / 50 | 7 | 2 2 3 4 5 5 6 6 7, Light only also 7 in wave 10 | 1 0 1 1 1 0 1 0 1 (0 in wave 10) |
+| Shadow only | Lost (wave 6) | 19 | 4 | 1 2 3 3 4 4 | 0 1 1 0 1 0 |
+| Light only | Lost (wave 5) | 6 | 2 | 2 2 2 2 2 | 1 0 0 0 0 |
+
+| Crowd (40 seeds each) | Won | Kills, median (range) | Final level, median (range) | Levels behind the reference at the end of waves 3 / 5 / 7 / 9 (runs alive) | Runs of 72+ kills meeting the pacing targets |
+|---|---|---|---|---|---|
+| Sloppy human, reads | 40 | 74 (69–75) | 8 (8–8) | 0.0 / 0.0 / 0.0 / 0.0 | 36 of 36 |
+| Sloppy human, half and half | 40 | 73 (67–75) | 8 (8–8) | 0.0 / 0.0 / 0.0 / 0.0 | 31 of 31 |
+| Sloppy human, random elements | 34 | 72.5 (6–75) | 8 (2–8) | 0.1 / 0.4 / 0.0 / 0.0 | 24 of 24 |
+| Sensible, random elements | 35 | 73.5 (6–75) | 8 (2–8) | 0.1 / 0.4 / 0.1 / 0.0 | 29 of 29 |
+| Sloppy human, 60/40 | 30 | 69.5 (53–75) | 8 (7–8) | 0.0 / 0.5 / 0.0 / 0.0 | 12 of 12 |
+| Sloppy human, 70/30 | 2 | 41.5 (9–69) | 6 (3–8) | 0.4 / 1.1 / 0.6 / 0.3 | – |
+| Sloppy human, one element after wave 3 | 0 | 42 (30–58) | 6 (5–7) | 0.0 / 0.1 / 0.2 / 0.6 | – |
+| Sloppy human, one element | 0 | 11.5 (6–20) | 3 (2–4) | 0.5 / 2.0 / – / – | – |
+
+**Kills only is enough for the prototype.** Every winning run ends at level 8, because the last level-up needs 62 of 75 kills. While still alive, a leaking crowd is on average at most about one level behind, two to three for a one-element board at wave 5, which has already lost. Leaks already cost lives and gold, and they are what loses the run. A wave XP bonus (7 per kill plus 3 per enemy of the wave, paid with the gold bonus, the same 750 XP) moves the crowd gaps by at most half a level, either way (`report5a.py xp`), and it would add a second XP source to tune. Recheck in 5b, where a level also makes the towers stronger.
+
+**For 5b.** The seven level-ups of the reference order become pauses on ticks 1452, 2209, 3369, 4329, 5567, 7233 and 8873; if a pause stops `Tick()`, no action of the order moves. A run holds at most **7 perks** (75 kills); the table allows 10 if XP modifiers come.
+
+**Risks.** The windows count ticks, not what a player feels: the second level-up comes as wave 3 starts, because wave 2's last enemy dies after wave 3 enters. Seven pauses in 172 s (one every 25 s on average, the longest gap 27.8 s, between ticks 5567 and 7233) may feel too many or too few; the simulation cannot tell, nor how the perks of 5b move kill times beyond the health proxy. **Tune first in play:** the number of level-ups (the steps from level 4 on), then the first step (30) if the first pause comes too soon.
+
+Simulation: `xp5a.py` holds these numbers and the helpers; `report5a.py main | xp` prints the tables and the pins above; `explore5a.py tables | robust` gives the table search and its robustness.

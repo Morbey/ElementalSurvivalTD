@@ -4,6 +4,9 @@
 # targeting is the 3c rule (no element in it); damage is applied at the hit: x2 against the other element, 0 against the own
 # (a launch at an immune enemy is a wasted shot and counts as fired); a per-wave survival bonus paid on the tick
 # the wave has finished spawning and none of its enemies is on the board, while lives > 0.
+# Step 5a: XP and level as counters only (nothing reads them). An enemy stat tuple may carry its XP as a 5th item (default 0);
+# `levels` lists the XP each level needs (the n-th item takes level n to n + 1), XP is a running total and carries over,
+# the level starts at 1 and stops when the table ends. A kill adds its XP on the tick its shot lands.
 import struct, math
 from collections import deque
 
@@ -75,10 +78,10 @@ def step_len(a, b): return DIAG_LEN if (a[0] != b[0] and a[1] != b[1]) else 1.0
 
 
 class Enemy:
-    __slots__ = ('field', 'speed', 'hp', 'maxhp', 'frm', 'to', 'p', 'len', 'arrived', 'x', 'y', 'on', 'bounty', 'elem', 'wave')
+    __slots__ = ('field', 'speed', 'hp', 'maxhp', 'frm', 'to', 'p', 'len', 'arrived', 'x', 'y', 'on', 'bounty', 'elem', 'wave', 'xp')
 
-    def __init__(self, field, speed, hp, bounty, elem=None, wave=0):
-        self.elem = elem; self.wave = wave; self.field = field; self.speed = f(speed); self.hp = f(hp); self.maxhp = self.hp; self.bounty = bounty
+    def __init__(self, field, speed, hp, bounty, elem=None, wave=0, xp=0):
+        self.xp = xp; self.elem = elem; self.wave = wave; self.field = field; self.speed = f(speed); self.hp = f(hp); self.maxhp = self.hp; self.bounty = bounty
         self.frm = SPAWN; n = field.next(SPAWN, SPAWN); self.to = n if n else SPAWN; self.len = step_len(self.frm, self.to)
         self.p = 0.0; self.arrived = self.frm == self.to and field.dist(SPAWN) == 0; self.on = True; self.sync()
 
@@ -154,13 +157,14 @@ class Waves:
 
 
 class Battle:
-    def __init__(self, waves, lives, tower_stats, gold=0, cost=0, refund_pct=100):
+    def __init__(self, waves, lives, tower_stats, gold=0, cost=0, refund_pct=100, levels=()):
         self.blocked = set(WALLS); self.field = Field(self.blocked)
         self.towers = []; self.enemies = []; self.proj = []
         self.waves = Waves(waves); self.lives = lives; self.outcome = 'Running'; self.tick_n = 0
         self.ts = tower_stats; self.gold = gold; self.cost = cost; self.refund_pct = refund_pct
         self.kills = 0; self.leaks = 0; self.earned = 0; self.spent = 0; self.sold_loss = 0
         self.alive = [0] * len(waves); self.spawned = [0] * len(waves); self.total = [sum(g[1] for g in groups(w)) for w in waves]; self.paid = [False] * len(waves); self.leaks_w = [0] * len(waves); self.bonus_earned = 0; self.shots = 0; self.wasted = 0; self.recoverable = 0; self.busy_ticks = 0; self.mixed_ticks = 0
+        self.levels = list(levels); self.xp = 0; self.level = 1; self.levelup_ticks = []; self.kill_log = []; self.paid_tick = [None] * len(waves)  # step 5a counters; kill_log: (tick, wave)
         n = len(waves); self.shots_w = [0] * n; self.wasted_w = [0] * n; self.recov_w = [0] * n; self.busy_w = [0] * n; self.mixed_w = [0] * n  # per wave of the target / of an enemy on the board
 
     # ---- placement and selling (Board + proposed 3b economy) ----
@@ -198,7 +202,7 @@ class Battle:
         self.tick_n += 1
         e = self.waves.step()
         if e is not None:
-            (st, wi) = e; self.enemies.append(Enemy(self.field, *st[:3], st[3] if len(st) > 3 else None, wi))
+            (st, wi) = e; self.enemies.append(Enemy(self.field, *st[:3], st[3] if len(st) > 3 else None, wi, st[4] if len(st) > 4 else 0))
             self.alive[wi] += 1; self.spawned[wi] += 1
         i = 0
         while i < len(self.enemies):
@@ -239,6 +243,9 @@ class Battle:
                 if en.hp <= 0 and en.on:
                     en.on = False; self.enemies.remove(en); self.kills += 1; self.alive[en.wave] -= 1
                     self.gold += en.bounty; self.earned += en.bounty
+                    self.xp += en.xp; self.kill_log.append((self.tick_n, en.wave))
+                    while self.level - 1 < len(self.levels) and self.xp >= sum(self.levels[:self.level]):
+                        self.level += 1; self.levelup_ticks.append(self.tick_n)
                 continue
             sc = f(st / f(math.sqrt(d2)))
             p[0] = f(p[0] + f(dx * sc)); p[1] = f(p[1] + f(dy * sc)); i += 1
@@ -251,6 +258,6 @@ class Battle:
         if self.lives > 0:
             for k, wv in enumerate(self.waves.w):
                 if not self.paid[k] and self.spawned[k] == self.total[k] and self.alive[k] == 0:
-                    self.paid[k] = True; bon = wv[4] if len(wv) > 4 else 0; self.gold += bon; self.bonus_earned += bon
+                    self.paid[k] = True; self.paid_tick[k] = self.tick_n; bon = wv[4] if len(wv) > 4 else 0; self.gold += bon; self.bonus_earned += bon
         if self.lives == 0: self.outcome = 'Lost'; return
         if self.waves.done and not self.enemies: self.outcome = 'Won'; self.proj.clear()
