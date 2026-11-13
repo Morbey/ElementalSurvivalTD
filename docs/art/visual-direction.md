@@ -141,7 +141,7 @@ The XP row sits at the top of the bottom bar, which has the room (72 high for on
 |---|---|
 | XP gained | the fill's scale eases to the new share over 0.15 s, ease-out (USS transition on scale); no text changes |
 | Level gained | the label shows the new level. Pop, one frame, no transition: label scale 1.5 about its left centre; track background `#F4F1EA`, so the whole bar flashes full; the fill jumps to the new share. Settle: label scale to 1.0 over 0.3 s, ease-out; track background to `#45413B` over 0.5 s, ease. Several levels at once play one pop with the last level |
-| Level table ended | fill held at scale 1 in `#8A8478`, label `Max level 8`; no more pops. A bright full bar would promise a level that never comes |
+| Level table ended | fill held at scale 1 in `#8A8478`, label `Max level 11` (the last level of the table); no more pops. A bright full bar would promise a level that never comes |
 
 - The label is rewritten only when the level changes, the fill's scale only when XP changes. Cost: two elements, two class writes per level, transitions on scale and colour only.
 - The empty track at the start reads as an empty slot, like the Upgrade button: no `0 XP` text. The bar carries no numbers.
