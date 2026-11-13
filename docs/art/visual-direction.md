@@ -171,6 +171,8 @@ Every hit shows its own number, never a sum. Numbers are pooled UI Toolkit label
 3. The weak number is dimmed by colour, not opacity, so its outline stays solid.
 4. Weak numbers are the first to go under load: they carry the least decision.
 
+**Measured targets** (every drawn frame of a late wave logged; two numbers overlap when their rectangles intersect). Numbers of one enemy: never, off the top line; on the top line at most 20 % of frames with five towers on one enemy. Numbers of different enemies: at most 10 % of frames.
+
 ## 3. Review of what is on screen
 | Item | Verdict | Reason |
 |---|---|---|
