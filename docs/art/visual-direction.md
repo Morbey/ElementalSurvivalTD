@@ -163,9 +163,9 @@ The XP row sits at the top of the bottom bar, which has the room (72 high for on
 |---|---|---|---|
 | L | `Light towers` | `+25 %` | `damage` |
 | S | `Shadow towers` | `+25 %` | `damage` |
-| All | `All towers` | `+15 %` | `fire rate` |
-| All | `All towers` | `+0.5` | `range` |
-| Gold | `Gold` | `+2` | `per kill` |
+| All | `All towers` | `+10 %` | `fire rate` |
+| All | `All towers` | `+1` | `range` |
+| Gold | `Gold` | `+3` | `per kill` |
 
 Every line fits on one line in the 188 inside; the longest planned, `Shadow towers` and `critical chance`, take about 150 and 120.
 

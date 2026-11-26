@@ -15,7 +15,7 @@ Step 5b turns a level into a choice: the battle stops, three perks are offered, 
 7. **Randomness is a generator of our own.** `Rng` is a Core class on 32-bit whole numbers only, stated exactly in plan 0012 with its pins, so the port copies it in a few lines. Whatever draws owns its generator and takes its seed; nothing shares a stream. An offer is a partial shuffle of the pool's places in an array made once.
 8. **The pause is battle state.** A battle awaiting a choice ignores `Tick()` and counts nothing, like a finished one, and the driver gathers no time. The choice opens at the end of a tick that leaves the run running, after the wave bonuses and the outcome. `Time.timeScale` is not touched.
 9. **The choice screen follows Core.** The view polls a count of the choices opened and whether one is open. The lock and the hold of the visual direction are the view's, in real time; a pick reaches Core when the hold ends, so the battle stays stopped under the picked look. The view calls `Battle.PickPerk` itself: no input state lies between a card and the battle.
-10. **Board input is off while a choice is open.** The placement input checks it where it checks the outcome, and the overlay takes every click on the UI (ADR 0004, decision 7).
+10. **Board input is off while a choice is open.** The placement input checks it where it checks the outcome, and in the three methods its buttons call (`Select`, `Deselect`, `SellSelected`). The overlay alone cannot guard those: UI Toolkit dispatches a frame's clicks after every `Update`, where the tick opens the choice, and before every `LateUpdate`, where the screen shows, so on that frame a click still reaches a button. From the next frame the overlay takes every click on the UI (ADR 0004, decision 7).
 11. **A scene run takes its seed from a static on the bootstrap,** read and cleared when the battle is built, because nothing can reach the battle before `Awake`. With none set, the seed comes from the clock.
 
 ## Alternatives
@@ -32,12 +32,13 @@ Step 5b turns a level into a choice: the battle stops, three perks are offered, 
 - **A Core event for an opened choice.** Rejected for a polled count, as in ADR 0003.
 - **The card's words derived from the modifier,** with one text per stat on the view. No word on the asset, but a perk's wording is content, and a perk of several modifiers will need its own. Rejected.
 - **The pick through a Gameplay component.** A method that only passes the call on. Rejected.
+- **Core refusing a purchase or a sale while a choice is open.** It would guard every caller, but `TryBuyTower` and `TrySellTower` would each need a result that says so, which nothing shows. Rejected for the check in the input, where the outcome is already checked.
 
 ## Consequences
 - A new perk on a known stat is one asset. A new stat is a member of `Stat` and the line that reads it. `Stat` and `Operation` are serialized on assets by value: append, never reorder.
 - `Tower.Stats` changes during a run. A view reads it when it draws and never keeps a stat; one that shows text polls `Modifiers.Count`.
 - `Board.TowerPlaced` is raised before the battle applies the modifiers, so a handler reads only what no modifier changes: the cell and the element. A tower placed through `Board.TryPlaceTower` has its base stats until the next pick.
-- A simulation or a test must answer every choice: an unanswered one stops the battle for good, and `Tick()` says nothing. Core does not refuse a purchase or a sale during a choice: the input refuses the board click and the keys, and the overlay takes the buttons.
+- A simulation or a test must answer every choice: an unanswered one stops the battle for good, and `Tick()` says nothing. Core does not refuse a purchase or a sale during a choice: the input refuses the board click, the keys and its buttons' three methods, and the overlay takes the pointer.
 - A run is reproducible from its seed and its picks. The game shows no seed, so a player's run cannot be replayed from a report yet.
 - A second random rule (critical hits) takes its own generator and seed. A modifier on an enemy (wave health, Slowed) needs enemy stats in `Stat` and removal by source.
 - The tower's damage enters the chart's lookup already modified (ADR 0005, decision 9).
