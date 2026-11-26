@@ -30,7 +30,7 @@ The port follows the rules of plans 0007 and 0010 and these. Ticks count `Tick()
 | Light | 15.625 | 1.9837499 (`3FFDEB84`) | 3.0 | 0.5040958 |
 | Shadow | 10 | 1.9837499 | 3.0 | 0.5040958 |
 
-After the first pick of perk 2 alone the rate is 1.7249999 (`3FDCCCCC`). A tower bought after the five picks has the same stats. A kill still pays its reward and no more.
+After the first pick of perk 2 alone the rate is 1.7249999 (`3FDCCCCC`), and after three picks of it alone 2.2813122 (`40120105`): the third stack is what tells float32 after each from a product rounded once (`40120106`). A tower bought after the five picks has the same stats. A kill still pays its reward and no more.
 
 **Pause pin.** The prototype map, 10 lives, 40 gold, refund 50, the chart and the Light tower of the balance document (cost 40, range 2.5, damage 10, 1.5 shots/s, projectile 10), level table `10, 10, 10`, seed 2, and a pool of three: 0 Light damage x1.25; 1 every tower's range +0.5; 2 gold per kill +2. Enemies are Shadow: speed 2, health 45, gold 10, XP 10. Wave 1: delay 0, bonus 7, one enemy. Wave 2: delay 2 s, bonus 9, two enemies 1 s apart. Before the first tick a Light tower is bought on (2,3).
 
@@ -62,7 +62,7 @@ Discarded: see ADR 0007 (`Time.timeScale`, stats computed when read, a list per 
 - **5b-AC5 The pick.** Rule 23. `Battle.PickPerk` refuses, by throwing, when no choice is open or the slot is outside the offer. `Progression` answers, for the open choice, its level, its number among the choices opened in a row and how many those are, and for each perk how often it was taken. After a pick of a perk that touches no tower of the run, every later tick equals the run with no pool.
 - **5b-AC6 Driver and input.** While a choice is open the driver runs no tick, gathers no time and its tick fraction is 0; the first tick after the pick runs on the next frame, with no burst. The placement input has no hover cell, buys, selects and deselects nothing, and its keys do nothing; a tower selected before stays selected. No production code writes `Time.timeScale`.
 - **5b-AC7 Seed.** A scene run takes `PrototypeBootstrap.SeedForNextRun` when it is set, and clears it; otherwise a seed from the clock. A restart draws from a fresh seed.
-- **5b-AC8 Data.** A perk asset holds one modifier (stat, element or none, operation, amount), its title and its attribute text. The run asset lists the pool. Refused, naming the asset: a pool of fewer than three, an empty place, a perk listed twice, an addition at or below 0, a multiplication at or below 1, and whatever 5b-AC1 refuses. The pool, the amounts, the waves and the enemy assets equal the balance document, and the scene's battle has that pool. This replaces the enemy assets and waves of 4e-AC5.
+- **5b-AC8 Data.** A perk asset holds one modifier (stat, element or none, operation, amount), its title and its attribute text. The run asset lists the pool. Refused, naming the asset: a pool of one or two (an empty pool is allowed and never opens a choice), an empty place, a perk listed twice, an addition at or below 0, a multiplication at or below 1, and whatever 5b-AC1 refuses. The pool, the amounts, the waves and the enemy assets equal the balance document, and the scene's battle has that pool. This replaces the enemy assets and waves of 4e-AC5.
 - **5b-AC9 Design target and pins.** On the real assets and the document's seed, the document's reference order with its picks meets every choice on its tick with its offer and ends as stated (tick, lives, gold, kills, XP, level, towers); building nothing loses as stated. No damage amount of the document reaches 100. These come from the port: if Core disagrees, it is reported, not re-pinned. This replaces 4e-AC6 and the ticks of 5a-AC4.
 - **5b-AC10 The level-up screen.** From the first frame after the tick that opens a choice, the overlay of section 1.7 shows: the title with the choice's level, the hint (with `(1 of 2)` only for choices in a row), and three cards in slot order. A card shows, per the direction's table: the tile (the element's, `All` for a tower stat with no element, `Gold` for gold per kill), the perk's title with the element's name in its UI colour, the number from the modifier (`+25 %` for x1.25, `+0.5` for +0.5) and the perk's attribute text. A perk taken before shows the stack line with the total after this pick (`Total +56 %` for a second x1.25, `Total +1` for a second +0.5); a new one shows none. Sizes, colours and places are the direction's. The overlay lies above the floating texts and under the end screen, and hides on the frame the last choice is answered.
 - **5b-AC11 Lock, pick and hold.** For the direction's lock after a choice appears, the second in a row too, a click on a card does nothing and the cards ignore picking. Then a click picks: the card holds the picked look and the others the passed look for the direction's hold, during which the choice is still open in Core and no click counts; then `PickPerk` is called, and the next choice deals in or the overlay hides. While the overlay shows, the buy buttons, Sell and the close button take no click. No key picks. The lock and the hold run in real time; the dealing, the title's entry and the fades are USS transitions.
@@ -83,6 +83,10 @@ Discarded: see ADR 0007 (`Time.timeScale`, stats computed when read, a list per 
 7. Rounding "half up" is done on the value as seven significant figures, so 1.5 x1.15, which a float holds as 1.7249999, shows `1.73` as the direction says.
 
 Not in this step: critical hits; rarity, weights and luck in the draw; perks with a downside, clamps and the tail's red look; removing a modifier; modifiers on enemies; a seed shown to the player; two choices in a row in play (the level table makes them impossible; the tests reach them).
+
+Left by the stage 4 review of T5b-1 and T5b-2:
+- When `PerkDefinition.cs` is next touched, its two checks become `!(value > 0f)` and `!(value > 1f)`, so a NaN amount is refused too.
+- For the Presentation review: `Select`, `Deselect` and `SellSelected` of `TowerPlacementInput` still act during a choice, and the overlay is their only guard (5b-AC11). If it proves a weak guard in the browser, the three methods get the check.
 
 ## Tasks
 Order and editor use: plan 0007, "Editor sequencing", with `tools/unity-lock.sh` around every batch run. T5b-1, T5b-2 and T5b-3 run in parallel on the signatures below; T5b-4 follows T5b-3 with the same agent (both write `Hud.uxml` and `Hud.uss`); T5b-6 runs in parallel from now. Only T5b-5 needs the editor open.
@@ -120,9 +124,9 @@ public Modifier PerkAt(int perk);
 public int TimesTaken(int perk);
 public bool ChoiceOpen { get; }
 public int ChoicesOpened { get; }                 // since the run began; a view polls it
-public int ChoiceLevel { get; }                   // the level the open choice answers
-public int ChoiceNumber { get; }                  // from 1, among the choices opened in a row
-public int ChoicesInARow { get; }
+public int ChoiceLevel { get; }                   // the level the open choice answers; 0 with none open
+public int ChoiceNumber { get; }                  // from 1, among the choices opened in a row; 0 with none open
+public int ChoicesInARow { get; }                 // 0 with none open
 public int OfferAt(int slot);                     // the perk on the slot; throws with no choice open
 internal void OpenChoice();                       // nothing when none is owed or one is open
 internal int Pick(int slot);                      // the perk taken; opens the next choice when one is owed
@@ -135,7 +139,7 @@ public void PickPerk(int slot);                   // Pick, Modifiers.Add, every 
 // a kill: Gold += Modifiers.ApplyWhole(Stat.GoldPerKill, target.GoldReward)
 ```
 
-**Done when:** no constructor of `Battle` changes; the EditMode suite of 5a passes untouched; `Tick()`, `Apply`, `ApplyWhole` and a draw have no `new`; Core has no `UnityEngine` and no text.
+**Done when:** no constructor of `Battle` changes; the EditMode suite of 5a passes untouched; `Tick()`, `Apply`, `ApplyWhole` and a draw allocate nothing; Core has no `UnityEngine` and no text.
 
 ### T5b-2 – Data and Gameplay: perks, the seed, the driver and the input
 Serves 5b-AC6 to AC8. Code only. New: `Data/PerkDefinition.cs`. Changed: `Data/RunDefinition.cs`, `Gameplay/PrototypeBootstrap.cs`, `Gameplay/TowerPlacementInput.cs`.
@@ -152,7 +156,7 @@ public Modifier[] ToPerks();                      // in order; throws naming the
 public static uint? SeedForNextRun;               // for tests: taken and cleared in Awake
 public RunDefinition Run => run;
 // Awake: new Progression(run.ToLevelTable(), run.ToPerks(), SeedForNextRun ?? a seed from the clock)
-// Update: returns while Battle.AwaitingChoice; a tick that opens a choice ends the frame's ticks and sets the accumulator to 0
+// Update: returns while Battle.AwaitingChoice, with the accumulator at 0; a tick that opens a choice ends the frame's ticks
 // TowerPlacementInput: TryPick answers false and ReadKeys does nothing while Battle.AwaitingChoice
 ```
 
@@ -200,6 +204,8 @@ On the worktree with its editor closed. Scene tests run with the time scale at 0
 
 **`SceneTestBase`.** `SetUp` sets `SeedForNextRun` to the reference seed before the scene loads. One `Tick()` helper replaces every direct `Battle.Tick()` of the scene tests: it fails, naming the tick, when a choice is open, then ticks. The reference picks sit beside the reference order; after a tick that opens a choice, a test that replays the order answers through `Battle.PickPerk`, checking the tick and the offer against the table. A test with a board of its own names its pick before it reaches a level; with none named, the helper fails. A source test keeps `Battle.Tick()` out of every other scene test file. The EditMode replay of the real run gets the same pick step.
 
+**Rules for these tests.** A modifier reaches a battle through `PickPerk` only: one added through `Battle.Modifiers.Add` leaves the towers on the board stale, so only a `Modifiers` of its own takes `Add`. A refusal is checked by the names at the start of its message and the reason in it, never by the whole text or a number: the text may differ between .NET runtimes, and a number follows the machine's culture.
+
 **Tests that change** (any other failing test is reported before it is touched)
 - Every test that reads the real waves, enemy assets or reference order: `RealAssetRunTests`, `XpRealRunTests` (its level ticks; its comparison of the run with and without a table becomes 5b-AC4's battle with no pool), `ElementDataTests`, and the scene tests that replay the order (`RunSceneTests`, also its run on the real driver at a time scale of 50, which now answers each choice; `BonusSceneTests`, `MixedWaveSceneTests`, `DamageNumberSceneTests`, `ElementSceneTests`, `SelectionSceneTests`, `FloatingTextSceneTests`), where an amount of 20 or a tick is pinned after the first pick.
 - `XpBarSceneTests`: a level reached by kills or by `AddXp` now opens a choice on the next tick.
@@ -207,11 +213,11 @@ On the worktree with its editor closed. Scene tests run with the time scale at 0
 - `ElementSceneTests`: the disc's range read from `RangeCells`.
 
 **EditMode**
-- **5b-AC1:** the modifier pin, the rate by its bits; additions before multiplications in both pick orders; an element perk leaves the other element and a tower of no element alone; each refusal.
+- **5b-AC1:** the modifier pin, each rate by its bits; additions before multiplications in both pick orders; an element perk leaves the other element and a tower of no element alone; each refusal.
 - **5b-AC2:** a tower bought after picks; every tower on the board on a pick; a shot in flight keeps its damage and a running cooldown its time; the next launch adds the new cooldown; a target inside the new range and outside the old is shot on the next tick; the sell value and the gold check; a kill with two gold perks, an exit and a wave bonus with them.
 - **5b-AC3:** the generator pin; 10 000 draws over pools of 3 to 6 hold three distinct places inside the pool; two progressions on one seed agree and two seeds differ; the first offer is the pin's first draw however much XP was added before it opens; pools of 0, 1 and 2.
 - **5b-AC4 and AC5:** the pause pin, tick by tick; on a kill that both ends a wave and gains a level the gold holds the bonus when the choice opens; a level on the winning tick and one on the losing tick open none; two and three levels from one `AddXp` open choices for their levels in order, each with its own draw, `ChoiceNumber` and `ChoicesInARow`; `PickPerk` with no choice and with slots −1 and 3; a pick of a Shadow perk on a board of Light towers, then every tick against the run with no pool.
-- **5b-AC8 and AC9:** every perk asset and the run asset against the document; each refusal with its message; the document's reference order with its picks, each choice on its tick with its offer, and its outcome; building nothing.
+- **5b-AC8 and AC9:** every perk asset and the run asset against the document; each refusal; the document's reference order with its picks, each choice on its tick with its offer, and its outcome; building nothing.
 - **5b-AC16:** the determinism test of 4e-AC7 with the offers, picks and tower stats in its snapshot; `TickAllocation` over the real run with picks, the choice ticks included; source tests: Core has no `UnityEngine`; no production file writes `timeScale`; outside Core and the tests only `LevelUpView` calls `PickPerk(`, and nothing calls `Modifiers.Add(`.
 
 **PlayMode**, in `Prototype.unity`
@@ -225,7 +231,7 @@ On the worktree with its editor closed. Scene tests run with the time scale at 0
 - **5b-AC17:** the scene tests of 2b to 5a pass with the changes listed above only.
 
 **Mutations the tests must kill**
-- Modifiers: a multiplication before an addition; percents added up (15 for 15.625); the element ignored, or none read as "no tower"; a new tower left at its base; the towers on the board not refreshed; a shot in flight or a cooldown changed by a pick; the refund from an effective cost; the gold perk paid on an exit, on a bonus or twice.
+- Modifiers: a multiplication before an addition; percents added up (15 for 15.625); the element ignored, or none read as "no tower"; a product of stacks rounded once (`40120106`); a new tower left at its base; the towers on the board not refreshed, or recomputed from their effective stats; a shot in flight or a cooldown changed by a pick; a whole tower addition (range +1) paid as gold; the gold perk paid on an exit, on a bonus or twice.
 - Draw: a constant or a shift off by one; the place taken by a remainder instead of the 64-bit product; the order not set afresh; a repeated perk; a number taken at construction; the second choice in a row showing the first offer.
 - Pause and pick: the choice opened inside the projectile step (gold 10, not 17, at the pause); a choice on the tick that ends the run; a tick counted or a countdown moving while open; the slot applied as a perk's place; a pick accepted with no choice open.
 - Gameplay: the driver gathering time during a choice (a burst after the pick); the seed never cleared; keys alive during a choice.

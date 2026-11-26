@@ -37,7 +37,7 @@ Step 5b turns a level into a choice: the battle stops, three perks are offered, 
 - A new perk on a known stat is one asset. A new stat is a member of `Stat` and the line that reads it. `Stat` and `Operation` are serialized on assets by value: append, never reorder.
 - `Tower.Stats` changes during a run. A view reads it when it draws and never keeps a stat; one that shows text polls `Modifiers.Count`.
 - `Board.TowerPlaced` is raised before the battle applies the modifiers, so a handler reads only what no modifier changes: the cell and the element. A tower placed through `Board.TryPlaceTower` has its base stats until the next pick.
-- A simulation or a test must answer every choice: an unanswered one stops the battle for good, and `Tick()` says nothing. Core does not refuse a purchase or a sale during a choice; the input does.
+- A simulation or a test must answer every choice: an unanswered one stops the battle for good, and `Tick()` says nothing. Core does not refuse a purchase or a sale during a choice: the input refuses the board click and the keys, and the overlay takes the buttons.
 - A run is reproducible from its seed and its picks. The game shows no seed, so a player's run cannot be replayed from a report yet.
 - A second random rule (critical hits) takes its own generator and seed. A modifier on an enemy (wave health, Slowed) needs enemy stats in `Stat` and removal by source.
 - The tower's damage enters the chart's lookup already modified (ADR 0005, decision 9).
