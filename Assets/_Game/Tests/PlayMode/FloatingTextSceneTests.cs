@@ -60,7 +60,7 @@ namespace ElementalTD.PlayModeTests
             int guard = 0;
             while (enemy.ImmuneHitTick == 0 && guard++ < 200)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
                 if (enemy.ImmuneHitTick == 0) Assert.AreEqual(0, DrawnWords().Count, "no word before the first landing");
             }
@@ -87,7 +87,7 @@ namespace ElementalTD.PlayModeTests
             guard = 0;
             while (landings < 3 && guard++ < 400)
             {
-                Battle.Tick();
+                Tick();
                 if (guard == 20) { BuyFree(3, 3, WaveElement); second = Battle.TickCount; }
                 yield return null;
                 if (enemy.ImmuneHitTick != last) { landings++; last = enemy.ImmuneHitTick; }
@@ -110,16 +110,16 @@ namespace ElementalTD.PlayModeTests
             Enemy enemy = SpawnWave1Enemy(health: 1_000_000f);
             yield return null;
             int guard = 0;
-            while (enemy.ImmuneHitTick == 0 && guard++ < 200) { Battle.Tick(); yield return null; }
-            for (int i = 0; i < 5; i++) { Battle.Tick(); yield return null; }
+            while (enemy.ImmuneHitTick == 0 && guard++ < 200) { Tick(); yield return null; }
+            for (int i = 0; i < 5; i++) { Tick(); yield return null; }
             Assert.IsTrue(Battle.TrySellTower(new GridPos(2, 3)));
             Assert.IsTrue(Battle.TrySellTower(new GridPos(1, 5)));
             guard = 0;
-            while (Battle.ProjectileCount > 0 && guard++ < 100) { Battle.Tick(); yield return null; }
+            while (Battle.ProjectileCount > 0 && guard++ < 100) { Tick(); yield return null; }
             Assert.AreEqual(0, Battle.ProjectileCount, "the shots in flight landed");
             int mark = enemy.ImmuneHitTick;
             Assert.Greater(mark, 0);
-            while (Battle.TickCount - mark < 45) { Battle.Tick(); yield return null; }
+            while (Battle.TickCount - mark < 45) { Tick(); yield return null; }
             Assert.AreEqual(mark, enemy.ImmuneHitTick, "no more landings");
             for (int age = 45; age <= 62; age++)
             {
@@ -128,7 +128,7 @@ namespace ElementalTD.PlayModeTests
                 if (age == 45) Assert.AreEqual(1f, words[0].word.Opacity, 1e-4f, "opaque at 45");
                 if (age == 54) Assert.AreEqual(0.5f, words[0].word.Opacity, 0.01f, "half at 54");
                 if (age >= 60) Assert.AreEqual(0, words.Count, $"hidden from 60 (age {age})");
-                Battle.Tick();
+                Tick();
                 yield return null;
             }
         }
@@ -137,14 +137,14 @@ namespace ElementalTD.PlayModeTests
         {
             BuyFree(2, 3, WaveElement);
             Enemy a = SpawnWave1Enemy(health: 1_000_000f);
-            for (int i = 0; i < 60; i++) Battle.Tick();
+            for (int i = 0; i < 60; i++) Tick();
             Enemy b = SpawnWave1Enemy(health: 1_000_000f);
             yield return null;
             int guard = 0;
             // Until the first has left the tower's range and the second is being hit: A's word is fading while B's is opaque.
             while (guard++ < 900)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
                 var words = AssertWords($"tick {Battle.TickCount}");
                 if (words.Count == 2 && words.Exists(w => w.enemy == a && w.word.Opacity < 0.99f) && words.Exists(w => w.enemy == b && w.word.Opacity > 0.99f))
@@ -183,14 +183,14 @@ namespace ElementalTD.PlayModeTests
         {
             BuyFree(14, 3, WaveElement);
             Enemy enemy = SpawnWave1Enemy(health: 1_000_000f);
-            while (enemy.DistanceToExit > 5f) Battle.Tick();
+            while (enemy.DistanceToExit > 5f) Tick();
             yield return null;
             Vector2 lastWord = default;
             bool sawWord = false;
             int guard = 0;
             while (OnBoard(enemy) && guard++ < 300)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
                 var words = AssertWords($"tick {Battle.TickCount}");
                 if (words.Count == 1) { lastWord = words[0].word.Bottom; sawWord = true; }
@@ -215,7 +215,7 @@ namespace ElementalTD.PlayModeTests
             bool both = false;
             for (int i = 0; i < 200 && !both; i++)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
                 var words = AssertWords($"tick {Battle.TickCount}");
                 both = words.Count == 1 && DrawnNumbers().Count > 0;
@@ -232,9 +232,9 @@ namespace ElementalTD.PlayModeTests
             for (int i = 0; i < 45; i++)
             {
                 SpawnWave1Enemy(health: 1_000_000f, speed: 0.1f);
-                Battle.Tick();
+                Tick();
             }
-            for (int i = 0; i < 60; i++) Battle.Tick();
+            for (int i = 0; i < 60; i++) Tick();
             yield return Frames(2);
             Assert.Greater(WordLayer.childCount, 32, "the pool grew past its prewarm of 32");
             for (int i = 0; i < 45; i++) NumberView.Show(HitAtCell(3, 3, 20f, HitKind.Strong, OffBoard + i));
@@ -287,7 +287,7 @@ namespace ElementalTD.PlayModeTests
             };
             // An enemy in the way: the cell it is heading to.
             Enemy enemy = SpawnWave1Enemy(health: 1_000_000f);
-            Battle.Tick();
+            Tick();
             yield return null;
             cases.Add(("enemy", enemy.Follower.To, EnemyText));
             foreach (var (name, cell, text) in cases)
@@ -488,7 +488,7 @@ namespace ElementalTD.PlayModeTests
             // The origin did not move: a number's bottom centre still equals its translate (grown about its bottom centre, so the scale does not shift it).
             NumberView.Show(HitAtCell(3, 3, 20f, HitKind.Strong, OffBoard + 1));
             yield return null;
-            for (int i = 0; i < 6; i++) { Battle.Tick(); yield return null; }
+            for (int i = 0; i < 6; i++) { Tick(); yield return null; }
             var numbers = DrawnNumbers();
             Assert.AreEqual(1, numbers.Count, where);
             Assert.AreEqual(numbers[0].Bottom.x, numbers[0].Rect.center.x, 0.5f, where + ": worldBound bottom centre x = translate x");
@@ -527,7 +527,7 @@ namespace ElementalTD.PlayModeTests
             float minY = 99f;
             while (OnBoard(enemy) && guard++ < 3000)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
                 var words = DrawnWords();
                 minY = Mathf.Min(minY, enemy.Y);
@@ -575,7 +575,7 @@ namespace ElementalTD.PlayModeTests
             Enemy enemy = SpawnWave1Enemy(health: 1_000_000f);
             ClickCell(5, 0);
             int guard = 0;
-            while (enemy.ImmuneHitTick == 0 && guard++ < 200) { Battle.Tick(); yield return null; }
+            while (enemy.ImmuneHitTick == 0 && guard++ < 200) { Tick(); yield return null; }
             NumberView.Show(HitOn(enemy, 20f, HitKind.Strong));
             yield return null;
             Assert.AreEqual(1, DrawnNumbers().Count, "a number shows again after a restart");
@@ -594,13 +594,13 @@ namespace ElementalTD.PlayModeTests
             while (Battle.Lives > 1 && guard++ < 2000)
             {
                 if (guard % 3 == 0 && spawned < 10) { Board.SpawnEnemy(fast); spawned++; }
-                Battle.Tick();
+                Tick();
                 if (guard % 5 == 0) yield return null;
             }
             Assert.AreEqual(1, Battle.Lives);
             Assert.AreEqual(RunOutcome.Running, Battle.Outcome);
             Enemy slow = Board.EnemyAt(0);
-            Battle.Tick();
+            Tick();
             ClickCell(5, 0);
             NumberView.Show(HitOn(slow, 20f, HitKind.Strong));
             yield return null;
@@ -609,7 +609,7 @@ namespace ElementalTD.PlayModeTests
             Assert.IsTrue(RefusalShown(), "a refusal is on screen before the end");
 
             guard = 0;
-            while (Battle.Outcome == RunOutcome.Running && guard++ < 2000) Battle.Tick();
+            while (Battle.Outcome == RunOutcome.Running && guard++ < 2000) Tick();
             Assert.AreEqual(RunOutcome.Lost, Battle.Outcome);
             yield return null;
             AssertNothingFloats("the frame after the defeat");
@@ -631,7 +631,7 @@ namespace ElementalTD.PlayModeTests
                 for (int i = 0; i < step && Battle.Outcome == RunOutcome.Running; i++, ticks++)
                 {
                     RunReferenceActionsAt(ticks);
-                    Battle.Tick();
+                    Tick();
                 }
                 if (Battle.Outcome != RunOutcome.Running) break;
                 if (lastWave && frames++ % 40 == 0) ClickCell(5, 0);
@@ -659,12 +659,12 @@ namespace ElementalTD.PlayModeTests
             BuyFree(2, 3, WaveElement);
             Enemy enemy = SpawnWave1Enemy(health: 1_000_000f);
             int guard = 0;
-            while (enemy.ImmuneHitTick == 0 && guard++ < 200) { Battle.Tick(); yield return null; }
+            while (enemy.ImmuneHitTick == 0 && guard++ < 200) { Tick(); yield return null; }
             NumberView.Show(HitOn(enemy, 20f, HitKind.Strong));
             NumberView.Show(HitAtCell(8, 6, 20f, HitKind.Strong, OffBoard));
             ClickCell(10, 6); // a refusal at a wall cell
             yield return null;
-            Battle.Tick();
+            Tick();
             yield return null;
             var targets = new List<(string what, VisualElement element)>();
             foreach (Drawn d in DrawnNumbers()) targets.Add(("number", d.Label));

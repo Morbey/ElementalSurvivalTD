@@ -66,5 +66,21 @@ namespace ElementalTD.Core.Tests
             Assert.AreEqual(1, Regex.Matches(File.ReadAllText(Path.Combine(GameDir, "Gameplay/PrototypeBootstrap.cs")), @"Battle\.Tick\(\)").Count,
                 "the bootstrap is the only driver");
         }
+
+        [Test]
+        public void S5b_AC4_No_Scene_Test_File_But_The_Base_Calls_Battle_Tick_Directly_Because_The_Tick_Helper_Fails_On_An_Unanswered_Choice()
+        {
+            string dir = Path.Combine(GameDir, "Tests", "PlayMode");
+            int scanned = 0;
+            foreach (string file in Directory.GetFiles(dir, "*.cs"))
+            {
+                scanned++;
+                string name = Path.GetFileName(file);
+                int calls = Regex.Matches(File.ReadAllText(file), @"\bBattle\.Tick\(").Count;
+                if (name == "SceneTestBase.cs") Assert.AreEqual(1, calls, "the helper is the one place that ticks the battle");
+                else Assert.AreEqual(0, calls, $"{name} calls Battle.Tick() instead of the Tick() helper");
+            }
+            Assert.Greater(scanned, 10);
+        }
     }
 }

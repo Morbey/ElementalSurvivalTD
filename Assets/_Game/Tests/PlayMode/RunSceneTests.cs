@@ -130,7 +130,7 @@ namespace ElementalTD.PlayModeTests
                 for (int i = 0; i < ticksPerFrame && Battle.Outcome == RunOutcome.Running; i++, ticks++)
                 {
                     if (referenceOrder) RunReferenceActionsAt(ticks);
-                    Battle.Tick();
+                    Tick();
                 }
                 yield return null;
                 AssertFrame();
@@ -195,16 +195,16 @@ namespace ElementalTD.PlayModeTests
 
             Assert.AreEqual(RunOutcome.Won, Battle.Outcome);
             Assert.AreEqual(10, Battle.Lives);
-            Assert.AreEqual(105, Battle.Gold, "document: 105 left");
-            Assert.AreEqual(10317, _endTicks, "document: won on the 10317th Tick(), through the scene");
+            Assert.AreEqual(189, Battle.Gold, "document: 189 left");
+            Assert.AreEqual(10026, _endTicks, "document: won on the 10026th Tick(), through the scene, answering seven choices");
             int lightTowers = 0, shadowTowers = 0;
             for (int i = 0; i < Board.TowerCount; i++)
             {
                 if (Board.TowerAt(i).Stats.Element == ElementOfTower(0)) lightTowers++; else shadowTowers++;
             }
-            Assert.AreEqual((14, 15), (lightTowers, shadowTowers), "document: 29 towers, 14 Light and 15 Shadow");
+            Assert.AreEqual((16, 16), (lightTowers, shadowTowers), "document: 32 towers, 16 Light and 16 Shadow");
             Assert.Greater(_framesAtCost, 0, "a frame had a gold equal to a cost, so the short-of-gold boundary was checked");
-            Assert.AreEqual("Gold 105", GoldLabel.text);
+            Assert.AreEqual("Gold 189", GoldLabel.text);
             Assert.AreEqual($"Wave 10/10: {WaveElements(Battle.Waves.WaveAt(9))}", Text("wave-label").text);
             Assert.IsFalse(Shown(Text("next-wave-label")), "hidden from wave 10 on");
             Assert.AreEqual("Victory", Text("end-title").text);
@@ -228,8 +228,8 @@ namespace ElementalTD.PlayModeTests
             Assert.IsNull(_input.SelectedTower, "4c-AC5: a click on a tower selects nothing after the run");
             Assert.AreEqual(towers, Board.TowerCount);
             Assert.AreEqual(towers, FindByName("Towers").childCount);
-            Assert.AreEqual(105, Battle.Gold);
-            Assert.AreEqual("Gold 105", GoldLabel.text);
+            Assert.AreEqual(189, Battle.Gold);
+            Assert.AreEqual("Gold 189", GoldLabel.text);
             Assert.IsFalse(_input.HasHoverCell);
             Assert.IsFalse(FindByName("Hover").gameObject.activeSelf);
         }

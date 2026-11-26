@@ -17,7 +17,7 @@ namespace ElementalTD.Core.Tests
         private const string Dir = "Assets/_Game/Data/Assets/";
 
         private static readonly int[] DocTable = { 30, 40, 70, 90, 110, 130, 150, 170, 190, 210 };
-        private static readonly int[] DocLevelTicks = { 1452, 2209, 3369, 4329, 5567, 7233, 8873 };
+        private static readonly int[] DocLevelTicks = { 1452, 2209, 3369, 4175, 5446, 6980, 8808 };
         private static readonly int[] DocLevelXp = { 30, 70, 140, 230, 340, 470, 620 };
 
         private static T Load<T>(string name) where T : UnityEngine.Object
@@ -27,48 +27,18 @@ namespace ElementalTD.Core.Tests
             return asset;
         }
 
-        private static Battle Build(bool withTable, out Board board)
-        {
-            var map = Load<MapDefinition>("Map_Prototype.asset");
-            var run = Load<RunDefinition>("Run_Prototype.asset");
-            board = new Board(map.ToGridMap(), map.Spawn, map.Exit);
-            return new Battle(board, run.ToWaves(), run.Lives, run.StartingGold, run.SellRefundPercent, Load<ElementChartDefinition>("ElementChart.asset").ToChart(),
-                withTable ? new Progression(run.ToLevelTable()) : null);
-        }
+        /// <summary>The real run: with the table (and the pool and seed of 5b, unless <paramref name="pool"/> is false) or with no progression at all.</summary>
+        private static Battle Build(bool withTable, out Board board, bool pool = true) => Reference5b.Build(out board, pool, withTable);
 
-        private static TowerStats Tower(bool light) => Load<TowerDefinition>(light ? "Tower_Light.asset" : "Tower_Shadow.asset").ToStats();
+        private static TowerStats Tower(bool light) => Reference5b.Tower(light);
 
-        // The reference build order of the document: Tick() calls done before the action, cell, Light or Shadow, buy or sell.
-        private static readonly (int tick, int x, int y, bool light, bool buy)[] Order =
-        {
-            (0, 0, 8, true, true), (0, 0, 8, true, false), (0, 11, 2, true, true), (0, 11, 3, true, true),
-            (1290, 14, 2, false, true), (1470, 13, 2, false, true), (2130, 12, 0, false, true), (2220, 10, 1, false, true),
-            (2910, 4, 7, true, true), (3360, 3, 7, true, true), (3630, 4, 6, false, true), (3840, 6, 8, false, true),
-            (4110, 1, 6, true, true), (4470, 0, 6, true, true), (4620, 3, 4, true, true), (5310, 2, 5, true, true),
-            (5580, 1, 2, false, true), (5580, 3, 2, false, true), (5970, 1, 3, false, true), (6390, 3, 3, true, true),
-            (6390, 6, 5, true, true), (6930, 7, 7, false, true), (7410, 7, 5, true, true), (7860, 8, 3, false, true),
-            (7860, 9, 2, true, true), (8310, 8, 5, false, true), (8790, 6, 1, true, true), (9000, 7, 3, false, true),
-            (9000, 7, 1, true, true), (9450, 9, 1, false, true), (9900, 0, 3, false, true),
-        };
-
-        /// <summary>Replays the reference order; <paramref name="afterTick"/> gets the number of Tick() calls done.</summary>
-        private static void Replay(Battle battle, Action<int> afterTick, bool build = true)
-        {
-            int next = 0, ticks = 0;
-            while (battle.Outcome == RunOutcome.Running && ticks < 12000)
-            {
-                while (build && next < Order.Length && Order[next].tick == ticks)
-                {
-                    var a = Order[next++];
-                    var cell = new GridPos(a.x, a.y);
-                    if (a.buy) Assert.AreEqual(PlacementResult.Placed, battle.TryBuyTower(cell, Tower(a.light)));
-                    else Assert.IsTrue(battle.TrySellTower(cell));
-                }
-                battle.Tick();
-                ticks++;
-                afterTick?.Invoke(ticks);
-            }
-        }
+        /// <summary>
+        /// Replays the 5b reference order with its picks; <paramref name="afterTick"/> gets the number of Tick() calls done, with a choice that
+        /// tick opened still open. With <paramref name="picks"/> false the run has no pool, so no choice can open, and its purchases are tried
+        /// without checking the document's gold (the document's order was made for the run with perks).
+        /// </summary>
+        private static void Replay(Battle battle, Action<int> afterTick, bool build = true, bool picks = true) =>
+            Reference5b.Replay(battle, afterTick, build: build, picks: picks, checkGold: picks);
 
         // ---- 5a-AC4 Data
 
@@ -182,7 +152,7 @@ namespace ElementalTD.Core.Tests
         // ---- 5a-AC4 The pins
 
         [Test]
-        public void S5a_AC4_Pin_The_Reference_Order_Gains_Levels_2_To_8_On_The_Documents_Ticks_With_The_Documents_XP_And_Wins_On_10317_At_Level_8_With_750_XP()
+        public void S5a_AC4_Pin_The_Reference_Order_Gains_Levels_2_To_8_On_The_Documents_Ticks_With_The_Documents_XP_And_Wins_On_10026_At_Level_8_With_750_XP()
         {
             Battle battle = Build(true, out Board board);
             Progression p = battle.Progression;
@@ -210,8 +180,8 @@ namespace ElementalTD.Core.Tests
             });
 
             Assert.AreEqual(7, levelUps);
-            Assert.AreEqual(10317, wonAt);
-            Assert.AreEqual((RunOutcome.Won, 10, 105), (battle.Outcome, battle.Lives, battle.Gold));
+            Assert.AreEqual(10026, wonAt);
+            Assert.AreEqual((RunOutcome.Won, 10, 189), (battle.Outcome, battle.Lives, battle.Gold));
             Assert.AreEqual((750, 8, false), (p.Xp, p.Level, p.TableEnded));
             Assert.AreEqual(75, kills.Count, "75 kills");
             Assert.AreEqual(1288, kills[0], "the first kill is where 4e put it");
@@ -243,7 +213,8 @@ namespace ElementalTD.Core.Tests
             Replay(battle, null, build: false);
             Assert.AreEqual((RunOutcome.Lost, 2931), (battle.Outcome, battle.TickCount));
             Assert.AreEqual((0, 1, 0), (battle.Progression.Xp, battle.Progression.Level, battle.Board.TowerCount));
-            Assert.AreEqual(175, battle.Gold, "4e's pin holds with XP on");
+            Assert.AreEqual(175, battle.Gold, "4e's pin holds with XP and the pool on");
+            Assert.AreEqual(0, battle.Progression.ChoicesOpened);
         }
 
         [Test]
@@ -267,7 +238,7 @@ namespace ElementalTD.Core.Tests
                 maxShare = Mathf.Max(maxShare, share);
                 checkedTicks++;
             });
-            Assert.AreEqual(10317, checkedTicks);
+            Assert.AreEqual(10026, checkedTicks);
             Assert.AreEqual(130f / 170f, (float)battle.Progression.XpIntoLevel / battle.Progression.XpForLevel, 1e-6f, "the bar ends three quarters full");
         }
 
@@ -275,7 +246,7 @@ namespace ElementalTD.Core.Tests
 
         private static List<(int, int, int, int, int, int, RunOutcome, int, float)> Snapshots(bool withTable, out Battle battle)
         {
-            battle = Build(withTable, out Board board);
+            battle = Build(withTable, out Board board, pool: false);
             Battle b = battle;
             var list = new List<(int, int, int, int, int, int, RunOutcome, int, float)>();
             Replay(b, _ =>
@@ -283,38 +254,26 @@ namespace ElementalTD.Core.Tests
                 float sum = 0f;
                 for (int e = 0; e < board.EnemyCount; e++) sum += board.EnemyAt(e).X * 3f + board.EnemyAt(e).Y + board.EnemyAt(e).Health + board.EnemyAt(e).WaveIndex;
                 list.Add((b.Gold, b.Lives, board.EnemyCount, b.HitCount, b.ProjectileCount, b.SurvivedWaves, b.Outcome, b.TickCount, sum));
-            });
+            }, picks: false);
             return list;
         }
 
         [Test]
-        public void S5a_AC3_The_Real_Run_With_The_Table_Equals_The_Real_Run_Without_It_On_Every_Tick_In_Everything_But_The_Level()
+        public void S5b_AC4_The_Real_Run_With_The_Table_And_No_Pool_Equals_The_Run_Without_A_Table_On_Every_Tick_In_Everything_But_The_Level()
         {
             var with = Snapshots(true, out Battle a);
             var without = Snapshots(false, out Battle b);
 
-            Assert.AreEqual(10317, with.Count);
+            Assert.Greater(with.Count, 3000, "a real run");
             Assert.AreEqual(without, with, "gold, lives, enemies, hits, shots, survived waves, outcome and enemy positions after every tick");
-            Assert.AreEqual((750, 8), (a.Progression.Xp, a.Progression.Level));
-            Assert.AreEqual((750, 1, true), (b.Progression.Xp, b.Progression.Level, b.Progression.TableEnded), "without a table the XP counts and the level stays 1");
-            Assert.AreEqual((RunOutcome.Won, 10, 105, 10317), (b.Outcome, b.Lives, b.Gold, b.TickCount), "4e's pins hold with no table too");
-            Assert.AreEqual(a.HitCount, b.HitCount);
-        }
-
-        [Test]
-        public void S5a_AC3_The_4e_Pins_Hold_With_XP_On_Win_Tick_Lives_Gold_First_Kill_And_Towers()
-        {
-            Battle battle = Build(true, out Board board);
-            int firstKill = -1;
-            int goldBefore = battle.Gold;
-            Replay(battle, tick =>
-            {
-                if (firstKill < 0 && battle.Progression.Xp > 0) firstKill = tick;
-            });
-            Assert.AreEqual((RunOutcome.Won, 10, 105, 10317), (battle.Outcome, battle.Lives, battle.Gold, battle.TickCount));
-            Assert.AreEqual(1288, firstKill, "the first kill, which pays on tick 1288 in 4e");
-            Assert.AreEqual(29, board.TowerCount);
-            Assert.AreEqual(115, goldBefore);
+            Assert.AreEqual(b.Progression.Xp, a.Progression.Xp);
+            Assert.AreEqual((1, true), (b.Progression.Level, b.Progression.TableEnded), "without a table the XP counts and the level stays 1");
+            Assert.AreEqual(0, a.Progression.ChoicesOpened, "a pool of no perk never opens a choice, whatever the level");
+            Assert.AreEqual(0, a.Modifiers.Count);
+            int level = 1, start = 0;
+            while (level <= DocTable.Length && a.Progression.Xp >= start + DocTable[level - 1]) start += DocTable[level++ - 1];
+            Assert.AreEqual(level, a.Progression.Level, "the level the table gives that XP");
+            Assert.AreEqual((b.Outcome, b.Lives, b.Gold, b.TickCount, b.HitCount), (a.Outcome, a.Lives, a.Gold, a.TickCount, a.HitCount));
         }
 
         // ---- 5a-AC9 Determinism and cost
@@ -332,7 +291,7 @@ namespace ElementalTD.Core.Tests
 
             var first = Run();
             var second = Run();
-            Assert.AreEqual(10317, first.Count);
+            Assert.AreEqual(10026, first.Count);
             Assert.AreEqual(first, second);
         }
 
@@ -340,20 +299,23 @@ namespace ElementalTD.Core.Tests
         public void S5a_AC9_No_Tick_Allocates_That_Did_Not_Allocate_Without_The_Table_The_Seven_Level_Ticks_And_The_Kill_Ticks_Included()
         {
             // The pool-growing ticks of 4e allocate; a tick with a kill or a level must not add to them. Compared tick by tick with the run without a table.
+            var levelAt = new int[10400];
             int[] Measure(bool withTable)
             {
-                Battle battle = Build(withTable, out _);
+                Battle battle = Build(withTable, out _, pool: false);
                 var counts = new int[10400];
+                var order = Reference5b.Actions;
                 int next = 0, ticks = 0;
                 while (battle.Outcome == RunOutcome.Running && ticks < 12000)
                 {
-                    while (next < Order.Length && Order[next].tick == ticks)
+                    while (next < order.Length && order[next].tick == ticks)
                     {
-                        var a = Order[next++];
+                        var a = order[next++];
                         if (a.buy) battle.TryBuyTower(new GridPos(a.x, a.y), Tower(a.light));
                         else battle.TrySellTower(new GridPos(a.x, a.y));
                     }
                     counts[ticks + 1] = TickAllocation.AllocationsOf(battle.Tick);
+                    levelAt[ticks + 1] = battle.Progression.Level;
                     ticks++;
                 }
                 return counts;
@@ -363,7 +325,10 @@ namespace ElementalTD.Core.Tests
             int[] control = Measure(false);
             int[] withTable = Measure(true);
             for (int i = 1; i < control.Length; i++) Assert.AreEqual(control[i], withTable[i], $"tick {i}: allocations with the table and without");
-            foreach (int tick in DocLevelTicks) Assert.LessOrEqual(withTable[tick], control[tick], $"level tick {tick}");
+            int levelTicks = 0;
+            for (int i = 2; i < levelAt.Length; i++)
+                if (levelAt[i] > levelAt[i - 1]) { levelTicks++; Assert.LessOrEqual(withTable[i], control[i], $"level tick {i}"); }
+            Assert.Greater(levelTicks, 0, "the run gained a level");
         }
 
         // ---- 5a-AC9 Source rules

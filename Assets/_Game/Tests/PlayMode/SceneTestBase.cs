@@ -45,6 +45,10 @@ namespace ElementalTD.PlayModeTests
             Assert.IsNotNull(_map, "Map_Prototype.asset not found");
             Time.timeScale = 0f; // nothing may move before the first assertions
             _nextAction = 0;    // the fixture object is shared by its tests: each replays the reference order from its start
+            _nextChoice = 0;
+            _pickMode = PickMode.Fail;
+            _namedPicks.Clear();
+            PrototypeBootstrap.SeedForNextRun = ReferenceSeed; // the first offer of a run depends on the seed: every scene run is the document's
             yield return SceneManager.LoadSceneAsync("Prototype", LoadSceneMode.Single);
             yield return null;
             yield return null;
@@ -168,7 +172,7 @@ namespace ElementalTD.PlayModeTests
             int ticks = 0;
             while (!condition() && ticks < maxTicks)
             {
-                Battle.Tick();
+                Tick();
                 ticks++;
                 if (ticks % ticksPerFrame == 0) yield return null;
             }
@@ -176,53 +180,122 @@ namespace ElementalTD.PlayModeTests
             yield return null;
         }
 
+        /// <summary>Ticks by hand this many times, letting the views render every few ticks and once more at the end (battle time, not real time).</summary>
+        protected IEnumerator TickFor(int count, int ticksPerFrame = 10)
+        {
+            for (int i = 1; i <= count; i++)
+            {
+                Tick();
+                if (i % ticksPerFrame == 0 && i < count) yield return null;
+            }
+            yield return null;
+        }
+
         protected IEnumerator TickUntilFirstEnemy() => TickUntil(() => Board.EnemyCount > 0, 1200, 50);
 
+        /// <summary>The seed of the document's reference order (docs/balance/0001-prototype-economy.md, "Reference seed and order").</summary>
+        protected const uint ReferenceSeed = 4;
+
         /// <summary>
-        /// The reference build order of docs/balance/0001-prototype-economy.md: after this many Tick() calls, select the tower
+        /// The reference build order of docs/balance/0001-prototype-economy.md, step 5b: after this many Tick() calls, select the tower
         /// (true: the first, Light; false: the second, Shadow) and click the cell (a purchase, or a sale when the cell holds a tower),
-        /// then the gold the document states. The same table is in RealAssetRunTests.
+        /// then the gold the document states. The same table is in Reference5b (EditMode).
         /// </summary>
         protected static readonly (int tick, int x, int y, bool light, bool buy, int goldAfter)[] ReferenceOrder =
         {
-            (0, 0, 8, true, true, 75),
-            (0, 0, 8, true, false, 115),
-            (0, 11, 2, true, true, 75),
-            (0, 11, 3, true, true, 35),
-            (1290, 14, 2, false, true, 5),
-            (1470, 13, 2, false, true, 25),
-            (2130, 12, 0, false, true, 5),
-            (2220, 10, 1, false, true, 5),
-            (2910, 4, 7, true, true, 5),
-            (3360, 3, 7, true, true, 10),
-            (3630, 4, 6, false, true, 0),
-            (3840, 6, 8, false, true, 10),
-            (4110, 1, 6, true, true, 0),
-            (4470, 0, 6, true, true, 35),
-            (4620, 3, 4, true, true, 5),
-            (5310, 2, 5, true, true, 5),
-            (5580, 1, 2, false, true, 45),
-            (5580, 3, 2, false, true, 5),
-            (5970, 1, 3, false, true, 5),
-            (6390, 3, 3, true, true, 50),
-            (6390, 6, 5, true, true, 10),
-            (6930, 7, 7, false, true, 0),
-            (7410, 7, 5, true, true, 0),
-            (7860, 8, 3, false, true, 50),
-            (7860, 9, 2, true, true, 10),
-            (8310, 8, 5, false, true, 0),
-            (8790, 6, 1, true, true, 0),
-            (9000, 7, 3, false, true, 65),
-            (9000, 7, 1, true, true, 25),
-            (9450, 9, 1, false, true, 5),
-            (9900, 0, 3, false, true, 5),
+            (0, 0, 8, true, true, 75), (0, 0, 8, true, false, 115), (0, 11, 2, true, true, 75), (0, 11, 3, true, true, 35),
+            (1290, 14, 2, false, true, 5), (1470, 13, 2, false, true, 25), (2130, 12, 0, false, true, 5), (2220, 10, 1, false, true, 5),
+            (2790, 4, 7, true, true, 4), (3150, 4, 6, false, true, 28), (3390, 3, 7, true, true, 1), (3600, 6, 8, false, true, 0),
+            (4050, 0, 6, true, true, 42), (4110, 1, 6, true, true, 15), (4230, 2, 5, true, true, 1), (4260, 3, 4, false, true, 9),
+            (4860, 1, 2, true, true, 8), (5190, 1, 3, true, true, 7), (5370, 3, 3, true, true, 33), (5460, 3, 2, false, true, 6),
+            (5670, 6, 5, false, true, 5), (5880, 7, 7, false, true, 4), (6060, 7, 5, false, true, 35), (6540, 8, 3, true, true, 8),
+            (6900, 9, 2, false, true, 7), (7230, 8, 5, true, true, 6), (7470, 7, 3, false, true, 55), (7470, 7, 1, true, true, 15),
+            (7800, 6, 1, false, true, 1), (8250, 9, 1, true, true, 0), (8760, 0, 3, true, true, 12), (8880, 1, 5, false, true, 66),
+            (8880, 14, 1, true, true, 26), (9330, 3, 1, false, true, 25),
         };
+
+        /// <summary>The choices of the same document: opens after this many Tick() calls, at this level, with this offer, and the slot picked.</summary>
+        protected static readonly (int tick, int level, int[] offer, int slot)[] ReferenceChoices =
+        {
+            (1452, 2, new[] { 1, 0, 2 }, 0), (2209, 3, new[] { 1, 4, 2 }, 1), (3369, 4, new[] { 3, 4, 2 }, 0), (4175, 5, new[] { 4, 1, 2 }, 2),
+            (5446, 6, new[] { 1, 3, 2 }, 0), (6980, 7, new[] { 2, 1, 0 }, 2), (8808, 8, new[] { 2, 3, 0 }, 2),
+        };
+
+        // ---- The one Tick() of the scene tests
+
+        private enum PickMode { Fail, Reference, Named, Leave }
+
+        private PickMode _pickMode;
+        private int _nextChoice;
+        private readonly Queue<int> _namedPicks = new Queue<int>();
+
+        /// <summary>
+        /// Ticks the battle by hand. It fails, naming the tick, when a choice is open (the battle would silently stand still), and answers the choice
+        /// the tick opens: from the reference picks after a replay of the order (checking the tick and the offer against the document), from the
+        /// perks a test named with <see cref="NamePicks"/>, or not at all after <see cref="LeaveChoicesOpen"/>. With none of these it fails.
+        /// </summary>
+        protected void Tick()
+        {
+            Assert.IsFalse(Battle.AwaitingChoice, $"Tick() called on tick {Battle.TickCount} with a choice open and unanswered: the battle does not move");
+            Battle.Tick();
+            if (!Battle.AwaitingChoice) return;
+
+            int tick = Battle.TickCount;
+            switch (_pickMode)
+            {
+                case PickMode.Reference:
+                {
+                    Assert.Less(_nextChoice, ReferenceChoices.Length, $"tick {tick}: a choice the document does not have");
+                    var row = ReferenceChoices[_nextChoice++];
+                    Assert.AreEqual(row.tick, tick, $"choice {_nextChoice}: the tick it opens on");
+                    Assert.AreEqual(row.level, Battle.Progression.ChoiceLevel, $"choice {_nextChoice}: its level");
+                    for (int slot = 0; slot < Progression.OfferSize; slot++)
+                        Assert.AreEqual(row.offer[slot], Battle.Progression.OfferAt(slot), $"choice {_nextChoice} on tick {tick}: the perk on slot {slot}");
+                    Battle.PickPerk(row.slot);
+                    break;
+                }
+                case PickMode.Named:
+                {
+                    Assert.Greater(_namedPicks.Count, 0, $"tick {tick}: a choice opened and the test named no pick for it");
+                    int perk = _namedPicks.Dequeue();
+                    for (int slot = 0; slot < Progression.OfferSize; slot++)
+                    {
+                        if (Battle.Progression.OfferAt(slot) != perk) continue;
+                        Battle.PickPerk(slot);
+                        return;
+                    }
+                    Assert.Fail($"tick {tick}: the test named perk {perk} and the offer is {Battle.Progression.OfferAt(0)}, {Battle.Progression.OfferAt(1)}, {Battle.Progression.OfferAt(2)}");
+                    break;
+                }
+                case PickMode.Leave:
+                    break;
+                default:
+                    Assert.Fail($"tick {tick}: a level was gained and a choice opened, and the test named no pick (NamePicks) and replays no reference order");
+                    break;
+            }
+        }
+
+        /// <summary>The perks (places in the pool) the next choices take, in order; each must be on its offer. A test that reaches a level names them first.</summary>
+        protected void NamePicks(params int[] perks)
+        {
+            _pickMode = PickMode.Named;
+            foreach (int perk in perks) _namedPicks.Enqueue(perk);
+        }
+
+        /// <summary>
+        /// For a test that only needs its choices answered: the fire-rate perk (place 2), which is on each of the first seven offers of the reference seed.
+        /// </summary>
+        protected void NameFireRatePicks() => NamePicks(2, 2, 2, 2, 2, 2, 2);
+
+        /// <summary>For the tests of the level-up screen: Tick() stops with the choice open, and the test answers it (the view, or Battle.PickPerk).</summary>
+        protected void LeaveChoicesOpen() => _pickMode = PickMode.Leave;
 
         private int _nextAction;
 
         /// <summary>Clicks the reference actions that are due after this many ticks, checking that each one did what it should.</summary>
         protected void RunReferenceActionsAt(int ticks)
         {
+            _pickMode = PickMode.Reference; // a replay of the order answers the choices as the document does
             while (_nextAction < ReferenceOrder.Length && ReferenceOrder[_nextAction].tick == ticks)
             {
                 var (tick, x, y, light, buy, goldAfter) = ReferenceOrder[_nextAction++];

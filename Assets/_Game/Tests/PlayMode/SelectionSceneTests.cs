@@ -355,7 +355,8 @@ namespace ElementalTD.PlayModeTests
             foreach (string name in new[] { "top-bar", "bottom-bar", "side-column", "tower-panel", "tower-stats", "synergies", "tower-actions" })
                 Assert.AreNotSame(E(name), panel.Pick(E(name).worldBound.center), $"{name} takes no pointer");
 
-            // Only the buy buttons, the close button, Sell and the end screen (with its button) take picking.
+            // Only the buy buttons, the close button, Sell, the level-up overlay (it must take every click while shown, 5b-AC11)
+            // and the end screen (with its button) take picking; the perk cards ignore it until their lock has run.
             var takers = new List<string>();
             Root.Query<VisualElement>().ForEach(e =>
             {
@@ -363,7 +364,7 @@ namespace ElementalTD.PlayModeTests
             });
             foreach (string taker in takers)
             {
-                bool allowed = taker == "panel-close" || taker == "sell-button" || taker == "end-screen" || taker == "restart-button" || taker.Contains("tower-button");
+                bool allowed = taker == "panel-close" || taker == "sell-button" || taker == "level-up" || taker == "end-screen" || taker == "restart-button" || taker.Contains("tower-button");
                 Assert.IsTrue(allowed, $"'{taker}' takes picking");
             }
             Assert.Contains("panel-close", takers);
@@ -415,7 +416,7 @@ namespace ElementalTD.PlayModeTests
             int ticks = 0;
             while (true)
             {
-                Battle.Tick();
+                Tick();
                 if (Battle.Outcome != RunOutcome.Running) break;
                 Assert.IsNotNull(_input.SelectedTower, "selected while the run runs");
                 if (++ticks % 50 == 0) yield return null;
@@ -460,7 +461,7 @@ namespace ElementalTD.PlayModeTests
             {
                 RunReferenceActionsAt(ticks);
                 if (ticks == 9900) selected = SelectByClick(0, 3); // the last purchase of the order; the run wins 417 ticks later
-                Battle.Tick();
+                Tick();
                 ticks++;
                 Assert.Less(ticks, 12000, "the run never ended");
                 if (Battle.Outcome == RunOutcome.Running)
@@ -655,7 +656,7 @@ namespace ElementalTD.PlayModeTests
             Assert.LessOrEqual(col.yMax, bottom.yMin + Snap);
 
             Wake();
-            Battle.Tick();
+            Tick();
             yield return Frames(3);
             AssertLayout("after the drop");
             Assert.AreEqual(position, _camera.transform.position, "M20: after the drop");
@@ -845,7 +846,7 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(DisplayStyle.None, L("sell-value-tail").resolvedStyle.display);
 
             Wake();
-            Battle.Tick();
+            Tick();
             yield return null;
             Assert.AreEqual("+8", L("sell-value").text, "17 at 50 percent, rounded down");
             Assert.AreEqual(" of 17", L("sell-value-tail").text, "the tail names this tower's cost");
@@ -887,7 +888,7 @@ namespace ElementalTD.PlayModeTests
             int frame = 0, dropFrame = -1;
             while (true)
             {
-                Battle.Tick();
+                Tick();
                 bool lowered = Battle.TryGetSellValue(A, out int after) && after < cost;
                 yield return null;
                 frame++;
@@ -914,7 +915,7 @@ namespace ElementalTD.PlayModeTests
             log.Add($"drop frame {dropFrame}: '{L("sell-value").text}{L("sell-value-tail").text}' [{SellClasses()}]");
 
             // The next frame: the pop gives way to the settle.
-            Battle.Tick();
+            Tick();
             yield return null;
             frame++;
             Assert.AreEqual(20, ShownNumber());
@@ -929,7 +930,7 @@ namespace ElementalTD.PlayModeTests
             string lastHud = null;
             while (Time.realtimeSinceStartup - tSettle < 0.95f)
             {
-                Battle.Tick();
+                Tick();
                 yield return new WaitForSecondsRealtime(1f / 60f); // a batch frame takes 0.4 ms: pace the run like a 60 Hz game, or 0.95 s plays a minute of waves
                 frame++;
                 Assert.AreEqual(QueryValue(A), ShownNumber(), $"frame {frame}");
@@ -994,28 +995,28 @@ namespace ElementalTD.PlayModeTests
             string text = L("sell-value").text + "|" + L("sell-value-tail").text + "|" + L("tower-panel-title").text;
             for (int i = 0; i < 10; i++)
             {
-                Battle.Tick(); // nothing in range: no launch
+                Tick(); // nothing in range: no launch
                 yield return null;
                 Assert.AreEqual(classes, SellClasses(), $"frame {i}");
                 Assert.AreEqual(text, L("sell-value").text + "|" + L("sell-value-tail").text + "|" + L("tower-panel-title").text);
             }
 
             Wake();
-            Battle.Tick();
+            Tick();
             yield return null;
             Assert.AreEqual("+20", L("sell-value").text);
             Assert.IsTrue(SellHas("sell-button--refund") && SellHas("sell-button--pop"), SellClasses());
             AssertLook(DropRed, DropRed, 1.4f, "the first frame");
             Assert.AreEqual(DisplayStyle.Flex, L("sell-value-tail").resolvedStyle.display);
 
-            Battle.Tick();
+            Tick();
             yield return null;
             Assert.IsFalse(SellHas("sell-button--pop"));
             Assert.IsTrue(SellHas("sell-button--settle"));
             string settled = SellClasses();
             for (int i = 0; i < 20; i++)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
                 Assert.AreEqual(settled, SellClasses(), $"frame {i} after the settle began: nothing is written");
                 Assert.AreEqual("+20", L("sell-value").text);
@@ -1034,7 +1035,7 @@ namespace ElementalTD.PlayModeTests
             AssertFullLook(40, "before");
 
             Wake();
-            Battle.Tick();
+            Tick();
             yield return null;
             Assert.IsTrue(SellHas("sell-button--pop"), SellClasses());
             Label number = L("sell-value"), tail = L("sell-value-tail");
@@ -1044,7 +1045,7 @@ namespace ElementalTD.PlayModeTests
             Assert.LessOrEqual(numberRight, tailLeft + Snap, $"the enlarged number's right edge ({numberRight:F2}) is at or left of the tail's left edge ({tailLeft:F2})");
 
             yield return new WaitForSecondsRealtime(1.0f);
-            Battle.Tick();
+            Tick();
             yield return Frames(2);
             Assert.AreEqual(1f, number.resolvedStyle.scale.value.x, 0.005f, "back at scale 1 after the settle");
             Assert.LessOrEqual(number.worldBound.xMax, tail.worldBound.xMin + Snap, "and still not over the tail");
@@ -1056,7 +1057,7 @@ namespace ElementalTD.PlayModeTests
             Tower fired = Buy(A);
             Tower fresh = BuyCheap(Quiet, 30);
             Wake();
-            Battle.Tick();
+            Tick();
             Assert.AreEqual(20, QueryValue(A));
             Assert.AreEqual(30, QueryValue(Quiet));
 
@@ -1088,7 +1089,7 @@ namespace ElementalTD.PlayModeTests
             ClickCell(A.X, A.Y);
             yield return Frames(2);
             Wake();
-            Battle.Tick();
+            Tick();
             yield return Frames(2);
             Assert.IsTrue(SellHas("sell-button--settle"), "the settle runs");
 
@@ -1109,7 +1110,7 @@ namespace ElementalTD.PlayModeTests
             ClickCell(A.X, A.Y);
             yield return Frames(2);
             Wake();
-            Battle.Tick(); // A and B launch on this tick
+            Tick(); // A and B launch on this tick
             yield return null;
             Assert.IsTrue(SellHas("sell-button--pop"), "the pop frame");
             if (when == "settle")
@@ -1151,7 +1152,7 @@ namespace ElementalTD.PlayModeTests
             for (int i = 0; i < 6; i++)
             {
                 if (i == 3) Wake();
-                Battle.Tick();
+                Tick();
                 yield return null;
             }
             Object.Destroy(probe.gameObject);
@@ -1168,7 +1169,7 @@ namespace ElementalTD.PlayModeTests
             yield return Frames(3);
             Assert.AreEqual("+40", L("sell-value").text);
             Wake();
-            Battle.Tick(); // the tower fires in the frame of the click: no frame has drawn the new number yet
+            Tick(); // the tower fires in the frame of the click: no frame has drawn the new number yet
             int gold = Battle.Gold;
             Assert.AreEqual("+40", L("sell-value").text, "the last drawn number was the cost");
             ClickButton(Btn("sell-button"));
@@ -1184,7 +1185,7 @@ namespace ElementalTD.PlayModeTests
             Buy(A);
             Buy(B, 1);
             Wake();
-            Battle.Tick();
+            Tick();
             ClickCell(A.X, A.Y);
             yield return Frames(3);
             _input.enabled = true;
@@ -1222,7 +1223,7 @@ namespace ElementalTD.PlayModeTests
             System.Action board = FrameMethod(views[1]), panel = FrameMethod(views[2]);
             for (int tick = 0; tick < 60; tick++)
             {
-                Battle.Tick();
+                Tick();
                 Assert.AreEqual(0, Allocations.Of(board), $"board view, tick {tick}");
                 Assert.AreEqual(0, Allocations.Of(panel), $"panel view, tick {tick}");
             }
@@ -1239,7 +1240,7 @@ namespace ElementalTD.PlayModeTests
             for (int i = 0; i < 5; i++) Assert.AreEqual(0, Allocations.Of(panel), "an open panel, an unchanged value");
             // A change allocates (a text is built), and only then: the next frame is silent again.
             Wake();
-            Battle.Tick();
+            Tick();
             Assert.Greater(Allocations.Of(panel), 0, "the value changed: a text is built");
             panel(); // the frame after the drop: the pop gives way to the settle (a class swap, no text)
             for (int i = 0; i < 3; i++) Assert.AreEqual(0, Allocations.Of(panel), $"settled, frame {i}");

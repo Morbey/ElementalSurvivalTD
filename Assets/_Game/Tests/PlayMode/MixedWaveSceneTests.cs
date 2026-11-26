@@ -82,7 +82,7 @@ namespace ElementalTD.PlayModeTests
                 for (int i = 0; i < ticksPerFrame && !stop() && Battle.Outcome == RunOutcome.Running; i++, ticks++)
                 {
                     RunReferenceActionsAt(Battle.TickCount);
-                    Battle.Tick();
+                    Tick();
                 }
                 yield return null;
             }
@@ -104,7 +104,7 @@ namespace ElementalTD.PlayModeTests
                 for (int i = 0; i < 3 && Battle.Outcome == RunOutcome.Running; i++)
                 {
                     RunReferenceActionsAt(Battle.TickCount);
-                    Battle.Tick();
+                    Tick();
                 }
                 yield return null;
                 if (Battle.Outcome != RunOutcome.Running) break;   // the end screen hides the countdown
@@ -191,7 +191,7 @@ namespace ElementalTD.PlayModeTests
                 for (int i = 0; i < 2 && Battle.Waves.StartedWaves == 4; i++)
                 {
                     RunReferenceActionsAt(Battle.TickCount);
-                    Battle.Tick();
+                    Tick();
                 }
                 yield return null;
                 if (Battle.Waves.StartedWaves != 4) break;

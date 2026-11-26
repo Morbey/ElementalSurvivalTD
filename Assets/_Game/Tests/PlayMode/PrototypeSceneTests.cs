@@ -95,7 +95,7 @@ namespace ElementalTD.PlayModeTests
             var visited = new HashSet<GridPos>();
             for (int tick = 0; tick < 1500 && !visited.Contains(new GridPos(9, 1)) && enemy.IsOnBoard; tick++)
             {
-                Battle.Tick();
+                Tick();
                 GridPos cell = enemy.Follower.From;
                 Assert.IsFalse(Board.Map.IsBlocked(cell), $"enemy inside blocked cell {cell}");
                 visited.Add(cell);
@@ -273,7 +273,7 @@ namespace ElementalTD.PlayModeTests
             // The stretch from (9,4) to (9,1) lasts 1.5 s at speed 2.
             yield return TickUntilOnStep(new GridPos(9, 4), new GridPos(9, 3));
             Enemy enemy = Board.EnemyAt(0);
-            for (int i = 0; i < 5; i++) Battle.Tick(); // two tick positions to interpolate between
+            for (int i = 0; i < 5; i++) Tick(); // two tick positions to interpolate between
             Transform view = EnemyViewAt(0);
             Time.timeScale = 1f;
             for (int i = 0; i < 3; i++) yield return null; // let the new time scale take effect
@@ -306,7 +306,7 @@ namespace ElementalTD.PlayModeTests
             // From the tick the first enemy is on (1,4) heading for (2,5): the diagonal stretch (1,4) to (4,7) lasts 2.1 s.
             yield return TickUntilOnStep(new GridPos(1, 4), new GridPos(2, 5));
             Enemy enemy = Board.EnemyAt(0);
-            for (int i = 0; i < 5; i++) Battle.Tick();
+            for (int i = 0; i < 5; i++) Tick();
             Transform view = EnemyViewAt(0);
             Time.timeScale = 1f;
             for (int i = 0; i < 3; i++) yield return null;

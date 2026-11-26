@@ -24,7 +24,7 @@ namespace ElementalTD.PlayModeTests
         {
             while (Battle.SurvivedWaves < waves && _ticks < 6000)
             {
-                Battle.Tick();
+                Tick();
                 _ticks++;
                 if (Battle.SurvivedWaves < waves && _ticks % ticksPerFrame == 0) yield return null;
             }
@@ -56,16 +56,19 @@ namespace ElementalTD.PlayModeTests
         }
 
         [UnityTest]
-        public IEnumerator S4a_AC4_The_Line_Hides_After_The_Duration_In_Unscaled_Time_And_The_Gold_Stays()
+        public IEnumerator S4a_AC4_The_Line_Hides_After_The_Duration_In_Battle_Time_And_The_Gold_Stays()
         {
+            // 5b-AC15: the line counts battle ticks (3 s = 180 ticks) from the frame that shows it, not real seconds.
             yield return TickToSurvived(1);
             yield return null;
             Assert.IsTrue(MessageShown());
 
-            yield return new WaitForSecondsRealtime(2.5f);
-            Assert.IsTrue(MessageShown(), "still shown before 3 s");
             yield return new WaitForSecondsRealtime(1.0f);
-            Assert.IsFalse(MessageShown(), "hidden after 3 s");
+            Assert.IsTrue(MessageShown(), "real time alone does not hide it");
+            yield return TickFor(170);
+            Assert.IsTrue(MessageShown(), "still shown 170 ticks (2.83 s) after the frame that showed it");
+            yield return TickFor(20);
+            Assert.IsFalse(MessageShown(), "hidden once the battle has ticked 3 s");
             Assert.AreEqual($"Gold {Battle.Gold}", GoldLabel.text);
         }
 
@@ -86,11 +89,11 @@ namespace ElementalTD.PlayModeTests
             StringAssert.DoesNotContain("survived", RefusalText);
 
             yield return new WaitForSecondsRealtime(1.8f);
-            Assert.IsFalse(RefusalShown(), "the refusal has its own, shorter life");
-            Assert.IsTrue(MessageShown(), "the survived line keeps its own 3 s");
+            Assert.IsFalse(RefusalShown(), "the refusal has its own, shorter life, in real time");
+            Assert.IsTrue(MessageShown(), "the survived line keeps its own 3 s of battle time: no tick has run");
             Assert.AreEqual(Survived(1), _label.text);
-            yield return new WaitForSecondsRealtime(1.5f);
-            Assert.IsFalse(MessageShown());
+            yield return TickFor(181);
+            Assert.IsFalse(MessageShown(), "hidden after 3 s of battle ticks");
 
             // The other way round: a survived line that arrives while a refusal shows leaves the refusal alone.
             ClickCell(5, 0);
@@ -130,7 +133,7 @@ namespace ElementalTD.PlayModeTests
                 for (int i = 0; i < 30 && Battle.Outcome == RunOutcome.Running; i++, ticks++)
                 {
                     RunReferenceActionsAt(ticks);
-                    Battle.Tick();
+                    Tick();
                 }
                 yield return null;
             }
@@ -146,7 +149,7 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual("Victory", Root.Q<Label>("end-title").text);
             Assert.IsFalse(MessageShown(), "1.3: the message line hides under the end screen, also the last wave's survived line");
             Assert.AreEqual($"Gold {Battle.Gold}", GoldLabel.text);
-            Assert.AreEqual("Gold 105", GoldLabel.text, "the gold includes the last wave's bonus");
+            Assert.AreEqual("Gold 189", GoldLabel.text, "the gold includes the last wave's bonus (document: 189)");
 
             yield return new WaitForSecondsRealtime(3.3f);
             Assert.IsFalse(MessageShown(), "still hidden after the line's duration");
@@ -168,7 +171,7 @@ namespace ElementalTD.PlayModeTests
             Assert.IsTrue(MessageShown());
             Label countdown = Root.Q<Label>("next-wave-label");
 
-            while (Battle.Waves.SecondsToNextWave <= 0f && _ticks < 2925) { Battle.Tick(); _ticks++; } // no frame: the survived line keeps its 3 s; stops when a countdown starts
+            while (Battle.Waves.SecondsToNextWave <= 0f && _ticks < 2925) { Tick(); _ticks++; } // no frame: the survived line keeps its 3 s; stops when a countdown starts
             Assert.AreEqual(RunOutcome.Running, Battle.Outcome);
             Assert.Greater(Battle.Waves.SecondsToNextWave, 0f, $"a countdown is running at tick {_ticks}");
             yield return null;
@@ -184,7 +187,7 @@ namespace ElementalTD.PlayModeTests
             string beforeLoss = _label.text;
             Assert.IsTrue(MessageShown(), "a message is showing before the losing tick");
 
-            while (Battle.Outcome == RunOutcome.Running && _ticks < 4000) { Battle.Tick(); _ticks++; }
+            while (Battle.Outcome == RunOutcome.Running && _ticks < 4000) { Tick(); _ticks++; }
             Assert.AreEqual(RunOutcome.Lost, Battle.Outcome);
             Assert.AreEqual(2931, _ticks, 1, "developer's smoke check: lost on tick 2931");
             yield return null;

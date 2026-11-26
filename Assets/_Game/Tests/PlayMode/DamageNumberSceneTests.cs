@@ -39,7 +39,7 @@ namespace ElementalTD.PlayModeTests
             var lastSlot = new Dictionary<int, float>();
             for (int k = 0; k < ticks; k++)
             {
-                Battle.Tick();
+                Tick();
                 List<Hit> hits = due?.Invoke(k);
                 if (hits != null)
                     foreach (Hit hit in hits)
@@ -106,10 +106,10 @@ namespace ElementalTD.PlayModeTests
             NumberView.Show(HitAtCell(6, 3, 8f, HitKind.Normal, OffBoard + 2));
             NumberView.Show(HitAtCell(9, 3, 16f, HitKind.Strong, OffBoard + 3));
             yield return null;
-            Battle.Tick(); // grown by the next frame: scale 1 needs 5 ticks
+            Tick(); // grown by the next frame: scale 1 needs 5 ticks
             for (int i = 0; i < 5; i++)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
             }
 
@@ -153,7 +153,7 @@ namespace ElementalTD.PlayModeTests
             int guard = 0;
             while (Battle.HitCount == 0 && guard++ < 200)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
                 if (Battle.HitCount == 0) Assert.AreEqual(0, VisibleNumbers(), "no number before a landing");
             }
@@ -174,7 +174,7 @@ namespace ElementalTD.PlayModeTests
             {
                 if (age > 0)
                 {
-                    Battle.Tick();
+                    Tick();
                     yield return null;
                 }
                 Assert.AreEqual(landed + age, Battle.TickCount);
@@ -217,7 +217,7 @@ namespace ElementalTD.PlayModeTests
             ReferenceStack model = NewStack();
             modelOut[0] = model;
 
-            Battle.Tick();
+            Tick();
             if (frameEveryTick)
             {
                 yield return null;
@@ -226,7 +226,7 @@ namespace ElementalTD.PlayModeTests
             Assert.Greater(Battle.ProjectileCount, 0, "the towers fired on the first tick");
             for (int k = 0; k < ticksAfterLaunch; k++)
             {
-                Battle.Tick();
+                Tick();
                 if (!frameEveryTick) continue;
                 yield return null;
                 MatchDrawn(model.Frame(BoardDrawn()), DrawnNumbers(), $"tick {k + 2}");
@@ -280,7 +280,7 @@ namespace ElementalTD.PlayModeTests
             Board.SpawnEnemy(new EnemyStats(0f, 1_000_000f, 0, wave));
             yield return null;
             ReferenceStack model = NewStack();
-            for (int i = 0; i < 900; i++) Battle.Tick();
+            for (int i = 0; i < 900; i++) Tick();
             Assert.Greater(Battle.HitCount, Battle.HitLogCapacity + 10, "more hits than the log holds, none read");
 
             yield return null;
@@ -299,7 +299,7 @@ namespace ElementalTD.PlayModeTests
             for (int ticks = 0; ticks < 3000; ticks++)
             {
                 RunReferenceActionsAt(ticks);
-                Battle.Tick();
+                Tick();
             }
             yield return null;
             MatchDrawn(model.Frame(BoardDrawn()), DrawnNumbers(), "after 3000 ticks");
@@ -312,7 +312,7 @@ namespace ElementalTD.PlayModeTests
             Enemy enemy = SpawnWave1Enemy(health: 1_000_000f);
             yield return null;
             ReferenceStack model = NewStack();
-            for (int i = 0; i < 20; i++) Battle.Tick();
+            for (int i = 0; i < 20; i++) Tick();
             SetTickFraction(0.5f);
             model.Alpha = 0.5f;
             Hit hit = HitOn(enemy, 20f, HitKind.Strong);
@@ -536,8 +536,8 @@ namespace ElementalTD.PlayModeTests
         public IEnumerator S4d_AC8_A_Record_Naming_Another_Enemy_Lifts_None_Of_The_First_Enemys_Numbers()
         {
             Enemy first = SpawnWave1Enemy(health: 1_000_000f);
-            Battle.Tick();
-            Battle.Tick();
+            Tick();
+            Tick();
             Enemy second = SpawnWave1Enemy(health: 1_000_000f);
             yield return null;
             ReferenceStack model = NewStack();
@@ -570,7 +570,7 @@ namespace ElementalTD.PlayModeTests
             AssertPoolIntact();
 
             // Everything ends; the alive count has not drifted: 29 numbers and then a weak one still show.
-            for (int i = 0; i < 31; i++) { Battle.Tick(); yield return null; }
+            for (int i = 0; i < 31; i++) { Tick(); yield return null; }
             Assert.AreEqual(0, VisibleNumbers());
             for (int k = 1; k <= 29; k++) NumberView.Show(HitAtCell(2 + k % 12, 3, k, HitKind.Strong, OffBoard + 100 + k));
             NumberView.Show(HitAtCell(3, 5, 7f, HitKind.Weak, OffBoard + 500));
@@ -602,7 +602,7 @@ namespace ElementalTD.PlayModeTests
             ShowBoth(HitAtCell(2, 6, 3f, HitKind.Weak, enemyEntry + 1)); // 30 alive: none
             for (int i = 0; i < 5; i++)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
             }
             Assert.AreEqual(30, VisibleNumbers(), "with 30 alive a weak one shows none");
@@ -615,7 +615,7 @@ namespace ElementalTD.PlayModeTests
 
             for (int i = 0; i < 27; i++)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
                 model.Frame(BoardDrawn());
             }
@@ -677,7 +677,7 @@ namespace ElementalTD.PlayModeTests
             int guard = 0;
             while (OnBoard(enemy) && guard++ < 100)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
                 MatchDrawn(model.Frame(BoardDrawn()), DrawnNumbers(), $"tick {Battle.TickCount}");
             }
@@ -695,14 +695,14 @@ namespace ElementalTD.PlayModeTests
             var settled = new List<Vector2>();
             for (int k = 0; k < 6; k++)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
                 MatchDrawn(model.Frame(BoardDrawn()), DrawnNumbers(), "after the kill");
             }
             foreach (Drawn d in DrawnNumbers()) settled.Add(d.Bottom);
             for (int k = 0; k < 4; k++)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
                 var now = DrawnNumbers();
                 Assert.AreEqual(settled.Count, now.Count);
@@ -720,7 +720,7 @@ namespace ElementalTD.PlayModeTests
             int guard2 = 0;
             while (DrawnNumbers().Count > 0 && guard2++ < 60)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
                 MatchDrawn(model.Frame(BoardDrawn()), DrawnNumbers(), "ending");
             }
@@ -738,7 +738,7 @@ namespace ElementalTD.PlayModeTests
             int guard = 0;
             while (enemy.DistanceToExit > 3f && guard++ < 400)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
             }
             Hit hit = HitOn(enemy, 20f, HitKind.Strong);
@@ -751,7 +751,7 @@ namespace ElementalTD.PlayModeTests
                 yield return null;
                 MatchDrawn(model.Frame(BoardDrawn()), DrawnNumbers(), "while it walks");
                 if (OnBoard(enemy)) lastStood = DrawnWorld(enemy);
-                Battle.Tick();
+                Tick();
             }
             Assert.IsFalse(OnBoard(enemy), "it exited");
             yield return null;
@@ -761,7 +761,7 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(expected.x, drawn[0].Bottom.x, PositionTolerance, "x where the enemy view last stood");
             Assert.AreEqual(expected.y, drawn[0].Bottom.y, PositionTolerance, "y where the enemy view last stood");
             Vector2 stays = drawn[0].Bottom;
-            Battle.Tick();
+            Tick();
             yield return null;
             Assert.AreEqual(stays.x, DrawnNumbers()[0].Bottom.x, PositionTolerance);
             Assert.AreEqual(stays.y, DrawnNumbers()[0].Bottom.y, PositionTolerance);
@@ -771,7 +771,7 @@ namespace ElementalTD.PlayModeTests
         public IEnumerator S4d_AC15_The_Next_Enemy_On_A_Reused_Object_Carries_None_Of_The_Numbers_Of_The_One_Before()
         {
             Enemy first = SpawnWave1Enemy(health: 1_000_000f);
-            for (int i = 0; i < 10; i++) Battle.Tick();
+            for (int i = 0; i < 10; i++) Tick();
             yield return null;
             ReferenceStack model = NewStack();
             Hit hit = HitOn(first, 20f, HitKind.Strong);
@@ -787,7 +787,7 @@ namespace ElementalTD.PlayModeTests
             Enemy second = SpawnWave1Enemy(health: 1_000_000f);
             Assert.AreSame(first, second, "the pool hands the same object out");
             Assert.AreNotEqual(first.Entry - 1, second.Entry);
-            Battle.Tick();
+            Tick();
             yield return null;
             MatchDrawn(model.Frame(BoardDrawn()), DrawnNumbers(), "after the next enemy entered");
             Assert.AreEqual(stays.x, DrawnNumbers()[0].Bottom.x, PositionTolerance, "the old number has not moved");
@@ -949,7 +949,7 @@ namespace ElementalTD.PlayModeTests
                 for (int i = 0; i < 30 && Battle.Waves.StartedWaves < Battle.Waves.WaveCount; i++, ticks++)
                 {
                     RunReferenceActionsAt(ticks);
-                    Battle.Tick();
+                    Tick();
                 }
                 yield return null;
                 model.Frame(BoardDrawn()); // keeps the model's reading of the log in step
@@ -961,7 +961,7 @@ namespace ElementalTD.PlayModeTests
             while (Battle.Outcome == RunOutcome.Running && ticks < 14000)
             {
                 RunReferenceActionsAt(ticks);
-                Battle.Tick();
+                Tick();
                 ticks++;
                 yield return null;
                 if (Battle.Outcome != RunOutcome.Running) break; // under the end screen nothing shows (4d-AC11)
@@ -1021,7 +1021,7 @@ namespace ElementalTD.PlayModeTests
             for (int k = 0; k < 400; k++)
             {
                 if (k % 10 == 0) SpawnWave1Enemy(health: 1_000_000f, speed: 0.6f);
-                Battle.Tick();
+                Tick();
                 TopUp();
                 if (k % 4 == 0) yield return null;
             }
@@ -1036,7 +1036,7 @@ namespace ElementalTD.PlayModeTests
             for (int k = 0; k < 120; k++)
             {
                 if (k % 30 == 0) ClickCell(5, 0); // a refusal in flight for the second view
-                Battle.Tick();
+                Tick();
                 TopUp();
                 int count = Allocations.Of(numbersFrame);
                 Assert.AreEqual(0, count, $"DamageNumberView.LateUpdate allocated on tick {k}");
@@ -1074,7 +1074,7 @@ namespace ElementalTD.PlayModeTests
 
             for (int k = 0; k < 24; k++)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
             }
             Assert.Greater(DrawnNumbers().Count, 0, "numbers were moving and fading during the frames");

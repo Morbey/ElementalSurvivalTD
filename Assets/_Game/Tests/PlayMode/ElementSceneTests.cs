@@ -402,7 +402,7 @@ namespace ElementalTD.PlayModeTests
             Board.SpawnEnemy(new EnemyStats(0f, 1_000_000f, 0, ElementOfTower(1))); // a Shadow enemy: only the Light tower hurts it
             for (int tick = 0; tick < 200; tick++)
             {
-                Battle.Tick();
+                Tick();
                 if (tick % 5 == 0)
                 {
                     yield return null;
@@ -438,12 +438,12 @@ namespace ElementalTD.PlayModeTests
         [UnityTest]
         public IEnumerator S4b_AC10_When_The_Last_Wave_Starts_No_Countdown_Shows_And_Nothing_Is_Thrown()
         {
-            // The run ticked far with a huge life count would need a new battle; the reference order wins in 10317 ticks, and the last wave starts on tick 8460.
+            // The run ticked far with a huge life count would need a new battle; the reference order wins in 10026 ticks, and the last wave starts on tick 8460.
             int ticks = 0;
             while (Battle.Waves.StartedWaves < Battle.Waves.WaveCount && ticks < 12000 && Battle.Outcome == RunOutcome.Running)
             {
                 RunReferenceActionsAt(ticks);
-                Battle.Tick();
+                Tick();
                 if (++ticks % 30 == 0) yield return null;
             }
             yield return Frames(2);
@@ -612,7 +612,7 @@ namespace ElementalTD.PlayModeTests
             yield return null;
             Assert.IsTrue(disc.gameObject.activeSelf);
             Assert.AreSame(lightDisc, discRenderer.sharedMaterial, "on a free cell: the selected tower's disc");
-            Assert.AreEqual(_input.Tower.RangeCells * _map.CellSize, discRenderer.bounds.extents.x, 0.05f, "with its range");
+            Assert.AreEqual(_input.Tower.ToStats().Range * _map.CellSize, discRenderer.bounds.extents.x, 0.05f, "with its range");
             Assert.AreEqual(0.01f, discRenderer.bounds.center.y, 0.01f, "flat, at height 0.01");
             Assert.Less(Vector3.Distance(_map.CellToWorld(free), new Vector3(disc.position.x, 0f, disc.position.z)), 0.01f);
 
@@ -642,12 +642,12 @@ namespace ElementalTD.PlayModeTests
         private Color32 LineColour => _label.resolvedStyle.color;
 
         [UnityTest]
-        public IEnumerator S4b_AC18_The_Survived_Line_Is_Gold_And_Lasts_3_Seconds()
+        public IEnumerator S4b_AC18_The_Survived_Line_Is_Gold_And_Lasts_3_Seconds_Of_Battle_Time()
         {
             int ticks = 0;
             while (Battle.SurvivedWaves < 1 && ticks < 3000)
             {
-                Battle.Tick();
+                Tick();
                 if (++ticks % 100 == 0) yield return null;
             }
             yield return Frames(3);
@@ -655,10 +655,12 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual("Wave 1 survived +40", _label.text);
             Assert.AreEqual(new Color32(255, 194, 61, 255), LineColour, "gold");
 
-            yield return new WaitForSecondsRealtime(2.6f);
-            Assert.IsTrue(MessageShown(), "the survived line is still shown at 2.6 s");
-            yield return new WaitForSecondsRealtime(0.7f);
-            Assert.IsFalse(MessageShown(), "and hidden by 3.3 s");
+            yield return new WaitForSecondsRealtime(1f);
+            Assert.IsTrue(MessageShown(), "real time does not hide it: the line counts battle ticks (5b-AC15)");
+            yield return TickFor(156);
+            Assert.IsTrue(MessageShown(), "the survived line is still shown 156 ticks (2.6 s of battle time) after the frame that showed it");
+            yield return TickFor(42);
+            Assert.IsFalse(MessageShown(), "and hidden by 3.3 s of battle time (198 ticks)");
             Assert.AreEqual(new Color32(255, 194, 61, 255), LineColour, "it fades gold");
         }
 
@@ -706,7 +708,7 @@ namespace ElementalTD.PlayModeTests
             float last = enemy.Health;
             for (int tick = 0; tick < 600 && enemy.IsOnBoard; tick++)
             {
-                Battle.Tick();
+                Tick();
                 if (enemy.Health != last) { healths.Add(enemy.Health); last = enemy.Health; }
                 if (tick % 10 == 0) yield return null;
             }
@@ -723,7 +725,7 @@ namespace ElementalTD.PlayModeTests
             ClickCell(1, 5);
             yield return null;
             int before = Battle.Gold;
-            while (Battle.Gold == before) Battle.Tick(); // the first kill pays on the tick it lands
+            while (Battle.Gold == before) Tick(); // the first kill pays on the tick it lands
             Assert.AreEqual($"Gold {before}", GoldLabel.text, "no frame since the tick");
             yield return null;
             Assert.AreEqual($"Gold {Battle.Gold}", GoldLabel.text, "one frame later");
@@ -784,7 +786,7 @@ namespace ElementalTD.PlayModeTests
             System.Action combatFrame = FrameMethod(views[0]);
             for (int tick = 0; tick < 120; tick++)
             {
-                Battle.Tick();
+                Tick();
                 int count = Allocations.Of(combatFrame);
                 Assert.AreEqual(0, count, $"CombatView allocated on tick {tick}");
             }

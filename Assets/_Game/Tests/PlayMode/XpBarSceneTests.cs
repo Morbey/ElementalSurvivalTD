@@ -40,7 +40,7 @@ namespace ElementalTD.PlayModeTests
             }
             Board.SpawnEnemy(new EnemyStats(0f, 1f, 0, default, xp));
             int before = P.Xp, guard = 0;
-            while (P.Xp == before && guard++ < 400) Battle.Tick();
+            while (P.Xp == before && guard++ < 400) Tick();
             Assert.AreEqual(before + xp, P.Xp, "the enemy was killed");
         }
 
@@ -289,7 +289,7 @@ namespace ElementalTD.PlayModeTests
             KillOne();
             Assert.IsTrue(Battle.TrySellTower(new GridPos(1, 3)));
             int guard = 0;
-            while (Battle.Outcome == RunOutcome.Running && guard++ < 6000) Battle.Tick();
+            while (Battle.Outcome == RunOutcome.Running && guard++ < 6000) Tick();
             Assert.AreEqual(RunOutcome.Lost, Battle.Outcome);
             yield return null;
             Assert.AreEqual(DisplayStyle.Flex, Root.Q<VisualElement>("end-screen").resolvedStyle.display);
@@ -343,6 +343,7 @@ namespace ElementalTD.PlayModeTests
         public IEnumerator S5a_AC7_On_The_Frame_After_The_Third_Kill_The_Row_Pops_With_No_Transition_And_The_Next_Frame_Settles()
         {
             yield return Frames(2);
+            NameFireRatePicks(); // the third kill opens a choice (5b); the tick helper answers it on the tick
             for (int kill = 1; kill <= 2; kill++)
             {
                 KillOne();
@@ -605,6 +606,7 @@ namespace ElementalTD.PlayModeTests
         public IEnumerator S5a_AC9_The_Views_Frame_Allocates_Nothing_Unless_The_Level_Changes_And_No_Layout_Under_The_Bottom_Bar_Changes_On_Any_Frame()
         {
             yield return Frames(3);
+            NameFireRatePicks(); // the kills reach levels 2 to 5: each choice is answered on the tick that opens it
             TowerStats s = _input.TowerAt(0).ToStats();
             var free = new TowerStats(s.Range, s.Damage, s.ShotsPerSecond, s.ProjectileSpeed, 0, s.Element);
             foreach (GridPos cell in new[] { new GridPos(1, 3), new GridPos(1, 5), new GridPos(2, 4) })
@@ -629,7 +631,7 @@ namespace ElementalTD.PlayModeTests
             {
                 if (tick % 15 == 0) Board.SpawnEnemy(new EnemyStats(0f, 1f, 0, default, 10));
                 int level = P.Level, xp = P.Xp;
-                Battle.Tick();
+                Tick();
                 int count = Allocations.Of(frame); // the view's frame, called by hand right after the tick
                 if (P.Level != level)
                 {

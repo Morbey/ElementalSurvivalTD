@@ -48,7 +48,7 @@ namespace ElementalTD.PlayModeTests
         public IEnumerator S4d_AC8_A_Record_Read_Late_Makes_The_First_Leave_From_Its_Own_Tick_Or_At_Once_When_That_Is_p_Ago([Values(3, 6)] int ticksAgo)
         {
             Enemy enemy = SpawnWave1Enemy(health: 1_000_000f);
-            for (int i = 0; i < 20; i++) Battle.Tick();
+            for (int i = 0; i < 20; i++) Tick();
             yield return null;
             ReferenceStack model = NewStack();
             int now = Battle.TickCount;
@@ -131,7 +131,7 @@ namespace ElementalTD.PlayModeTests
             yield return null;
             ReferenceStack model = NewStack();
             int ticks = 0;
-            while (OnBoard(a) && ticks < 400) { Battle.Tick(); ticks++; if (a.DistanceToExit < 40f && ticks % 6 == 0) { var hb = HitOn(b, 20f, HitKind.Strong); NumberView.Show(hb); model.Show(hb); if (OnBoard(a)) { var ha = HitOn(a, 21f, HitKind.Strong); NumberView.Show(ha); model.Show(ha); } } if (ticks % 2 == 0) { yield return null; MatchDrawn(model.Frame(BoardDrawn()), DrawnNumbers(), $"tick {ticks}"); } }
+            while (OnBoard(a) && ticks < 400) { Tick(); ticks++; if (a.DistanceToExit < 40f && ticks % 6 == 0) { var hb = HitOn(b, 20f, HitKind.Strong); NumberView.Show(hb); model.Show(hb); if (OnBoard(a)) { var ha = HitOn(a, 21f, HitKind.Strong); NumberView.Show(ha); model.Show(ha); } } if (ticks % 2 == 0) { yield return null; MatchDrawn(model.Frame(BoardDrawn()), DrawnNumbers(), $"tick {ticks}"); } }
             yield return null;
             Assert.IsFalse(OnBoard(a));
             var pairs = MatchDrawn(model.Frame(BoardDrawn()), DrawnNumbers(), "after the first exited");
@@ -139,7 +139,7 @@ namespace ElementalTD.PlayModeTests
             Assert.Greater(onSecond.Count, 0, "the second enemy still has numbers");
             for (int i = 0; i < 6; i++)
             {
-                Battle.Tick();
+                Tick();
                 yield return null;
                 pairs = MatchDrawn(model.Frame(BoardDrawn()), DrawnNumbers(), "after");
                 foreach (var pair in pairs)
