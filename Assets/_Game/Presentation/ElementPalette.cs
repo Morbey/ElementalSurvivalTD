@@ -5,7 +5,10 @@ using UnityEngine;
 
 namespace ElementalTD.Presentation
 {
-    /// <summary>How each element looks: its UI colour and the materials of its towers, enemies, shots and range disc (ADR 0005).</summary>
+    /// <summary>
+    /// How each element looks: its UI colour, the colour of its initial on its tile, and the materials of its towers,
+    /// enemies, shots and range disc (ADR 0005).
+    /// </summary>
     [CreateAssetMenu(fileName = "ElementPalette", menuName = "ElementalTD/Element Palette")]
     public sealed class ElementPalette : ScriptableObject
     {
@@ -14,6 +17,7 @@ namespace ElementalTD.Presentation
         {
             public ElementDefinition Element;
             public Color UiColor;
+            public Color TileTextColor;
             public Material Tower, Enemy, Projectile, RangeDisc;
         }
 

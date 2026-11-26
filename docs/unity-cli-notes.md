@@ -23,6 +23,8 @@ What the team has learned about driving this project with the `unity` CLI. Add a
 - In a `script eval`, extension methods do not resolve: call `UnityEngine.UIElements.UQueryExtensions.Q<Label>(root, name)`, not `root.Q<Label>(name)`.
 - Saving a scene after a script rename keeps the old `m_EditorClassIdentifier`. Set it through `SerializedObject.FindProperty("m_EditorClassIdentifier")`, then save.
 - In Play mode, send a real click with `InputSystem.QueueStateEvent(Mouse.current, …)` over a few frames from `EditorApplication.update`; UI Toolkit receives it with no `EventSystem`. `Mouse.current` read from that callback does not show the queued state.
+- In 5b the queued mouse state never arrived (`Mouse.current.position` stayed 0, even with the Game view focused). Hover and click a UI element instead with `PointerMoveEvent`, `PointerDownEvent` and `PointerUpEvent.GetPooled(new Event { … mousePosition = <panel point> })` sent to `panel.visualTree.SendEvent`; the button's click handler and `:hover` both respond.
+- `editor quit --save false` still wrote assets changed in memory by a `script eval` (even when set back to their old values, the file gains the new fields). After the quit, `git checkout` any asset the task must not change.
 - Opening the editor on a worktree rewrites `.vscode/settings.json`. Revert it before the commit.
 - On a URP material, `renderQueue` set from a script is reset to the shader's queue plus `_QueueOffset`. Set `_QueueOffset` (for example 1 for 3001), then the queue.
 - Another agent saving a script in the worktree during Play reloads the domain, and every view then throws a `NullReferenceException` each frame. Call `AssetDatabase.DisallowAutoRefresh()` before Play and `AllowAutoRefresh()` after Stop.

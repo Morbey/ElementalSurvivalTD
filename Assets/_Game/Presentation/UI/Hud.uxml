@@ -74,6 +74,11 @@
             <ui:Label name="refusal" class="floating-text" picking-mode="Ignore" />
         </ui:VisualElement>
     </ui:VisualElement>
+    <ui:VisualElement name="level-up">
+        <ui:Label name="level-up-title" class="hud-text" picking-mode="Ignore" />
+        <ui:Label name="level-up-hint" class="hud-text" picking-mode="Ignore" />
+        <ui:VisualElement name="perk-cards" picking-mode="Ignore" />
+    </ui:VisualElement>
     <ui:VisualElement name="end-screen">
         <ui:Label name="end-title" class="hud-text" picking-mode="Ignore" />
         <ui:Button name="restart-button" text="Restart" />
