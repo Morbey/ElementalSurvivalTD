@@ -361,6 +361,7 @@ Button#panel-close:hover:active {
 }
 
 .stat-row__caption {
+    flex-grow: 1;
     font-size: 16px;
     -unity-font-style: normal;
     color: rgb(181, 175, 163);
@@ -369,6 +370,19 @@ Button#panel-close:hover:active {
 .stat-row__value {
     font-size: 16px;
     -unity-text-align: middle-right;
+}
+
+/* A tail shows only when perks change the value; it pushes its value left by its own width. */
+
+.stat-row__tail {
+    display: none;
+    margin-left: 4px;
+    font-size: 14px;
+    color: rgb(127, 224, 138);
+}
+
+.stat-row__tail.stat-row__tail--shown {
+    display: flex;
 }
 
 /* Tower panel: synergies */
@@ -806,13 +820,19 @@ Button.perk-card.perk-card--passed {
 }
 
 #end-title {
-    margin-bottom: 24px;
+    margin-bottom: 8px;
     font-size: 48px;
     color: rgb(255, 107, 94);
 }
 
 #end-screen.end-screen--won #end-title {
     color: rgb(255, 194, 61);
+}
+
+#end-level {
+    margin-bottom: 24px;
+    font-size: 20px;
+    color: rgb(181, 175, 163);
 }
 
 Button#restart-button,

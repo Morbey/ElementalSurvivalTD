@@ -6,7 +6,8 @@ using UnityEngine.UIElements;
 namespace ElementalTD.Presentation
 {
     /// <summary>
-    /// Shows one line of text, for a time in unscaled seconds, when a wave is survived; a newer line replaces the one shown.
+    /// Shows one line of text, for a time in battle seconds, when a wave is survived; a newer line replaces the one shown.
+    /// Battle time stands still while a choice of perks is open, so the line is still seen after the pick (ADR 0007).
     /// Showing and hiding are a USS class, so the style sheet holds the look and the fade. Survived waves are polled from
     /// the battle (ADR 0004).
     /// </summary>
@@ -20,13 +21,13 @@ namespace ElementalTD.Presentation
 
         [Tooltip("{0}: wave number, {1}: its survival bonus.")]
         [SerializeField] private string waveSurvivedText;
-        [Tooltip("Seconds of unscaled time the survived line stays on screen.")]
+        [Tooltip("Seconds of battle time the survived line stays on screen, counted in ticks from the frame that shows it.")]
         [SerializeField, Min(0f)] private float waveSurvivedDuration = 2f;
 
         private Battle _battle;
         private Label _label;
         private bool _shown;
-        private float _hideAt;
+        private int _shownAtTick;
         private int _seenSurvivedWaves;
 
         private void Start()
@@ -61,7 +62,7 @@ namespace ElementalTD.Presentation
                 int bonus = _battle.Waves.WaveAt(number - 1).SurvivalBonus;
                 Show(string.Format(waveSurvivedText, number.ToString(), bonus.ToString()));
             }
-            else if (_shown && Time.unscaledTime >= _hideAt)
+            else if (_shown && (_battle.TickCount - _shownAtTick) * Battle.TickSeconds >= waveSurvivedDuration)
             {
                 Hide();
             }
@@ -72,7 +73,7 @@ namespace ElementalTD.Presentation
             _label.text = text;
             _label.AddToClassList(ShownClass);
             _shown = true;
-            _hideAt = Time.unscaledTime + waveSurvivedDuration;
+            _shownAtTick = _battle.TickCount;
         }
 
         private void Hide()

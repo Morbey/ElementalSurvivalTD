@@ -7,9 +7,9 @@ using UnityEngine.UIElements;
 namespace ElementalTD.Presentation
 {
     /// <summary>
-    /// Shows the tower selected on the board in the side column, in place of the buy buttons: what it is, and on Sell what a
-    /// sale pays now, polled from the battle after the frame's ticks (ADR 0004). Texts are built only when the selection or
-    /// the value changes; the looks and the drop are USS classes, so the style sheet holds their colours and times.
+    /// Shows the tower selected on the board in the side column, in place of the buy buttons: what it is, its effective stats
+    /// with a tail where perks changed them, and on Sell what a sale pays now, polled from the battle after the frame's ticks
+    /// (ADR 0004, ADR 0007). Texts are built only when the selection, the run's modifier count or the value changes; the looks and the drop are USS classes, so the style sheet holds their colours and times.
     /// Holds no rule: Sell and the close button go through the placement input.
     /// </summary>
     public sealed class TowerPanelView : MonoBehaviour
@@ -21,6 +21,10 @@ namespace ElementalTD.Presentation
         private const string DamageValueName = "stat-damage";
         private const string ShotsValueName = "stat-shots";
         private const string RangeValueName = "stat-range";
+        private const string DamageTailName = "stat-damage-tail";
+        private const string ShotsTailName = "stat-shots-tail";
+        private const string RangeTailName = "stat-range-tail";
+        private const string TailShownClass = "stat-row__tail--shown";
         private const string CloseButtonName = "panel-close";
         private const string SellButtonName = "sell-button";
         private const string SellValueName = "sell-value";
@@ -41,6 +45,8 @@ namespace ElementalTD.Presentation
         [SerializeField] private string titleText;
         [Tooltip("A .NET numeric format for Damage, Shots/s and Range, applied with the invariant culture.")]
         [SerializeField] private string statNumberFormat;
+        [Tooltip("A .NET numeric format for a stat's tail, the effective value less the base, with its signs; invariant culture.")]
+        [SerializeField] private string statTailFormat = "";
         [Tooltip("Sell while it pays the full cost. {0}: the amount.")]
         [SerializeField] private string fullValueText;
         [Tooltip("Sell while it pays less than the cost. {0}: the amount.")]
@@ -56,12 +62,16 @@ namespace ElementalTD.Presentation
         private Label _damageValue;
         private Label _shotsValue;
         private Label _rangeValue;
+        private Label _damageTail;
+        private Label _shotsTail;
+        private Label _rangeTail;
         private Button _closeButton;
         private Button _sellButton;
         private Label _sellValue;
         private Label _sellTail;
 
         private Tower _shownTower;
+        private int _shownModifiers;
         private int _shownValue = NoValue;
         private bool _popping;
 
@@ -77,6 +87,9 @@ namespace ElementalTD.Presentation
                 _damageValue = root.Q<Label>(DamageValueName);
                 _shotsValue = root.Q<Label>(ShotsValueName);
                 _rangeValue = root.Q<Label>(RangeValueName);
+                _damageTail = root.Q<Label>(DamageTailName);
+                _shotsTail = root.Q<Label>(ShotsTailName);
+                _rangeTail = root.Q<Label>(RangeTailName);
                 _closeButton = root.Q<Button>(CloseButtonName);
                 _sellButton = root.Q<Button>(SellButtonName);
                 _sellValue = root.Q<Label>(SellValueName);
@@ -84,11 +97,12 @@ namespace ElementalTD.Presentation
             }
 
             if (_column == null || _tile == null || _title == null || _elementValue == null || _damageValue == null
-                || _shotsValue == null || _rangeValue == null || _closeButton == null || _sellButton == null || _sellValue == null
+                || _shotsValue == null || _rangeValue == null || _damageTail == null || _shotsTail == null || _rangeTail == null
+                || _closeButton == null || _sellButton == null || _sellValue == null
                 || _sellTail == null || placementInput == null || palette == null || bootstrap == null || bootstrap.Battle == null)
             {
                 Debug.LogError($"TowerPanelView: assign the UI document (with {SideColumnName}, {TileName}, {TitleName}, {ElementValueName}, " +
-                    $"{DamageValueName}, {ShotsValueName}, {RangeValueName}, {CloseButtonName}, {SellButtonName}, {SellValueName} and " +
+                    $"{DamageValueName}, {ShotsValueName}, {RangeValueName}, {DamageTailName}, {ShotsTailName}, {RangeTailName}, {CloseButtonName}, {SellButtonName}, {SellValueName} and " +
                     $"{SellTailName}), the placement input, the palette and the bootstrap; the battle must exist.", this);
                 _closeButton = null;
                 _sellButton = null;
@@ -113,6 +127,8 @@ namespace ElementalTD.Presentation
             Tower tower = placementInput.SelectedTower;
             if (!ReferenceEquals(tower, _shownTower)) ShowTower(tower);
             if (tower == null) return;
+            // A pick recomputes every tower's stats: rewritten on the frame after it, while the panel is open.
+            if (_battle.Modifiers.Count != _shownModifiers) ShowStats(tower);
 
             // The pop look holds for one frame, then the settle look eases to the refund look.
             if (_popping)
@@ -123,7 +139,7 @@ namespace ElementalTD.Presentation
             }
 
             _battle.TryGetSellValue(tower.Cell, out int value);
-            if (value != _shownValue) ShowValue(value, tower.Stats.Cost);
+            if (value != _shownValue) ShowValue(value, tower.BaseStats.Cost);
         }
 
         private void ShowTower(Tower tower)
@@ -136,7 +152,7 @@ namespace ElementalTD.Presentation
             _column.EnableInClassList(TowerShownClass, tower != null);
             if (tower == null) return;
 
-            TowerStats stats = tower.Stats;
+            TowerStats stats = tower.BaseStats;
             if (palette.TryGetLook(stats.Element, out ElementPalette.Look look) && look.Element != null && look.Tower != null)
             {
                 _title.text = string.Format(titleText, look.Element.DisplayName);
@@ -153,10 +169,27 @@ namespace ElementalTD.Presentation
                 _tile.style.backgroundColor = StyleKeyword.Null;
             }
 
-            _damageValue.text = stats.Damage.ToString(statNumberFormat, CultureInfo.InvariantCulture);
-            _shotsValue.text = stats.ShotsPerSecond.ToString(statNumberFormat, CultureInfo.InvariantCulture);
-            _rangeValue.text = stats.Range.ToString(statNumberFormat, CultureInfo.InvariantCulture);
             _sellTail.text = string.Format(refundTailText, stats.Cost.ToString());
+            ShowStats(tower);
+        }
+
+        private void ShowStats(Tower tower)
+        {
+            _shownModifiers = _battle.Modifiers.Count;
+            TowerStats effective = tower.Stats;
+            TowerStats bought = tower.BaseStats;
+            ShowStat(_damageValue, _damageTail, effective.Damage, bought.Damage);
+            ShowStat(_shotsValue, _shotsTail, effective.ShotsPerSecond, bought.ShotsPerSecond);
+            ShowStat(_rangeValue, _rangeTail, effective.Range, bought.Range);
+        }
+
+        private void ShowStat(Label value, Label tail, float effective, float bought)
+        {
+            value.text = StatText.Shown(effective).ToString(statNumberFormat, CultureInfo.InvariantCulture);
+            decimal difference = StatText.Difference(effective, bought);
+            bool changed = difference != 0m;
+            if (changed) tail.text = difference.ToString(statTailFormat, CultureInfo.InvariantCulture);
+            tail.EnableInClassList(TailShownClass, changed);
         }
 
         private void ShowValue(int value, int cost)

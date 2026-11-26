@@ -18,6 +18,7 @@ namespace ElementalTD.Presentation
         private const string NextWaveLabelName = "next-wave-label";
         private const string EndScreenName = "end-screen";
         private const string EndTitleName = "end-title";
+        private const string EndLevelName = "end-level";
         private const string RestartButtonName = "restart-button";
         private const string WonClass = "end-screen--won";
 
@@ -42,6 +43,8 @@ namespace ElementalTD.Presentation
         [SerializeField] private string elementSeparator;
         [SerializeField] private string victoryText;
         [SerializeField] private string defeatText;
+        [Tooltip("Under the end screen's title. {0}: the run's level.")]
+        [SerializeField] private string endLevelText = "";
 
         private Battle _battle;
         private Label _waveLabel;
@@ -50,6 +53,7 @@ namespace ElementalTD.Presentation
         private Label _nextWaveLabel;
         private VisualElement _endScreen;
         private Label _endTitle;
+        private Label _endLevel;
         private Button _restartButton;
 
         // -1 forces the first frame to write every label.
@@ -74,14 +78,15 @@ namespace ElementalTD.Presentation
                 _nextWaveLabel = root.Q<Label>(NextWaveLabelName);
                 _endScreen = root.Q<VisualElement>(EndScreenName);
                 _endTitle = root.Q<Label>(EndTitleName);
+                _endLevel = root.Q<Label>(EndLevelName);
                 _restartButton = root.Q<Button>(RestartButtonName);
             }
 
             if (_waveLabel == null || _livesLabel == null || _goldLabel == null || _nextWaveLabel == null || _endScreen == null
-                || _endTitle == null || _restartButton == null || bootstrap == null || bootstrap.Battle == null || palette == null)
+                || _endTitle == null || _endLevel == null || _restartButton == null || bootstrap == null || bootstrap.Battle == null || palette == null)
             {
                 Debug.LogError($"RunHudView: assign the UI document (with {WaveLabelName}, {LivesLabelName}, {GoldLabelName}, {NextWaveLabelName}, " +
-                    $"{EndScreenName}, {EndTitleName} and {RestartButtonName}), the bootstrap and the palette; the battle must exist.", this);
+                    $"{EndScreenName}, {EndTitleName}, {EndLevelName} and {RestartButtonName}), the bootstrap and the palette; the battle must exist.", this);
                 _restartButton = null;
                 enabled = false;
                 return;
@@ -144,7 +149,11 @@ namespace ElementalTD.Presentation
             if (outcomeChanged)
             {
                 _shownOutcome = (int)outcome;
-                if (outcome != RunOutcome.Running) _endTitle.text = outcome == RunOutcome.Won ? victoryText : defeatText;
+                if (outcome != RunOutcome.Running)
+                {
+                    _endTitle.text = outcome == RunOutcome.Won ? victoryText : defeatText;
+                    _endLevel.text = string.Format(endLevelText, _battle.Progression.Level.ToString());
+                }
                 _endScreen.EnableInClassList(WonClass, outcome == RunOutcome.Won);
                 _endScreen.style.display = outcome == RunOutcome.Running ? DisplayStyle.None : DisplayStyle.Flex;
             }

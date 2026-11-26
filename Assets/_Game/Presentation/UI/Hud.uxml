@@ -25,14 +25,17 @@
                     <ui:VisualElement class="stat-row" picking-mode="Ignore">
                         <ui:Label class="hud-text stat-row__caption" text="Damage" picking-mode="Ignore" />
                         <ui:Label name="stat-damage" class="hud-text stat-row__value" picking-mode="Ignore" />
+                        <ui:Label name="stat-damage-tail" class="hud-text stat-row__tail" picking-mode="Ignore" />
                     </ui:VisualElement>
                     <ui:VisualElement class="stat-row" picking-mode="Ignore">
                         <ui:Label class="hud-text stat-row__caption" text="Shots/s" picking-mode="Ignore" />
                         <ui:Label name="stat-shots" class="hud-text stat-row__value" picking-mode="Ignore" />
+                        <ui:Label name="stat-shots-tail" class="hud-text stat-row__tail" picking-mode="Ignore" />
                     </ui:VisualElement>
                     <ui:VisualElement class="stat-row" picking-mode="Ignore">
                         <ui:Label class="hud-text stat-row__caption" text="Range" picking-mode="Ignore" />
                         <ui:Label name="stat-range" class="hud-text stat-row__value" picking-mode="Ignore" />
+                        <ui:Label name="stat-range-tail" class="hud-text stat-row__tail" picking-mode="Ignore" />
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="synergies" picking-mode="Ignore">
@@ -81,6 +84,7 @@
     </ui:VisualElement>
     <ui:VisualElement name="end-screen">
         <ui:Label name="end-title" class="hud-text" picking-mode="Ignore" />
+        <ui:Label name="end-level" class="hud-text" picking-mode="Ignore" />
         <ui:Button name="restart-button" text="Restart" />
     </ui:VisualElement>
 </ui:UXML>

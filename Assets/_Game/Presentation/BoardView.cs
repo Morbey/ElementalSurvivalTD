@@ -8,7 +8,7 @@ namespace ElementalTD.Presentation
     /// <summary>
     /// Shows the board: the cell tiles, one visual per tower in its element's material, the hover, the frame around the
     /// tower selected on the board and the range disc. The disc stands for the selected tower while there is one; otherwise
-    /// for the tower on the hovered cell, or else for the tower to buy.
+    /// for the tower on the hovered cell, or else for the tower to buy; always at the effective range (ADR 0007).
     /// </summary>
     public sealed class BoardView : MonoBehaviour
     {
@@ -33,6 +33,7 @@ namespace ElementalTD.Presentation
         [Tooltip("Authored for a cell size of 1, centred on the cell; its root is scaled by the map's cell size.")]
         [SerializeField] private GameObject selectionFramePrefab;
 
+        private Battle _battle;
         private Board _board;
         private MapDefinition _map;
         private GridMap _grid;
@@ -55,16 +56,17 @@ namespace ElementalTD.Presentation
 
         private void Start()
         {
-            if (bootstrap == null || bootstrap.Board == null || placementInput == null || palette == null || cellPrefab == null
+            if (bootstrap == null || bootstrap.Board == null || bootstrap.Battle == null || placementInput == null || palette == null || cellPrefab == null
                 || blockedMaterial == null || spawnMaterial == null || exitMaterial == null
                 || towerPrefab == null || hoverPrefab == null || rangeDiscPrefab == null || selectionFramePrefab == null
                 || placementInput.TowerCount == 0)
             {
-                Debug.LogError("BoardView: assign every reference, and towers on the placement input; the board must exist.", this);
+                Debug.LogError("BoardView: assign every reference, and towers on the placement input; the board and the battle must exist.", this);
                 enabled = false;
                 return;
             }
 
+            _battle = bootstrap.Battle;
             _board = bootstrap.Board;
             _map = bootstrap.Map;
             _grid = _board.Map;
@@ -133,8 +135,8 @@ namespace ElementalTD.Presentation
                 return;
             }
 
-            TowerDefinition toBuy = placementInput.Tower; // never null while a cell is hovered
-            ShowDisc(cell, toBuy.RangeCells, toBuy.Element != null ? toBuy.Element.ToElement() : default);
+            TowerStats toBuy = _battle.Modifiers.Apply(placementInput.Tower.ToStats()); // never null while a cell is hovered
+            ShowDisc(cell, toBuy.Range, toBuy.Element);
         }
 
         private void ShowDisc(GridPos cell, float range, Element element)

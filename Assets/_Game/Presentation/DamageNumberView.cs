@@ -102,7 +102,7 @@ namespace ElementalTD.Presentation
         private int[] _entering;   // this frame's numbers younger than the push time
         private int _readHits;
         private readonly List<FloatingLabel> _words = new List<FloatingLabel>();
-        private readonly Dictionary<int, string> _amountTexts = new Dictionary<int, string>();
+        private Dictionary<int, string> _amountTexts;
 
         private void Start()
         {
@@ -122,6 +122,8 @@ namespace ElementalTD.Presentation
             _numbers = new Number[maxNumbers];
             _numberLabels = new FloatingLabel[maxNumbers];
             _entering = new int[maxNumbers];
+            // Sized for as many amounts as numbers can be alive, so a run's usual amounts never grow it.
+            _amountTexts = new Dictionary<int, string>(maxNumbers);
             for (int i = 0; i < maxNumbers; i++) _numberLabels[i] = FloatingLabel.Create(numberParent);
             for (int i = 0; i < prewarmWords; i++) AddWord();
         }

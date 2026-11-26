@@ -18,6 +18,7 @@ namespace ElementalTD.Data
         [Tooltip("While unassigned, no element: it deals x1.")]
         [SerializeField] private ElementDefinition element;
 
+        // No production reader since step 5b; goes once ElementSceneTests reads ToStats().Range instead (plan 0012, T5b-4).
         public float RangeCells => rangeCells;
         public ElementDefinition Element => element;
 
