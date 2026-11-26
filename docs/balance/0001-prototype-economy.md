@@ -1,4 +1,4 @@
-# 0001 – Prototype economy (step 4e, mixed waves)
+# 0001 – Prototype economy (steps 4e to 5b: mixed waves, XP, perks)
 
 Provisional until playtests. Simulated on a float32 port of Core (`tools/balance/core.py`) that follows the rules for the port of plans 0007 (1 to 10) and 0010 (11 to 15) and reproduces:
 - the 3c pins the real Core confirmed (`verify3c.py`);
@@ -9,7 +9,7 @@ The gold rules are those of plan 0005: gold is checked before the board, a kill 
 
 ## Values
 
-Changed from step 4b: waves 4 to 10 (groups and health) and the enemy assets. Nothing else.
+Changed from step 4b: waves 4 to 10 (groups and health) and the enemy assets. Nothing else. Step 5b retuned the health of waves 8 to 10 for the perks ("Step 5b" below); the 4e and 5a tables were simulated on the 4e health (260, 360, 420) and no perks.
 
 | Value | Where | Number | Confidence |
 |---|---|---|---|
@@ -21,7 +21,7 @@ Changed from step 4b: waves 4 to 10 (groups and health) and the enemy assets. No
 | Sell refund after the first launch | `Run_Prototype.sellRefundPercent` | 50 (20 gold) | low |
 | Lives | `Run_Prototype.lives` | 10 | medium |
 | Enemy speed | all enemies | 2 | – |
-| Wave health, waves 4 to 10 | the enemy assets below | 100, 100, 180, 180, 260, 360, 420 | low (waves 9 and 10: medium-low, they decide the run) |
+| Wave health, waves 4 to 10 | the enemy assets below | 100, 100, 180, 180, 360, 680, 800 (5b) | low (waves 9 and 10: medium-low, they decide the run) |
 
 Groups are written in spawn order, `S` for a Shadow group and `L` for a Light group, with the count: `S3 L3` is 3 Shadow enemies, then 3 Light. **Every group's interval is 1 s**, and all groups of a wave share its health, so the enemy asset of a group is `Enemy_Shadow<health>` or `Enemy_Light<health>`.
 
@@ -34,11 +34,11 @@ Groups are written in spawn order, `S` for a Shadow group and `L` for a Light gr
 | 5 | 8 | `L4 S3` | 7 | 100 | 5 | 35 |
 | 6 | 8 | `S1 L1 S1 L1 S1 L1 S1 L1` | 8 (4 S, 4 L) | 180 | 9 | 40 |
 | 7 | 8 | `S2 L1 S2 L1 S2 L1` | 9 (6 S, 3 L) | 180 | 9 | 45 |
-| 8 | 8 | `L2 S1 L2 S1 L2 S1 L1` | 10 (7 L, 3 S) | 260 | 13 | 50 |
-| 9 | 8 | `S1 L1` five times, then `S1` | 11 (6 S, 5 L) | 360 | 18 | 55 |
-| 10 | 8 | `L1 S1` six times | 12 (6 L, 6 S) | 420 | 21 | 60 |
+| 8 | 8 | `L2 S1 L2 S1 L2 S1 L1` | 10 (7 L, 3 S) | 360 | 18 | 50 |
+| 9 | 8 | `S1 L1` five times, then `S1` | 11 (6 S, 5 L) | 680 | 34 | 55 |
+| 10 | 8 | `L1 S1` six times | 12 (6 L, 6 S) | 800 | 40 | 60 |
 
-**Enemy assets** (13), every one speed 2 and reward 10: `Enemy_Shadow45`, `Enemy_Light55`, `Enemy_Light70`, `Enemy_Shadow100`, `Enemy_Light100`, `Enemy_Shadow180`, `Enemy_Light180`, `Enemy_Shadow260`, `Enemy_Light260`, `Enemy_Shadow360`, `Enemy_Light360`, `Enemy_Shadow420`, `Enemy_Light420`. From step 4b, `Enemy_Shadow45`, `Enemy_Light55`, `Enemy_Light70` and `Enemy_Shadow180` stay; `Enemy_Shadow85`, `Enemy_Light105`, `Enemy_Shadow135`, `Enemy_Light245`, `Enemy_Shadow345` and `Enemy_Shadow460` go; the other nine are new.
+**Enemy assets** (13), every one speed 2, reward 10 and XP 10: `Enemy_Shadow45`, `Enemy_Light55`, `Enemy_Light70`, `Enemy_Shadow100`, `Enemy_Light100`, `Enemy_Shadow180`, `Enemy_Light180`, `Enemy_Shadow360`, `Enemy_Light360`, `Enemy_Shadow680`, `Enemy_Light680`, `Enemy_Shadow800`, `Enemy_Light800`. Step 5b: wave 8 now uses `Enemy_Light360` and `Enemy_Shadow360` (wave 9's assets in 4e, kept); `Enemy_Shadow680`, `Enemy_Light680`, `Enemy_Shadow800` and `Enemy_Light800` are created; `Enemy_Shadow260`, `Enemy_Light260`, `Enemy_Shadow420` and `Enemy_Light420` are deleted.
 
 **Entry ticks are those of step 4b**: the first enemy of waves 1 to 10 enters on ticks 901, 1501, 2160, 2880, 3660, 4500, 5400, 6360, 7380 and 8460, and the 75th and last on tick 9120.
 
@@ -108,7 +108,7 @@ End ticks count `Tick()` calls, including the one that ends the run. Gold includ
 | 9 | stream 6 S, 5 L | 33% / 50%, 99%, 0.4 | 33% / 50%, 99%, 0.7 | 36% / 51%, 100%, 0 |
 | 10 | stream 6 L, 6 S | 35% / 50%, 97%, 0.9 | 34% / 50%, 96%, 1.0 | 35% / 52%, 97%, 0 |
 
-## Reference build order (wins)
+## Reference build order of step 4e (wins on the 4e health; the tests replay the 5b order)
 
 Each action runs after the given number of `Tick()` calls, before the next one, with the tower selected before the click. Every action is accepted, the four-cell occupancy rule included. It is the maze order with the reading bot's elements and no swap (`refrepair.py 0 0`, `ref4e.json`). The swaps tried (2 towers at wave 7, 8, 9 or 10) win with fewer lives or lose.
 
@@ -257,8 +257,201 @@ Won on tick 10317 with XP 750 and level 8. **Building nothing** loses on tick 29
 
 **Kills only is enough for the prototype.** Every winning run ends at level 8, because the last level-up needs 62 of 75 kills. While still alive, a leaking crowd is on average at most about one level behind, two to three for a one-element board at wave 5, which has already lost. Leaks already cost lives and gold, and they are what loses the run. A wave XP bonus (7 per kill plus 3 per enemy of the wave, paid with the gold bonus, the same 750 XP) moves the crowd gaps by at most half a level, either way (`report5a.py xp`), and it would add a second XP source to tune. Recheck in 5b, where a level also makes the towers stronger.
 
-**For 5b.** The seven level-ups of the reference order become pauses on ticks 1452, 2209, 3369, 4329, 5567, 7233 and 8873; if a pause stops `Tick()`, no action of the order moves. A run holds at most **7 perks** (75 kills); the table allows 10 if XP modifiers come.
+A run holds at most **7 perks** (75 kills); the table allows 10 if XP modifiers come. The level-up ticks the tests pin are those of the 5b reference order below.
 
 **Risks.** The windows count ticks, not what a player feels: the second level-up comes as wave 3 starts, because wave 2's last enemy dies after wave 3 enters. Seven pauses in 172 s (one every 25 s on average, the longest gap 27.8 s, between ticks 5567 and 7233) may feel too many or too few; the simulation cannot tell, nor how the perks of 5b move kill times beyond the health proxy. **Tune first in play:** the number of level-ups (the steps from level 4 on), then the first step (30) if the first pause comes too soon.
 
 Simulation: `xp5a.py` holds these numbers and the helpers; `report5a.py main | xp` prints the tables and the pins above; `explore5a.py tables | robust` gives the table search and its robustness.
+
+## Step 5b: perks
+
+A level-up stops the battle and offers three perks of the pool (plan 0012, rules 16 to 24). The port reproduces the plan's three pins exactly (`verify5b.py`: generator, modifier, pause), and `verify3c.py`, `verify4b.py`, `verify4e.py` and the 5a pins are unchanged. Nothing else of 4e or 5a changes but the perks and the health of waves 8 to 10.
+
+### The pool, in order
+
+A perk's place is its name in the draw and the source of its modifier.
+
+| Place | Perk | Modifier | Card | Confidence |
+|---|---|---|---|---|
+| 0 | Light towers damage | damage x1.25, Light | `+25 %` | medium |
+| 1 | Shadow towers damage | damage x1.25, Shadow | `+25 %` | medium |
+| 2 | Every tower's fire rate | shots per second x1.10 | `+10 %` | medium |
+| 3 | Every tower's range | range +1 | `+1` | low |
+| 4 | Gold per kill | gold per kill +3 | `+3` | low |
+
+What one pick changes on the board: a Light tower hits a Shadow enemy for 25 instead of 20, so wave 8's enemies (360) die in 15 hits instead of 18, and wave 10's (800) in 32 instead of 40. Fire rate goes from 1.5 to 1.65 shots/s (the panel reads `1.65` and `+0.15`), so each shot comes 0.06 s sooner. Range goes from 2.5 to 3.5 cells, so the best cell covers 50% of the unbuilt route instead of 35%. A kill pays 13.
+
+**Worth** (`explore5b.py worth`, `stack`, `range`). The measure is the health multiplier on waves 4 to 10 of the 4e waves that each seeded run still wins, found by bisection over 20 sloppy readers and 20 sloppy half-and-half players. One pick: the mean of both crowds (and of both elements for damage). Seven picks: readers / half and half. With no perks they hold 1.07.
+
+| Perk | One pick at level 2 / 4 / 6 / 8 (no other perk) | Seven picks, readers / half and half |
+|---|---|---|
+| Damage x1.25, one element | 1.20 / 1.20 / 1.17 / 1.09 | 1.88 / 1.93 (aimed where the next wave needs it) |
+| Fire rate x1.15 (plan placeholder) | 1.22 / 1.21 / 1.19 / 1.09 | 2.18 / 2.10 |
+| Fire rate x1.10 | 1.17 / 1.17 / 1.15 / 1.09 | 1.77 / 1.73 |
+| Range +0.5 (plan placeholder) | 1.11 / 1.12 / 1.10 / 1.08 | 1.43 / 1.40 |
+| Range +1 | 1.18 / 1.18 / 1.15 / 1.09 | 1.56 / 1.56 |
+| Gold +2 (plan placeholder) | 1.18 / 1.15 / 1.11 / 1.07 | 1.47 / 1.44 |
+| Gold +3 | 1.23 / 1.18 / 1.13 / 1.07 | 1.64 / 1.62 |
+
+- **Damage x1.25** is the strongest pick from level 4 on when it goes to the element the next wave needs (at level 2, gold +3 matches it). It is offered in 60% of choices for a given element, so its worth depends on reading. It is also the largest amount the readable damage cap allows: seven stacks give 10 x 1.25^7 = 47.68 per shot and **95.37 against the other element** (`report5b.py`). x1.26 would pass 100.
+- **Fire rate x1.15 was the pick everybody always takes.** It touches every tower, so seven stacks hold more health than aimed damage, and the elemental build stops mattering. At **x1.10** one pick is worth about three quarters of a damage pick and seven stacks sit just below aimed damage. It is the safe pick, not the best one.
+- **Range +0.5 was the pick nobody takes**: about a third of a damage pick. At **+1** each of the first three picks is worth about a damage pick (+0.11, +0.13, +0.15 on the multiplier), the fourth +0.08, and the fifth onward nothing (+0.03, +0.00, +0.00). Range stacks are worth nothing past 6.5 cells, so the amount does that limiting without a clamp.
+- **Gold per kill: +3, not +2.** It is the economy pick: taken at level 2 it is worth a damage pick, at level 8 nothing (13 kills remain), so when to take it is a real decision. At +2 on the proposal's waves, gold first won 5 of 40 runs (+3: 21) and random picks 29 (+3: 36). Seven stacks of +3 still hold less than aimed damage, so +3 taken early does not snowball: it buys about five towers' worth over a run.
+
+**The range disc against the board** (`explore5b.py disc`, unbuilt route of 21.7 cells, 111 free cells off it):
+
+| Range | Picks of +1 | Disc, share of the 16 x 9 board | Best cell covers | Cells reaching half the route | Cells reaching all three wall sections |
+|---|---|---|---|---|---|
+| 2.5 | 0 | 14% | 35% | 0 | 0 |
+| 3.5 | 1 | 27% | 50% | 1 | 0 |
+| 4.5 | 2 | 44% | 62% | 13 | 2 |
+| 5.5 | 3 | 66% | 74% | 37 | 12 |
+| 6.5 | 4 | 92% | 88% | 70 | 28 |
+| 9.5 | 7 | 197% | 100% | 111 | 81 |
+
+One or two picks keep placement a decision: no cell reaches both wall gaps at 3.5. From four picks (6.5) most cells see half the route, and placement stops mattering. Fewer than 1% of reading or random runs get there; the range-first bot gets there in 50% of runs. That is the price of an addition with no clamp. If play shows it, the cheapest fix is +0.75, which reaches 6.5 at five picks (not simulated).
+
+### Waves
+
+Waves 8 to 10 change by whole hits of 20; waves 1 to 7, counts, groups, cadence, gold, bonuses and the XP table stay. Health of waves 4 to 10: **100, 100, 180, 180, 360, 680, 800** (5, 5, 9, 9, 18, 34 and 40 hits of 20; 4e: 260, 360, 420). The values table and the wave table above carry them, and "Enemy assets" lists what is created and deleted (four created, four deleted, nine kept: 13, as in 4e).
+
+The perks arrive over the run (levels 2 to 5 by wave 5), so the early mixed waves stay as they were and still test the mix. Raising waves 4 to 7 as well (`160, 160, 280, 280, 480, 680, 800`) helped no target, weakened every poor picker (gold first 18, majority 26) and would replace four more enemy assets. Waves 9 and 10 test the amount the build has grown to.
+
+**Bots.** Builds and elements are those of 4e (sloppy human: every 2 s, a seeded-random cell among the 6 best). Crowd member s uses build seed s, picker seed s and draw seed s.
+
+Pick policies (`perks5b.py`):
+- **Reads**: the damage of the element whose towers face the most enemy health per damage per second (the board plus the announced wave); else gold per kill on the first two choices; else range if not yet taken; else fire rate, range, the other damage, gold.
+- **Random**: a seeded random slot.
+- **Gold first**: gold whenever offered, else random.
+- **Majority**: the damage of the element it has most towers of; else fire rate, range, the other damage, gold.
+- **Range first**: range whenever offered, else random.
+- **Rate first**: fire rate whenever offered, else random.
+
+**Retune** (`explore5b.py retune <healths>`): wins in 40, median lives.
+
+| Health, waves 4–10 | Reads / reads | Half / reads | Reads / random | Half / random | Reads / gold first | Half / majority | Reads / range first | Random elements / random | 60/40 / reads | One element after wave 3 / reads | One element / reads |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 4e: 100, 100, 180, 180, 260, 360, 420 | 40, 10 | 40, 10 | 40, 10 | 40, 10 | 40, 10 | 40, 10 | 40, 10 | 38, 9 | 40, 8 | 18, 0 | 0, 0 |
+| 160, 160, 280, 280, 480, 680, 800 (waves 4–7 raised too) | 39, 10 | 39, 9 | 34, 8 | 30, 6 | 18, 0 | 26, 4 | 23, 1 | 17, 0 | 17, 0 | 0, 0 | 0, 0 |
+| 100, 100, 180, 180, 480, 680, 800 | 40, 10 | 39, 10 | 36, 8 | 32, 6 | 20, 1 | 30, 4 | 28, 2 | 24, 3 | 29, 7 | 0, 0 | 0, 0 |
+| 100, 100, 180, 180, 360, 640, 780 | 40, 10 | 40, 10 | 38, 10 | 38, 9 | 30, 5 | 40, 9 | 36, 5 | 34, 7 | 38, 7 | 1, 0 | 0, 0 |
+| **100, 100, 180, 180, 360, 680, 800 (proposal)** | 39, 10 | 39, 9 | 36, 8 | 35, 6 | 21, 2 | 40, 6 | 33, 3 | 28, 4 | 33, 7 | 0, 0 | 0, 0 |
+| Proposal −1 hit on waves 8–10: 340, 660, 780 | 40, 10 | 40, 10 | 38, 9 | 37, 9 | 24, 4 | 40, 8 | 34, 4 | 31, 5 | 34, 7 | 1, 0 | 0, 0 |
+| Proposal +1 hit on waves 8–10: 380, 700, 820 | 39, 8 | 39, 9 | 35, 6 | 30, 4 | 13, 0 | 37, 4 | 27, 2 | 23, 1 | 25, 4 | 0, 0 | 0, 0 |
+| Proposal with gold +2 | 38, 9 | 39, 8 | 29, 5 | 29, 3 | 5, 0 | 40, 6 | 27, 1 | 24, 1 | 24, 3 | 0, 0 | 0, 0 |
+| Proposal with the plan placeholders (x1.15, +0.5, +2) | 35, 7 | 37, 9 | 22, 1 | 25, 3 | 5, 0 | 40, 9 | 7, 0 | 19, 0 | 25, 3 | 1, 0 | 0, 0 |
+
+**Margin** (`explore5b.py margin 100,100,180,180,360,680,800`): the health multiplier each of 20 runs still holds on the proposal, mean, and runs below 1. The reading picker holds 1.13 (0 of 20 below 1), reading with half and half 1.15 (0). Random picks hold 1.09 (2) and 1.07 (3), majority 1.12 (1), gold first 1.01 (12). For comparison, the 4e sloppy reader held 1.07 on the 4e waves with no perks.
+
+### Simulation (`report5b.py`)
+
+Strategies with the reading picker, draw seed 0:
+
+| Strategy | Outcome | End tick | Lives | Kills | Light/Shadow | Gold at end | Level | Perks taken (places 0–4) |
+|---|---|---|---|---|---|---|---|---|
+| Builds nothing | Lost | 2931 | 0 | 0 | 0/0 | 175 | 1 | [0, 0, 0, 0, 0] |
+| Reads, sensible | Won | 9836 | 10 | 75 | 18/16 | 109 | 8 | [1, 2, 1, 2, 1] |
+| Reads, maze | Won | 10022 | 10 | 75 | 17/15 | 189 | 8 | [1, 1, 2, 2, 1] |
+| Half and half, Light first | Won | 9842 | 9 | 74 | 15/14 | 95 | 8 | [1, 2, 2, 2, 0] |
+| Half and half, Shadow first | Won | 9851 | 10 | 75 | 17/17 | 109 | 8 | [1, 1, 2, 2, 1] |
+| Half and half, maze, Light first | Won | 10041 | 10 | 75 | 15/14 | 105 | 8 | [1, 2, 2, 2, 0] |
+| Half and half, maze, Shadow first | Won | 10036 | 10 | 75 | 16/16 | 189 | 8 | [1, 1, 2, 2, 1] |
+| Light only | Lost | 3746 | 0 | 6 | 6/0 | 20 | 2 | [0, 1, 0, 0, 0] |
+| Shadow only | Lost | 5239 | 0 | 19 | 0/11 | 51 | 4 | [0, 1, 0, 1, 1] |
+| Reads waves 1–3, then Light only | Lost | 9492 | 0 | 59 | 27/3 | 1 | 7 | [0, 2, 2, 1, 1] |
+| Reads waves 1–3, then Shadow only | Lost | 9672 | 0 | 62 | 2/29 | 0 | 8 | [2, 1, 1, 2, 1] |
+| Reads, sells 2 and rebuilds at wave 8 | Won | 9900 | 10 | 75 | 17/16 | 109 | 8 | [1, 1, 2, 2, 1] |
+| Late: first tower at wave 2, reads | Won | 9912 | 4 | 69 | 18/15 | 71 | 8 | [1, 1, 2, 2, 1] |
+| Saver: 2 at start, then batches of 3, reads | Lost | 9732 | 0 | 62 | 16/13 | 80 | 8 | [1, 2, 2, 1, 1] |
+
+Crowds, 40 seeds each: wins, median lives (range), per pick policy.
+
+| Crowd | Reads | Random | Gold first | Majority | Range first | Rate first |
+|---|---|---|---|---|---|---|
+| Sloppy human, reads | 39, 10 (0–10) | 36, 8 (0–10) | 21, 2 (0–10) | 39, 7 (0–10) | 33, 3 (0–8) | 30, 4 (0–10) |
+| Sloppy human, half and half | 39, 9 (0–10) | 35, 6 (0–10) | 20, 1 (0–10) | 40, 6 (1–10) | 28, 3 (0–10) | 29, 4 (0–10) |
+| Sloppy human, random elements | 33, 7 (0–10) | 28, 4 (0–10) | 14, 0 (0–10) | 29, 3 (0–10) | 17, 0 (0–9) | 25, 2 (0–10) |
+| Sloppy human, 60/40 | 33, 7 (0–10) | 21, 1 (0–9) | 14, 0 (0–9) | 17, 0 (0–7) | 12, 0 (0–5) | 20, 1 (0–9) |
+| Sloppy human, 70/30 | 3, 0 (0–3) | 0, 0 (0–0) | 0, 0 (0–0) | 0, 0 (0–0) | 0, 0 (0–0) | 0, 0 (0–0) |
+| Sloppy human, one element after wave 3 | 0, 0 (0–0) | 0, 0 (0–0) | 0, 0 (0–0) | 0, 0 (0–0) | 0, 0 (0–0) | 1, 0 (0–1) |
+| Sloppy human, one element | 0, 0 (0–0) | 0, 0 (0–0) | 0, 0 (0–0) | 0, 0 (0–0) | 0, 0 (0–0) | 0, 0 (0–0) |
+
+Range picks per run, share of the crowd runs with 0 / 1 / 2 / 3 / 4+: reads 24 / 54 / 19 / 2 / 0%, random 32 / 37 / 28 / 4 / 0%, gold first 55 / 35 / 10 / 0 / 0%, majority 59 / 31 / 9 / 1 / 0%, range first 2 / 9 / 17 / 21 / 50%, rate first 67 / 22 / 10 / 0 / 0%.
+
+**Checks over all 1696 runs of `report5b.py`:** no run gains two levels on one tick (a kill pays 10 XP and the smallest step is 30); no run has more than 7 level-ups; the largest damage launched is 76.29 (10 x 1.25^6 x 2). The largest any run can show is **95.37** (seven Light or seven Shadow damage picks), below 100.
+
+**Design targets met.**
+1. **A mixed build that picks sensibly wins with lives to spare:** the reading picker wins 39 of 40 with a median of 10 lives (half and half: 39, 9), and holds 13% more health.
+2. **A mixed build that picks badly still has a fair chance:** random picks win 36 and 35 of 40 (median 8 and 6), and gold first 21 and 20 (median 2 and 1). Gold first is the weakest policy, because it takes gold at level 8, where it buys nothing.
+3. **A one-element build still loses:** one element loses 240 of 240 runs across the six pickers; one element after wave 3 wins 1 of 240 (rate first). 70/30 wins at most 3 of 40.
+4. **Not trivial for a card reader:** it holds 13% more health than the proposal, against 7% for the 4e reader on the 4e waves. One more hit on waves 8 to 10 leaves it 39 wins with a median of 8, and the saver (2 towers at start, then batches of 3) now loses.
+
+### Reference seed and order
+
+**Seed 4** (`proposal5b.SEED`; `refrepair5b.py seeds 200` ranks the seeds; on seed 4 the reading picker wins with 10 lives and takes all five perks, both damages twice). The order is the 4e construction (maze order, reading elements, a tick-0 buy and sell, no swap) rebuilt on the 5b waves with the reading picker, and written to `ref5b.json` by `refrepair5b.py 4`. Each action runs after the given number of `Tick()` calls, before the next one. A choice opened by a tick is answered before any action at that count (rule 24).
+
+| Choice | Opens after tick | Level | Offer, slots 0 / 1 / 2 | Slot picked | Perk taken |
+|---|---|---|---|---|---|
+| 1 | 1452 | 2 | 1 / 0 / 2 | 0 | 1 Shadow damage |
+| 2 | 2209 | 3 | 1 / 4 / 2 | 1 | 4 Gold per kill |
+| 3 | 3369 | 4 | 3 / 4 / 2 | 0 | 3 Range |
+| 4 | 4175 | 5 | 4 / 1 / 2 | 2 | 2 Fire rate |
+| 5 | 5446 | 6 | 1 / 3 / 2 | 0 | 1 Shadow damage (`Total +56 %`) |
+| 6 | 6980 | 7 | 2 / 1 / 0 | 2 | 0 Light damage |
+| 7 | 8808 | 8 | 2 / 3 / 0 | 2 | 0 Light damage (`Total +56 %`) |
+
+No choice falls on a tick with a purchase.
+
+**Outcome:** won on the **10026th** `Tick()`, with **10 lives**, **189 gold**, **75 kills**, **32 towers (16 Light, 16 Shadow)**, **XP 750** and **level 8**. The level-ups come on ticks **1452, 2209, 3369, 4175, 5446, 6980 and 8808**, the first kill on 1288, and the largest hit is 31.25 (Shadow 10 x 1.25^2, x2).
+
+**Robustness:** with every action after tick 0 shifted 1 to 30 ticks later, no action is refused and the run still wins with 10 lives and 189 gold, ending between ticks 10019 and 10057.
+
+**Building nothing:** unchanged: lost on the **2931st** `Tick()` with **175 gold**, **XP 0**, **level 1**, and no choice opened.
+
+| Tick | Cell | Tower | Action | Gold change | Gold after |
+|---|---|---|---|---|---|
+| 0 | (0, 8) | `Tower_Light` | buy | −40 | 75 |
+| 0 | (0, 8) | `Tower_Light` | sell | +40 | 115 |
+| 0 | (11, 2) | `Tower_Light` | buy | −40 | 75 |
+| 0 | (11, 3) | `Tower_Light` | buy | −40 | 35 |
+| 1290 | (14, 2) | `Tower_Shadow` | buy | −40 | 5 |
+| 1470 | (13, 2) | `Tower_Shadow` | buy | −40 | 25 |
+| 2130 | (12, 0) | `Tower_Shadow` | buy | −40 | 5 |
+| 2220 | (10, 1) | `Tower_Shadow` | buy | −40 | 5 |
+| 2790 | (4, 7) | `Tower_Light` | buy | −40 | 4 |
+| 3150 | (4, 6) | `Tower_Shadow` | buy | −40 | 28 |
+| 3390 | (3, 7) | `Tower_Light` | buy | −40 | 1 |
+| 3600 | (6, 8) | `Tower_Shadow` | buy | −40 | 0 |
+| 4050 | (0, 6) | `Tower_Light` | buy | −40 | 42 |
+| 4110 | (1, 6) | `Tower_Light` | buy | −40 | 15 |
+| 4230 | (2, 5) | `Tower_Light` | buy | −40 | 1 |
+| 4260 | (3, 4) | `Tower_Shadow` | buy | −40 | 9 |
+| 4860 | (1, 2) | `Tower_Light` | buy | −40 | 8 |
+| 5190 | (1, 3) | `Tower_Light` | buy | −40 | 7 |
+| 5370 | (3, 3) | `Tower_Light` | buy | −40 | 33 |
+| 5460 | (3, 2) | `Tower_Shadow` | buy | −40 | 6 |
+| 5670 | (6, 5) | `Tower_Shadow` | buy | −40 | 5 |
+| 5880 | (7, 7) | `Tower_Shadow` | buy | −40 | 4 |
+| 6060 | (7, 5) | `Tower_Shadow` | buy | −40 | 35 |
+| 6540 | (8, 3) | `Tower_Light` | buy | −40 | 8 |
+| 6900 | (9, 2) | `Tower_Shadow` | buy | −40 | 7 |
+| 7230 | (8, 5) | `Tower_Light` | buy | −40 | 6 |
+| 7470 | (7, 3) | `Tower_Shadow` | buy | −40 | 55 |
+| 7470 | (7, 1) | `Tower_Light` | buy | −40 | 15 |
+| 7800 | (6, 1) | `Tower_Shadow` | buy | −40 | 1 |
+| 8250 | (9, 1) | `Tower_Light` | buy | −40 | 0 |
+| 8760 | (0, 3) | `Tower_Light` | buy | −40 | 12 |
+| 8880 | (1, 5) | `Tower_Shadow` | buy | −40 | 66 |
+| 8880 | (14, 1) | `Tower_Light` | buy | −40 | 26 |
+| 9330 | (3, 1) | `Tower_Shadow` | buy | −40 | 25 |
+
+### What the simulation cannot tell
+
+- **Bots are not players.** The reading picker knows the measured worth of every perk, and the gap between it and random picks is small (1.13 against 1.09): on this map placement and elements matter more than the picks. Whether a player feels a pick depends on the numbers and discs on screen, which no bot sees.
+- **Seven pauses** in about 167 s (one every 24 s, the longest gap 30.5 s, between ticks 6980 and 8808): whether that feels right, too many or too few, is for play.
+- **Range at four picks or more** turns placement into a non-decision for a player who keeps taking it. Bots cannot judge whether that feels like power or like the board stopped mattering.
+- **Gold +3 early** may read as the obvious first pick to players who like economy. The bots take it only at levels 2 and 3, as the measure says.
+
+**Tune first in play:** wave 10's and then wave 9's health, by whole hits; then range (+1 or +0.75) if wide discs flatten placement; then gold (+3 or +2) if it becomes the default first pick; fire rate last. Confidence: damage and fire rate medium, range, gold and the health of waves 8 to 10 low.
+
+Simulation: `perks5b.py` holds the pickers and the job runner, and `proposal5b.py` these numbers. `verify5b.py` checks the plan's pins. `report5b.py` prints the pool, the assets, the pins, the reference order with its choices, the strategy and crowd tables, the range-pick shares and the checks. `refrepair5b.py seeds N | <seed>` ranks the seeds and builds `ref5b.json`. `explore5b.py worth | stack | range | disc | margin | retune` gives the design search above; `POOL=dmg,rate,range,gold` in the environment tries other amounts in `retune` and `margin`.
