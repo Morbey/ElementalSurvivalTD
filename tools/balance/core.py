@@ -7,6 +7,8 @@
 # Step 5a: XP and level as counters only (nothing reads them). An enemy stat tuple may carry its XP as a 5th item (default 0);
 # `levels` lists the XP each level needs (the n-th item takes level n to n + 1), XP is a running total and carries over,
 # the level starts at 1 and stops when the table ends. A kill adds its XP on the tick its shot lands.
+# Step 5b (plan 0012, rules 16 to 24): modifiers (Modifiers), the generator and the draw (Rng, draw), and the perk choice that
+# pauses the battle (Battle.perks / seed / choice_open / pick). A battle with an empty pool is the 5a battle on every tick.
 import struct, math
 from collections import deque
 
@@ -112,12 +114,71 @@ class Enemy:
         return self.arrived
 
 
-class Tower:
-    __slots__ = ('cell', 'rng2', 'dmg', 'cd_add', 'ps', 'cd', 'fired', 'cost', 'elem')
+# ---- step 5b: modifiers (rules 16, 17, 19), the generator (rule 20) and the draw (rule 21) ----
+DMG, SPS, RANGE, GOLD = 'damage', 'sps', 'range', 'gold'      # Stat: TowerDamage, TowerShotsPerSecond, TowerRange, GoldPerKill
+ADD, MUL = 'add', 'mul'
 
-    def __init__(self, cell, ts, cost, elem=None):
-        self.elem = elem; self.cell = cell; r = f(ts['range']); self.rng2 = f(r * r); self.dmg = f(ts['damage'])
-        self.cd_add = f(1.0 / f(ts['sps'])); self.ps = f(ts['pspeed']); self.cd = 0.0; self.fired = False; self.cost = cost
+
+def modifier(stat, op, value, elem=None):
+    """(stat, element or None, operation, float32 amount), with Core's refusals (5b-AC1): gold per kill takes whole additions only."""
+    if stat == GOLD and (op == MUL or value != int(value) or elem is not None): raise ValueError('gold per kill takes whole additions only')
+    return (stat, elem, op, f(value))
+
+
+def perk(stat, op, value, elem=None):
+    """A perk asset's modifier, with the data's refusals (5b-AC8): an addition at or below 0, a multiplication at or below 1."""
+    if op == ADD and value <= 0: raise ValueError('an addition at or below 0')
+    if op == MUL and value <= 1: raise ValueError('a multiplication at or below 1')
+    return modifier(stat, op, value, elem)
+
+
+class Modifiers:
+    """The run's modifiers in the order added. Rule 17: the base, every addition in order, then every multiplication in order, float32 after each."""
+    def __init__(self): self.l = []
+    def add(self, m, source=-1): self.l.append(m + (source,))
+    def apply(self, stat, elem, v):
+        v = f(v)
+        for s, e, op, a, _ in self.l:
+            if s == stat and op == ADD and (e is None or e == elem): v = f(v + a)
+        for s, e, op, a, _ in self.l:
+            if s == stat and op == MUL and (e is None or e == elem): v = f(v * a)
+        return v
+    def whole(self, stat, v): return v + sum(int(a) for s, _, op, a, _ in self.l if s == stat and op == ADD)
+
+
+MASK = 0xFFFFFFFF
+
+
+class Rng:
+    """Rule 20 (SplitMix-style, 32-bit)."""
+    def __init__(self, seed): self.s = seed & MASK
+    def next(self):
+        self.s = (self.s + 0x9E3779B9) & MASK; z = self.s
+        z ^= z >> 16; z = (z * 0x85EBCA6B) & MASK; z ^= z >> 13; z = (z * 0xC2B2AE35) & MASK; z ^= z >> 16
+        return z
+    def below(self, n): return (self.next() * n) >> 32
+
+
+def draw(rng, n):
+    """Rule 21: a partial shuffle of 0..n-1, set afresh; the offer is slots 0 to 2."""
+    order = list(range(n))
+    for i in range(3):
+        j = i + rng.below(n - i); order[i], order[j] = order[j], order[i]
+    return tuple(order[:3])
+
+
+class Tower:
+    __slots__ = ('cell', 'rng2', 'dmg', 'cd_add', 'ps', 'cd', 'fired', 'cost', 'elem', 'ts', 'r', 'sps')
+
+    def __init__(self, cell, ts, cost, elem=None, mods=None):
+        self.elem = elem; self.cell = cell; self.ts = ts; self.ps = f(ts['pspeed']); self.cd = 0.0; self.fired = False; self.cost = cost
+        self.refresh(mods if mods is not None else Modifiers())
+
+    def refresh(self, mods):
+        """Rule 18: the effective stats from the base ones; a shot in flight and a running cooldown keep theirs."""
+        r = mods.apply(RANGE, self.elem, self.ts['range']); self.r = r; self.rng2 = f(r * r)
+        self.dmg = mods.apply(DMG, self.elem, self.ts['damage'])
+        self.sps = mods.apply(SPS, self.elem, self.ts['sps']); self.cd_add = f(1.0 / self.sps)
 
 
 def groups(wave):
@@ -157,7 +218,7 @@ class Waves:
 
 
 class Battle:
-    def __init__(self, waves, lives, tower_stats, gold=0, cost=0, refund_pct=100, levels=()):
+    def __init__(self, waves, lives, tower_stats, gold=0, cost=0, refund_pct=100, levels=(), perks=None, seed=0):
         self.blocked = set(WALLS); self.field = Field(self.blocked)
         self.towers = []; self.enemies = []; self.proj = []
         self.waves = Waves(waves); self.lives = lives; self.outcome = 'Running'; self.tick_n = 0
@@ -165,6 +226,12 @@ class Battle:
         self.kills = 0; self.leaks = 0; self.earned = 0; self.spent = 0; self.sold_loss = 0
         self.alive = [0] * len(waves); self.spawned = [0] * len(waves); self.total = [sum(g[1] for g in groups(w)) for w in waves]; self.paid = [False] * len(waves); self.leaks_w = [0] * len(waves); self.bonus_earned = 0; self.shots = 0; self.wasted = 0; self.recoverable = 0; self.busy_ticks = 0; self.mixed_ticks = 0
         self.levels = list(levels); self.xp = 0; self.level = 1; self.levelup_ticks = []; self.kill_log = []; self.paid_tick = [None] * len(waves)  # step 5a counters; kill_log: (tick, wave)
+        # step 5b: the pool (a perk's place is its source), the generator, the levels owed a choice, the open offer
+        self.perks = list(perks or []); self.mods = Modifiers(); self.rng = Rng(seed); self.pending = 0; self.answered = 0
+        if 0 < len(self.perks) < 3: raise ValueError('a pool of one or two perks')
+        self.choice_open = False; self.offer = None; self.choices_opened = 0; self.taken = [0] * len(self.perks)
+        self.choice_log = []  # (tick, level, offer, slot)
+        self.max_dmg = 0.0    # the largest damage of a launch: what a damage number can show
         n = len(waves); self.shots_w = [0] * n; self.wasted_w = [0] * n; self.recov_w = [0] * n; self.busy_w = [0] * n; self.mixed_w = [0] * n  # per wave of the target / of an enemy on the board
 
     # ---- placement and selling (Board + proposed 3b economy) ----
@@ -184,7 +251,7 @@ class Battle:
         r = self.can_place(c)
         if r != 'Placed': return r
         self.blocked.add(c); self.field.compute()
-        self.towers.append(Tower(c, self.ts, self.cost, elem)); self.gold -= self.cost; self.spent += self.cost
+        self.towers.append(Tower(c, self.ts, self.cost, elem, self.mods)); self.gold -= self.cost; self.spent += self.cost
         return r
 
     def sell(self, c):
@@ -197,8 +264,22 @@ class Battle:
         return None
 
     # ---- Battle.Tick ----
+    # ---- step 5b: the choice (rules 22, 23) ----
+    def open_choice(self):
+        if self.choice_open or not self.pending or not self.perks: return
+        self.offer = draw(self.rng, len(self.perks)); self.choice_open = True; self.choices_opened += 1
+
+    def pick(self, slot):
+        if not self.choice_open or not 0 <= slot < 3: raise ValueError('no choice open or slot outside the offer')
+        k = self.offer[slot]; self.mods.add(self.perks[k], k); self.taken[k] += 1
+        self.choice_log.append((self.tick_n, self.answered + 2, self.offer, slot))
+        for t in self.towers: t.refresh(self.mods)
+        self.pending -= 1; self.answered += 1; self.choice_open = False; self.offer = None
+        self.open_choice()
+        return k
+
     def tick(self):
-        if self.outcome != 'Running': return
+        if self.outcome != 'Running' or self.choice_open: return
         self.tick_n += 1
         e = self.waves.step()
         if e is not None:
@@ -224,6 +305,7 @@ class Battle:
             if t.elem is None or best.elem is None: dmg = t.dmg
             else: dmg = 0.0 if best.elem == t.elem else f(t.dmg * 2.0)  # 0 against the own element, x2 against the other
             self.shots += 1; self.shots_w[best.wave] += 1
+            if dmg > self.max_dmg: self.max_dmg = dmg
             if dmg == 0.0:  # wasted; 'recoverable' when an enemy it could damage was also in range (what skip-own-element would save)
                 self.wasted += 1; self.wasted_w[best.wave] += 1
                 for en in self.enemies:
@@ -242,10 +324,10 @@ class Battle:
                 en.hp = f(en.hp - p[3]); self.proj.pop(i)
                 if en.hp <= 0 and en.on:
                     en.on = False; self.enemies.remove(en); self.kills += 1; self.alive[en.wave] -= 1
-                    self.gold += en.bounty; self.earned += en.bounty
+                    g = self.mods.whole(GOLD, en.bounty); self.gold += g; self.earned += g
                     self.xp += en.xp; self.kill_log.append((self.tick_n, en.wave))
                     while self.level - 1 < len(self.levels) and self.xp >= sum(self.levels[:self.level]):
-                        self.level += 1; self.levelup_ticks.append(self.tick_n)
+                        self.level += 1; self.levelup_ticks.append(self.tick_n); self.pending += 1
                 continue
             sc = f(st / f(math.sqrt(d2)))
             p[0] = f(p[0] + f(dx * sc)); p[1] = f(p[1] + f(dy * sc)); i += 1
@@ -259,5 +341,6 @@ class Battle:
             for k, wv in enumerate(self.waves.w):
                 if not self.paid[k] and self.spawned[k] == self.total[k] and self.alive[k] == 0:
                     self.paid[k] = True; self.paid_tick[k] = self.tick_n; bon = wv[4] if len(wv) > 4 else 0; self.gold += bon; self.bonus_earned += bon
-        if self.lives == 0: self.outcome = 'Lost'; return
-        if self.waves.done and not self.enemies: self.outcome = 'Won'; self.proj.clear()
+        if self.lives == 0: self.outcome = 'Lost'
+        elif self.waves.done and not self.enemies: self.outcome = 'Won'; self.proj.clear()
+        if self.outcome == 'Running': self.open_choice()  # rule 22: after the bonuses and the outcome
