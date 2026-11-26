@@ -709,7 +709,7 @@ MonoBehaviour:
   palette: {fileID: 11400000, guid: 649ce049bf3794c4686081e291820c4d, type: 2}
   bootstrap: {fileID: 1930703238}
   titleText: '{0} tower'
-  statNumberFormat: 0.##
+  statNumberFormat: 0.#####
   statTailFormat: "+0.##;\u22120.##"
   fullValueText: +{0}
   refundValueText: +{0}

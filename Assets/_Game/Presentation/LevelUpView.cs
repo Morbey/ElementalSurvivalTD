@@ -119,7 +119,6 @@ namespace ElementalTD.Presentation
 
             _battle = bootstrap.Battle;
             _progression = _battle.Progression;
-            _shownChoices = _progression.ChoicesOpened;
             BuildPerkWords(bootstrap.Run);
 
             _cards = new Card[Progression.OfferSize];
@@ -142,15 +141,17 @@ namespace ElementalTD.Presentation
             }
 
             // The enter look holds for one frame; removing it lets the base rules deal the cards and settle the title.
+            // The lock counts from here, not from the show frame, whose layout and glyph work may be long (plan 0012, 5b-AC11).
             if (_entering)
             {
                 _entering = false;
                 _overlay.RemoveFromClassList(EnterClass);
+                _lockEndsAt = now + lockSeconds;
             }
 
             bool open = _progression.ChoiceOpen;
             int opened = _progression.ChoicesOpened;
-            if (open && opened != _shownChoices) ShowChoice(opened, now);
+            if (open && opened != _shownChoices) ShowChoice(opened);
             else if (!open && _shown) Hide();
 
             if (_locked && now >= _lockEndsAt)
@@ -160,7 +161,7 @@ namespace ElementalTD.Presentation
             }
         }
 
-        private void ShowChoice(int opened, float now)
+        private void ShowChoice(int opened)
         {
             _shownChoices = opened;
             _title.text = string.Format(titleText, _progression.ChoiceLevel.ToString());
@@ -176,7 +177,8 @@ namespace ElementalTD.Presentation
             _shown = true;
             _entering = true;
             _locked = true;
-            _lockEndsAt = now + lockSeconds;
+            // Until the next frame sets it, so the previous choice's end cannot open this lock early.
+            _lockEndsAt = float.PositiveInfinity;
             SetCardsPicking(PickingMode.Ignore);
         }
 

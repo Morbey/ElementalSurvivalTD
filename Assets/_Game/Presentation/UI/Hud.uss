@@ -103,10 +103,6 @@
     flex-grow: 1;
 }
 
-.stat-row {
-    justify-content: space-between;
-}
-
 #synergies {
     flex-grow: 1;
     flex-shrink: 1;

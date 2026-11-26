@@ -9,8 +9,8 @@ namespace ElementalTD.Gameplay
     /// <summary>
     /// Turns the pointer into board cells: hover, and a click that selects a tower on the board, ends that selection,
     /// or tries to buy the tower to buy. Holds the buyable towers and which one is the tower to buy: number key N chooses the N-th.
-    /// Picks nothing without a running battle, so a click on the end screen never reaches the board, and nothing, keys
-    /// included, while a choice of perks is open; a selection made before it stays (ADR 0007).
+    /// Picks nothing without a running battle, so a click on the end screen never reaches the board, and does nothing, keys
+    /// and buttons included, while a choice of perks is open; a selection made before it stays (ADR 0007).
     /// The selection is input state only; the rules live in the Core Battle and Board (ADR 0004).
     /// </summary>
     public sealed class TowerPlacementInput : MonoBehaviour
@@ -51,19 +51,22 @@ namespace ElementalTD.Gameplay
         /// <summary>Chooses the tower to buy and ends the selection on the board. Ignores an index outside the list.</summary>
         public void Select(int index)
         {
-            if (index < 0 || index >= TowerCount) return;
+            if (index < 0 || index >= TowerCount || ChoiceOpen()) return;
             SelectedIndex = index;
             Deselect();
         }
 
         /// <summary>Ends the selection on the board; nothing else changes.</summary>
-        public void Deselect() => _selectedTower = null;
+        public void Deselect()
+        {
+            if (!ChoiceOpen()) _selectedTower = null;
+        }
 
         /// <summary>Sells the selected tower through the battle and ends the selection. False with none selected.</summary>
         public bool SellSelected()
         {
             Tower tower = SelectedTower;
-            if (tower == null) return false;
+            if (tower == null || ChoiceOpen()) return false;
 
             bool sold = bootstrap.Battle.TrySellTower(tower.Cell);
             Deselect();
@@ -116,13 +119,19 @@ namespace ElementalTD.Gameplay
         private void ReadKeys()
         {
             Keyboard keyboard = Keyboard.current;
-            if (keyboard == null) return;
-            Battle battle = bootstrap != null ? bootstrap.Battle : null;
-            if (battle != null && battle.AwaitingChoice) return;
+            if (keyboard == null || ChoiceOpen()) return;
 
             if (keyboard.escapeKey.wasPressedThisFrame) Deselect();
             for (int i = 0; i < TowerCount && Key.Digit1 + i <= Key.Digit0; i++)
                 if (keyboard[Key.Digit1 + i].wasPressedThisFrame) Select(i);
+        }
+
+        // The buttons' clicks reach Select, Deselect and SellSelected on the frame a tick opens the choice,
+        // before the overlay shows (ADR 0007, decision 10).
+        private bool ChoiceOpen()
+        {
+            Battle battle = bootstrap != null ? bootstrap.Battle : null;
+            return battle != null && battle.AwaitingChoice;
         }
 
         private bool TryPick(Vector2 screenPosition, out GridPos cell)
