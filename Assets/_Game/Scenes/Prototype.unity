@@ -588,6 +588,7 @@ GameObject:
   - component: {fileID: 1997445117}
   - component: {fileID: 1997445116}
   - component: {fileID: 1997445118}
+  - component: {fileID: 1997445119}
   m_Layer: 0
   m_Name: Hud
   m_TagString: Untagged
@@ -673,6 +674,7 @@ MonoBehaviour:
   elementSeparator: ' + '
   victoryText: Victory
   defeatText: Defeat
+  endLevelText: Level {0}
 --- !u!114 &1997445114
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -708,6 +710,7 @@ MonoBehaviour:
   bootstrap: {fileID: 1930703238}
   titleText: '{0} tower'
   statNumberFormat: 0.##
+  statTailFormat: "+0.##;\u22120.##"
   fullValueText: +{0}
   refundValueText: +{0}
   refundTailText: "\_of {0}"
@@ -788,6 +791,32 @@ MonoBehaviour:
   bootstrap: {fileID: 1930703238}
   levelText: Level {0}
   maxLevelText: Max level {0}
+--- !u!114 &1997445119
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1997445108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc62214320ce14750b082457677927e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ElementalTD.Presentation::ElementalTD.Presentation.LevelUpView
+  document: {fileID: 1997445110}
+  bootstrap: {fileID: 1930703238}
+  palette: {fileID: 11400000, guid: 649ce049bf3794c4686081e291820c4d, type: 2}
+  lockSeconds: 0.6
+  holdSeconds: 0.35
+  titleText: Level {0}
+  hintText: Choose one
+  hintInARowText: Choose one ({0} of {1})
+  percentText: +{0} %
+  amountText: +{0}
+  stackText: Total <b><color=#FFFFFF>{0}</color></b>
+  allTileText: All
+  goldTileText: Gold
+  elementNameText: <color=#{1}>{0}</color>
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

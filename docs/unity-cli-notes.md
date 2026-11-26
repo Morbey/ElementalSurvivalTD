@@ -16,6 +16,7 @@ What the team has learned about driving this project with the `unity` CLI. Add a
 - `component set_field` handles numbers, object references (`{"path": "Assets/…"}`, `{"hierarchyPath": "…"}`) and `Vector3`, but not `Vector2Int`. Use `script eval` with `SerializedObject` for those, then `AssetDatabase.SaveAssets()`.
 - `scene add_to_build` and `remove_from_build` change the list only in memory. Save it explicitly and check `ProjectSettings/EditorBuildSettings.asset` on disk.
 - `settings.player set` does not cover the WebGL player settings. Set them through `script eval` (`PlayerSettings.WebGL.…`), save, and check `ProjectSettings/ProjectSettings.asset`.
+- `SerializedProperty.intValue` on a float field (for example `EnemyDefinition.maxHealth`) is silently ignored; use `floatValue`, and check the value on disk.
 - `asset copy` refuses a source outside `Assets/`. Use `AssetDatabase.CopyAsset` through `script eval`.
 - For multi-step asset or scene work, write a C# script outside `Assets/` and run `unity command script eval --file <path>`. Give the file's absolute path: a relative one is resolved against the project, not the shell's directory. In it, do not use `??` on `GetComponent` or `GameObject.Find` results: Unity's fake null defeats it.
 - Smoke-check a scene with `unity command editor.playmode start`, then `script eval` calls on the live objects, then `editor.playmode stop`; Play mode changes are discarded.
