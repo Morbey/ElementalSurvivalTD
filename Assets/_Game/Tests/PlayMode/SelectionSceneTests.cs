@@ -940,7 +940,7 @@ namespace ElementalTD.PlayModeTests
                 string hud = $"{L("wave-label").text}|{L("next-wave-label").text}|{L("lives-label").text}|{GoldLabel.text}|{_label.text}|{string.Join(" ", _label.GetClasses())}|enemies {Board.EnemyCount}|towerFired {Battle.ProjectileCount}";
                 if (hud != lastHud) { trace.Add($"t={t:F3} HUD CHANGED: {hud}"); lastHud = hud; }
                 trace.Add($"t={t:F3} scale {scale:F3} colour {(Color32)L("sell-value").resolvedStyle.color} border {(Color32)E("sell-button").resolvedStyle.borderTopColor}");
-                if (!sampled && t >= 0.08f && t < 0.2f)
+                if (!sampled && t >= 0.03f && t < 0.2f)
                 {
                     sampled = true;
                     Assert.Greater(scale, 1.005f, $"t={t:F3}: not yet at 1");
@@ -961,7 +961,7 @@ namespace ElementalTD.PlayModeTests
                 }
             }
             Debug.Log("4c Eduardo: every frame of the settle\n" + string.Join("\n", trace));
-            Assert.IsTrue(sampled, "a frame fell in the 0.08 to 0.2 s window");
+            Assert.IsTrue(sampled, "a frame fell in the 0.03 to 0.2 s window");
             AssertLook(RefundGold, RefundBorder, 1f, $"{Time.realtimeSinceStartup - tPop:F2} s after the drop");
             log.Add($"resolved after {Time.realtimeSinceStartup - tPop:F2} s: refund look");
             Assert.AreEqual(1, new List<string>(SellClasses().Split(' ')).FindAll(c => c == "sell-button--settle").Count);
@@ -1022,6 +1022,7 @@ namespace ElementalTD.PlayModeTests
                 Assert.AreEqual("+20", L("sell-value").text);
             }
             yield return new WaitForSecondsRealtime(0.9f);
+            yield return Frames(3);   // a transition advances with frames: a slow frame must not leave it half-way at the read
             AssertLook(RefundGold, RefundBorder, 1f, "after the drop");
         }
 

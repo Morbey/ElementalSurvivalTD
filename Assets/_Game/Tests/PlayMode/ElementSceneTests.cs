@@ -612,7 +612,7 @@ namespace ElementalTD.PlayModeTests
             yield return null;
             Assert.IsTrue(disc.gameObject.activeSelf);
             Assert.AreSame(lightDisc, discRenderer.sharedMaterial, "on a free cell: the selected tower's disc");
-            Assert.AreEqual(_input.Tower.ToStats().Range * _map.CellSize, discRenderer.bounds.extents.x, 0.05f, "with its range");
+            Assert.AreEqual(Battle.Modifiers.Apply(_input.Tower.ToStats()).Range * _map.CellSize, discRenderer.bounds.extents.x, 0.05f, "with its range");
             Assert.AreEqual(0.01f, discRenderer.bounds.center.y, 0.01f, "flat, at height 0.01");
             Assert.Less(Vector3.Distance(_map.CellToWorld(free), new Vector3(disc.position.x, 0f, disc.position.z)), 0.01f);
 

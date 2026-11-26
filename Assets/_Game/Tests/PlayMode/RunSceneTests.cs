@@ -181,6 +181,7 @@ namespace ElementalTD.PlayModeTests
             CollectionAssert.Contains(_seenCountdowns, $"Next wave in 8 s: {WaveElements(Battle.Waves.WaveAt(1))}", "right after the last enemy of wave 1: Light is next, Shadow is current");
             for (int lives = 10; lives >= 0; lives--) CollectionAssert.Contains(_seenLives, $"Lives {lives}", "lives drop one at a time");
             Assert.AreEqual("Defeat", Text("end-title").text);
+            Assert.AreEqual("Level 1", Text("end-level").text, "5b-AC14: a lost run with no kill is at level 1");
             Assert.IsTrue(Shown(End));
             Assert.Greater(_maxEnemies, 1, "several enemies were drawn at once");
             Assert.AreEqual(0, Object.FindObjectsByType<Collider>(FindObjectsInactive.Include).Length);
@@ -208,6 +209,7 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual($"Wave 10/10: {WaveElements(Battle.Waves.WaveAt(9))}", Text("wave-label").text);
             Assert.IsFalse(Shown(Text("next-wave-label")), "hidden from wave 10 on");
             Assert.AreEqual("Victory", Text("end-title").text);
+            Assert.AreEqual("Level 8", Text("end-level").text, "5b-AC14: the level of the run, under the title, not Max level");
             Assert.IsTrue(Shown(End));
             Assert.AreEqual(0, Battle.ProjectileCount);
             foreach (Transform view in _projectileViews) Assert.IsFalse(view.gameObject.activeSelf, "no projectile view is active after a win");

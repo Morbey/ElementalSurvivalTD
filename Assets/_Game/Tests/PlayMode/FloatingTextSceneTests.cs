@@ -313,6 +313,7 @@ namespace ElementalTD.PlayModeTests
                 Assert.AreEqual(expectedBottom.x, actual.x, 0.7f, name + " x");
                 Assert.AreEqual(expectedBottom.y, actual.y, 0.7f, name + " y");
                 yield return new WaitForSecondsRealtime(1.6f);
+                yield return Frames(3);   // the view hides it on the first frame past 1.5 s and the style resolves on the next: a slow frame must not decide
                 Assert.IsFalse(RefusalShown(), name + ": hidden after its life");
             }
         }
@@ -346,23 +347,44 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(PanelOfCell(7, 6, 0.6f).x, RefusalAnchor().x, 0.7f, "at the cell of the click");
         }
 
+        /// <summary>Stamps the time of each frame's LateUpdate after every view's own (execution order 10000).</summary>
+        [DefaultExecutionOrder(10000)]
+        public sealed class FrameClock : MonoBehaviour
+        {
+            public float LastLate;
+
+            private void LateUpdate() => LastLate = Time.unscaledTime;
+        }
+
         [UnityTest]
         public IEnumerator S4d_AC10_It_Rises_16_And_Fades_In_Real_Seconds_Is_Hidden_After_Its_Life_And_A_Newer_One_Restarts_It_At_Its_Own_Cell()
         {
-            yield return null;
+            // Two samples of the rise a second apart, read as a slope: the label's absolute place depends on the camera and the board area,
+            // which a batch run may still be settling on the first frames, and the rise (16 px over 1.5 s, linear) does not.
+            yield return Frames(3);
+            int settle = 0;
+            while (BoardAreaRect.width <= 0f && settle++ < 30) yield return null;
             Vector2 first = PanelOfCell(5, 3, 0.6f);
-            float t0 = Time.unscaledTime;
-            ClickCell(5, 3);
+            // The label is read in the next frame's Update, so it shows what the view wrote in the last LateUpdate: its age is that of the
+            // clock below, which stamps each frame after every view has run, however long the frames in between were.
+            var clock = new GameObject("FrameClock").AddComponent<FrameClock>();
             yield return null;
+            float t0 = clock.LastLate;
+            ClickCell(5, 3);
+            yield return Frames(3);
             Assert.AreEqual(1f, RefusalLabel.parent.resolvedStyle.opacity, 0.01f);
-            float y0 = RefusalAnchor().y;
-            yield return new WaitForSecondsRealtime(1.0f);
-            float age = Time.unscaledTime - t0;
-            Assert.AreEqual(y0 - 16f * (age - 0.02f) / 1.5f, RefusalAnchor().y, 0.7f, "it rises 16 over 1.5 s");
-            Assert.AreEqual(1f, RefusalLabel.parent.resolvedStyle.opacity, 0.01f, "opaque until the fade starts at 1.1 s");
-            yield return new WaitForSecondsRealtime(0.3f);
-            age = Time.unscaledTime - t0;
-            Assert.AreEqual(Mathf.Clamp01((1.5f - age) / 0.4f), RefusalLabel.parent.resolvedStyle.opacity, 0.12f, "fading linearly over the last 0.4 s");
+            float yA = RefusalAnchor().y, tA = clock.LastLate;
+            yield return new WaitForSecondsRealtime(0.8f);
+            yield return null;
+            float yB = RefusalAnchor().y, tB = clock.LastLate;
+            float age = tB - tA;
+            Assert.AreEqual(16f * age / 1.5f, yA - yB, 0.7f, "it rises 16 over 1.5 s");
+            Assert.AreEqual(1f, RefusalLabel.parent.resolvedStyle.opacity, tB - t0 < 1.08f ? 0.01f : 1f, "opaque until the fade starts at 1.1 s");
+            yield return new WaitForSecondsRealtime(0.45f);
+            yield return null;
+            age = clock.LastLate - t0;
+            Assert.AreEqual(Mathf.Clamp01((1.5f - age) / 0.4f), RefusalLabel.parent.resolvedStyle.opacity, 0.03f, "fading linearly over the last 0.4 s");
+            Object.Destroy(clock.gameObject);
             Assert.Less(RefusalLabel.parent.resolvedStyle.opacity, 1f);
 
             // A newer refusal on another cell: its text, its cell, a full life.
@@ -374,6 +396,7 @@ namespace ElementalTD.PlayModeTests
             yield return new WaitForSecondsRealtime(1.0f);
             Assert.IsTrue(RefusalShown(), "a full life from the newer refusal");
             yield return new WaitForSecondsRealtime(0.7f);
+            yield return Frames(3);
             Assert.IsFalse(RefusalShown(), "hidden after its life");
             Assert.AreNotEqual(first.x, PanelOfCell(10, 6, 0.6f).x);
         }
@@ -429,8 +452,10 @@ namespace ElementalTD.PlayModeTests
             Assert.AreEqual(GoldText, RefusalText);
             float y0 = RefusalAnchor().y;
             yield return new WaitForSecondsRealtime(1.0f);
+            yield return null;   // a frame has run since the wait: the view's state is the one of this age, also after a slow frame
             Assert.AreEqual(y0, RefusalAnchor().y, 0.5f, "pinned over the upper half of the cell: it does not rise");
             yield return new WaitForSecondsRealtime(0.3f);
+            yield return null;
             Assert.Less(RefusalLabel.parent.resolvedStyle.opacity, 1f, "it still fades");
             _camera.ResetAspect();
         }

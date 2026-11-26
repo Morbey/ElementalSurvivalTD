@@ -89,6 +89,7 @@ namespace ElementalTD.PlayModeTests
             StringAssert.DoesNotContain("survived", RefusalText);
 
             yield return new WaitForSecondsRealtime(1.8f);
+            yield return Frames(2);   // the view hid it on a frame after its 1.5 s; the style resolves on the next
             Assert.IsFalse(RefusalShown(), "the refusal has its own, shorter life, in real time");
             Assert.IsTrue(MessageShown(), "the survived line keeps its own 3 s of battle time: no tick has run");
             Assert.AreEqual(Survived(1), _label.text);

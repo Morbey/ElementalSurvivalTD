@@ -419,6 +419,7 @@ namespace ElementalTD.PlayModeTests
             AssertDurations(Fill, 0.15f, "the next gain eases");
             Assert.AreEqual(20f / 40f, WrittenScale, 1e-6f);
             yield return new WaitForSecondsRealtime(0.4f);
+            yield return Frames(3);   // a transition advances with frames: a slow frame must not leave it half-way at the read
             Assert.AreEqual(20f / 40f, ResolvedScale, 1e-4f);
         }
 

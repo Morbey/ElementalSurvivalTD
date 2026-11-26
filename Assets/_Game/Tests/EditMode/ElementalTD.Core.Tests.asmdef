@@ -5,7 +5,8 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "ElementalTD.Core",
-        "ElementalTD.Data"
+        "ElementalTD.Data",
+        "ElementalTD.Presentation"
     ],
     "includePlatforms": [
         "Editor"
